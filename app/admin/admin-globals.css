@@ -1,0 +1,6 @@
+/* app/admin/admin-globals.css */
+@import "tailwindcss";
+
+body {
+  background-color: #f8fafc; /* Màu nền xám nhạt cho sang */
+}

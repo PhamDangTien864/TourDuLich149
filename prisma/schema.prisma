@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model images {
+  id         Int         @id @default(autoincrement())
+  image_url  String      @db.VarChar(500)
+  sort_order Int
+  is_deleted Boolean     @default(false)
+  provinces  provinces[]
+}
+
+model provinces {
+  id            Int     @id @default(autoincrement())
+  image_id      Int
+  province_code String  @db.VarChar(50)
+  province_name String  @db.VarChar(50)
+  note          String? @db.VarChar(50)
+  is_deleted    Boolean @default(false)
+  image         images  @relation(fields: [image_id], references: [id])
+}
+
+model tour_categories {
+  id            Int     @id @default(autoincrement())
+  category_name String  @db.VarChar(50)
+  note          String? @db.VarChar(50)
+  tours         tours[]
+}
+
+model tours {
+  id            Int             @id @default(autoincrement())
+  title         String          @db.VarChar(100)
+  location_name String          @db.VarChar(50)
+  price         BigInt
+  category_id   Int
+  description   String?         @db.LongText
+  sub_title     String?         @db.VarChar(100)
+  is_active     Boolean         @default(true)
+  is_deleted    Boolean         @default(false)
+  category      tour_categories @relation(fields: [category_id], references: [id])
+  bookings      bookings[]
+}
+
+model customers {
+  id            Int        @id @default(autoincrement())
+  full_name     String     @db.VarChar(50)
+  identity_card String     @db.VarChar(50)
+  is_male       Boolean    @default(true)
+  phone_number  String     @db.VarChar(50)
+  address       String?    @db.VarChar(100)
+  birth_date    DateTime?  @db.Date
+  note          String?    @db.VarChar(100)
+  is_deleted    Boolean    @default(false)
+  bookings      bookings[]
+}
+
+model accounts {
+  id           Int              @id @default(autoincrement())
+  full_name    String           @db.VarChar(50)
+  phone_number String           @db.VarChar(50)
+  birth_date   DateTime         @db.Date
+  username     String           @unique @db.VarChar(50)
+  password     String           @db.VarChar(100)
+  role_id      Int
+  is_deleted   Boolean          @default(false)
+  bookings     bookings[]
+  transactions transactions[]
+  chatbot_logs chatbot_logs[]
+}
+
+model bookings {
+  id           Int            @id @default(autoincrement())
+  customer_id  Int
+  tour_id      Int
+  account_id   Int
+  start_date   DateTime
+  end_date     DateTime
+  total_amount BigInt
+  paid_amount  BigInt         @default(0)
+  is_confirmed Boolean        @default(false)
+  customer     customers      @relation(fields: [customer_id], references: [id])
+  tour         tours          @relation(fields: [tour_id], references: [id])
+  account      accounts       @relation(fields: [account_id], references: [id])
+  transactions transactions[]
+}
+
+model transactions {
+  id               Int      @id @default(autoincrement())
+  booking_id       Int
+  account_id       Int
+  service_id       Int
+  quantity         Int
+  transaction_date DateTime @default(now())
+  booking          bookings @relation(fields: [booking_id], references: [id])
+  account          accounts @relation(fields: [account_id], references: [id])
+}
+
+model chatbot_logs {
+  id           Int      @id @default(autoincrement())
+  account_id   Int?
+  user_query   String   @db.Text
+  bot_response String   @db.Text
+  created_at   DateTime @default(now())
+  account      accounts? @relation(fields: [account_id], references: [id])
+}
