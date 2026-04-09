@@ -15,8 +15,8 @@ export default async function HomePage() {
       
       {/* Hero Section */}
       <section className="relative h-[60vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
-        <img src="https://images.unsplash.com/photo-1506929113675-b55f9d92d471?w=2000" className="absolute inset-0 w-full h-full object-cover scale-105" alt="Hero" />
-        <div className="absolute inset-0 bg-slate-900/40" />
+        <img src="https://images.unsplash.com/photo-1552590635-27c2c2128b15?w=2000" className="absolute inset-0 w-full h-full object-cover scale-105" alt="Hero" />
+        <div className="absolute inset-0 bg-slate-900/20" />
         <div className="relative z-10 text-center px-4">
           <h1 className="text-5xl md:text-9xl font-black text-white tracking-tighter mb-6">Viet<span className="text-blue-400">Travel</span></h1>
           <p className="text-white/80 font-bold text-lg md:text-2xl max-w-2xl mx-auto">Trải nghiệm du lịch Luxury cùng trí tuệ nhân tạo số 1 Việt Nam.</p>
