@@ -35,10 +35,23 @@ export default function RegisterPage() {
         setIsSuccess(true);
         toast.success("Đăng ký thành công! Check email.");
       } else {
-        toast.error(data.error || "Dữ liệu chưa đúng định dạng!");
+        // Bắt lỗi chi tiết
+        if (data.details) {
+          // ZodError - hiển thị từng trường lỗi
+          if (Array.isArray(data.details)) {
+            data.details.forEach(error => {
+              toast.error(`${error.path?.[0] || 'Lỗi'}: ${error.message}`);
+            });
+          } else {
+            toast.error(data.details);
+          }
+        } else {
+          // Lỗi khác (username/email đã tồn tại, etc.)
+          toast.error(data.error || "Đăng ký thất bại!");
+        }
       }
     } catch (error) {
-      toast.error("Lỗi kết nối server!");
+      toast.error("Không thể kết nối đến server!");
     } finally {
       setLoading(false);
     }
@@ -57,7 +70,6 @@ export default function RegisterPage() {
               <motion.div key="form" exit={{ opacity: 0, x: -20 }}>
                 <div className="text-center mb-10">
                   <h1 className="text-4xl font-black text-slate-800 mb-3 tracking-tighter">Gia nhập VietTravel ✈️</h1>
-                  <p className="text-slate-400 font-bold">Tạo tài khoản riêng, email nhận mã riêng cho chất</p>
                 </div>
 
                 <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-6">

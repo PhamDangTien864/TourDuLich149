@@ -27,9 +27,18 @@ export const registerSchema = z.object({
     .regex(/^(?=.*[a-z])(?=.*[A-Z]).*$/, 'Mât khâu phai có chù hoa và chù thuong'),
   birth_date: z.string()
     .refine((date) => {
-      const age = new Date().getFullYear() - new Date(date).getFullYear();
-      return age >= 18;
-    }, 'Ní phải trên 18 tuổi mới được đi tour nha'),
+      const birthDate = new Date(date);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      // Chua sinh nhat trong nam nay -> giam 1
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      return age >= 16; // Giam xuong 16 tuoi
+    }, 'Ní phai trên 16 tuai moi duoc dang ky'),
 });
 
 // Các schema khác (Tour, Booking, Review) giữ nguyên như cũ của ní...

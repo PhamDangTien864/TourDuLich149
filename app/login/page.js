@@ -41,11 +41,29 @@ export default function LoginPage() {
         }
         router.refresh();
       } else {
-        toast.error(data.error || "Đăng nhập thất bại!");
+        // Bắt lỗi chi tiết cho login
+        if (res.status === 403) {
+          toast.error("Tài khoản chưa được xác thực! Vui lòng check email.");
+        } else if (res.status === 401) {
+          toast.error("Sai tên đăng nhập hoặc mật khẩu!");
+        } else if (res.status === 404) {
+          toast.error("Tài khoản không tồn tại!");
+        } else if (data.details) {
+          // ZodError - hiển thị từng trường lỗi
+          if (Array.isArray(data.details)) {
+            data.details.forEach(error => {
+              toast.error(`${error.path?.[0] || 'Lỗi'}: ${error.message}`);
+            });
+          } else {
+            toast.error(data.details);
+          }
+        } else {
+          toast.error(data.error || "Đăng nhập thất bại!");
+        }
       }
     } catch (error) {
       console.error("FRONTEND_LOGIN_ERROR:", error);
-      toast.error("Không kết nối được với Server!");
+      toast.error("Không thể kết nối đến server!");
     } finally {
       setLoading(false);
     }
