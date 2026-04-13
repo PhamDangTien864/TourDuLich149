@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // SỬA: Đổi thành Promise
 ) {
   try {
     const resolvedParams = await params;
@@ -35,7 +35,7 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // SỬA: Đổi thành Promise
 ) {
   try {
     const resolvedParams = await params;
