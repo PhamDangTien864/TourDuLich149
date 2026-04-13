@@ -171,7 +171,7 @@ model tours {
   reviews         reviews[]
   tour_includes   tour_includes[]
   tour_schedules  tour_schedules[]
-  tour_categories tour_categories  @relation(fields: [category_id], references: [id])
+  category        tour_categories  @relation(fields: [category_id], references: [id])
   wishlist        wishlist[]
 
   @@index([category_id], map: "tours_category_id_fkey")
