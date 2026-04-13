@@ -28,7 +28,7 @@ function BookingContent() {
         <BookingForm tourId={tourId} price={price} />
         
         <p className="mt-10 text-center text-slate-500 text-xs font-bold uppercase tracking-widest leading-loose">
-          Bằng việc nhấn xác nhận, ní đồng ý với <br/> 
+          Bằng việc nhấn xác nhận, bạn đồng ý với <br/> 
           <span className="text-slate-400 underline cursor-pointer">điều khoản dịch vụ</span> của VietTravel.
         </p>
       </div>

@@ -1,20 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, Loader2, Phone, User } from "lucide-react";
+import { CheckCircle, Loader2, Phone, User, CreditCard } from "lucide-react";
 import PaymentQR from "./PaymentQR";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function BookingForm({ tourId, price }) {
-  const [loading, setLoading] = useState(false);
-  const [isBooked, setIsBooked] = useState(false);
+export default function BookingForm({ amount, tourId }) {
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [bookingId, setBookingId] = useState(null);
+  const [confirming, setConfirming] = useState(false);
 
-  const handleBooking = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!customerName || !phone) {
-      toast.error("Điền đầy đủ thông tin để VietTravel hỗ trợ ní nhé!");
+      toast.error('Vui lòng nhập đầy đủ thông tin!');
       return;
     }
 
@@ -23,24 +27,47 @@ export default function BookingForm({ tourId, price }) {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tourId, amount: price, customerName, phone }),
+        body: JSON.stringify({ tourId, amount, customerName, phone, email })
       });
 
-      if (res.ok) {
-        setIsBooked(true);
-        toast.success("Tuyệt vời! Đơn hàng đã được ghi nhận.", { duration: 5000 });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Đặt tour thành công! Vui lòng thanh toán.');
+        setBookingId(data.booking.id);
+        setShowPayment(true);
+      } else {
+        toast.error(data.error || 'Đặt tour thất bại!');
       }
     } catch (error) {
-      toast.error("Hệ thống bận rồi ní ơi!");
+      toast.error('Lỗi hệ thống, vui lòng thử lại!');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePaidConfirm = async () => {
+    setConfirming(true);
+    try {
+      const res = await fetch('/api/bookings/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId })
+      });
+      if (res.ok) {
+        toast.success("Hệ thống đang kiểm tra thanh toán của bạn!", { icon: '💰' });
+        // Có thể chuyển hướng về trang lịch sử sau 2s
+      }
+    } catch (error) {
+      toast.error("Lỗi gửi xác nhận!");
+    } finally {
+      setConfirming(false);
     }
   };
 
   return (
     <div className="space-y-6">
       <AnimatePresence mode="wait">
-        {!isBooked ? (
+        {!showPayment ? (
           <motion.div 
             key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="space-y-5"
@@ -51,7 +78,7 @@ export default function BookingForm({ tourId, price }) {
                 <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                 <input 
                   type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Họ và tên của ní" 
+                  placeholder="Họ và tên của bạn" 
                   className="w-full bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white" 
                 />
               </div>
@@ -63,10 +90,17 @@ export default function BookingForm({ tourId, price }) {
                   className="w-full bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white" 
                 />
               </div>
+              <div className="relative">
+                <input 
+                  type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email (nhận thông báo)" 
+                  className="w-full bg-white/5 border border-white/10 rounded-[24px] px-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white" 
+                />
+              </div>
             </div>
 
             <button 
-              onClick={handleBooking} disabled={loading}
+              onClick={handleSubmit} disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 py-5 rounded-[24px] font-black text-lg transition-all active:scale-95 flex items-center justify-center gap-2 shadow-2xl shadow-blue-900/50"
             >
               {loading ? <Loader2 className="animate-spin" /> : "XÁC NHẬN ĐẶT TOUR"}
@@ -80,7 +114,15 @@ export default function BookingForm({ tourId, price }) {
             <div className="bg-green-500/20 p-4 rounded-2xl border border-green-500/30 text-green-400 flex items-center justify-center gap-2 mx-auto w-fit px-6">
               <CheckCircle size={20} /> <span className="font-black text-sm">ĐẶT TOUR THÀNH CÔNG</span>
             </div>
-            <PaymentQR amount={Number(price)} tourId={tourId} customerName={customerName} />
+            <PaymentQR amount={amount} tourId={tourId} />
+            
+            <button 
+              onClick={handlePaidConfirm}
+              disabled={confirming}
+              className="w-full bg-green-600 hover:bg-green-700 py-4 rounded-2xl font-black text-white transition-all flex items-center justify-center gap-2"
+            >
+              {confirming ? <Loader2 className="animate-spin" /> : <><CreditCard size={20} /> TÔI ĐÃ CHUYỂN KHOẢN</>}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

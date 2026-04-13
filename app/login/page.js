@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { User, Lock, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Header from "../components/Header";
 import { toast } from "react-hot-toast";
@@ -16,11 +16,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
-      toast.error("Ní quên nhập tài khoản hoặc mật khẩu kìa!");
-      return;
-    }
-
+    if (!username || !password) return toast.error("Nhập tài khoản và mật khẩu!");
+    
     setLoading(true);
     try {
       const res = await fetch('/api/auth/login', {
@@ -32,14 +29,23 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        toast.success(`Chào mừng ${data.user.name} quay trở lại!`, { icon: '🚀' });
-        if (data.user.role === 1) router.push('/admin');
-        else router.push('/');
+        localStorage.setItem('auth_token', data.clientToken);
+        localStorage.setItem('user_data', JSON.stringify(data.user));
+        
+        toast.success(`Chào mừng ${data.user.name} đã trở lại!`);
+        
+        if (data.user.role === 1) {
+          router.push('/admin');
+        } else {
+          router.push('/');
+        }
+        router.refresh();
       } else {
-        toast.error(data.error || "Sai tài khoản rồi ní!");
+        toast.error(data.error || "Đăng nhập thất bại!");
       }
     } catch (error) {
-      toast.error("Lỗi kết nối rồi ní ơi!");
+      console.error("FRONTEND_LOGIN_ERROR:", error);
+      toast.error("Không kết nối được với Server!");
     } finally {
       setLoading(false);
     }
@@ -50,43 +56,41 @@ export default function LoginPage() {
       <Header />
       <main className="flex-1 flex items-center justify-center p-6 py-12">
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
           className="bg-white w-full max-w-md rounded-[48px] shadow-2xl shadow-blue-100 p-10 md:p-14 border border-slate-100"
         >
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-black text-slate-800 mb-3 tracking-tighter">Chào ní! 👋</h1>
-            <p className="text-slate-400 font-bold">Hành trình mới đang đợi ní phía trước</p>
+            <h1 className="text-4xl font-black text-slate-800 mb-3 tracking-tighter">Chào bạn!</h1>
+            <p className="text-slate-400 font-bold">Hành trình Luxury dành cho bạn</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-[0.2em]">Username</label>
+              <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Username</label>
               <div className="relative group">
-                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={20} />
+                <User className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={20} />
                 <input 
-                  type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Username của ní" 
+                  type="text" required value={username} onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Username" 
                   className="w-full pl-16 pr-8 py-5 bg-slate-50 border-2 border-transparent rounded-[28px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" 
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-[0.2em]">Mật khẩu</label>
+              <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Mật khẩu</label>
               <div className="relative group">
                 <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={20} />
                 <input 
-                  type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
+                  type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+                  placeholder=".........." 
                   className="w-full pl-16 pr-8 py-5 bg-slate-50 border-2 border-transparent rounded-[28px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" 
                 />
               </div>
             </div>
 
             <button 
-              disabled={loading}
+              type="submit" disabled={loading} 
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-[28px] font-black text-lg shadow-xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3"
             >
               {loading ? <Loader2 className="animate-spin" /> : <>Tiếp tục <ArrowRight size={22} /></>}
@@ -95,7 +99,7 @@ export default function LoginPage() {
 
           <div className="mt-10 text-center">
             <p className="text-slate-500 font-bold text-sm">
-              Chưa có tài khoản? <Link href="/register" className="text-blue-600 hover:underline underline-offset-4">Đăng ký ngay</Link>
+              Bạn chưa có tài khoản? <Link href="/register" className="text-blue-600 hover:underline">Đăng ký ngay</Link>
             </p>
           </div>
         </motion.div>

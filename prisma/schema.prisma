@@ -7,43 +7,53 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model images {
-  id         Int         @id @default(autoincrement())
-  image_url  String      @db.VarChar(500)
-  sort_order Int
-  is_deleted Boolean     @default(false)
-  provinces  provinces[]
+model accounts {
+  id           Int            @id @default(autoincrement())
+  full_name    String         @db.VarChar(50)
+  phone_number String         @db.VarChar(50)
+  birth_date   DateTime       @db.Date
+  username     String         @unique @db.VarChar(50)
+  password     String         @db.VarChar(100)
+  is_deleted   Boolean        @default(false)
+  role         Int            @default(2)
+  is_verified  Boolean        @default(false)
+  email        String         @unique @db.VarChar(100)
+  bookings     bookings[]
+  chatbot_logs chatbot_logs[]
+  reviews      reviews[]
+  transactions transactions[]
+  wishlist     wishlist[]
 }
 
-model provinces {
-  id            Int     @id @default(autoincrement())
-  image_id      Int
-  province_code String  @db.VarChar(50)
-  province_name String  @db.VarChar(50)
-  note          String? @db.VarChar(50)
-  is_deleted    Boolean @default(false)
-  image         images  @relation(fields: [image_id], references: [id])
+model bookings {
+  id           Int            @id @default(autoincrement())
+  customer_id  Int
+  tour_id      Int
+  account_id   Int
+  start_date   DateTime
+  end_date     DateTime
+  total_amount BigInt
+  paid_amount  BigInt         @default(0)
+  is_confirmed Boolean        @default(false)
+  accounts     accounts       @relation(fields: [account_id], references: [id])
+  customers    customers      @relation(fields: [customer_id], references: [id])
+  tours        tours          @relation(fields: [tour_id], references: [id])
+  transactions transactions[]
+
+  @@index([account_id], map: "bookings_account_id_fkey")
+  @@index([customer_id], map: "bookings_customer_id_fkey")
+  @@index([tour_id], map: "bookings_tour_id_fkey")
 }
 
-model tour_categories {
-  id            Int     @id @default(autoincrement())
-  category_name String  @db.VarChar(50)
-  note          String? @db.VarChar(50)
-  tours         tours[]
-}
+model chatbot_logs {
+  id           Int       @id @default(autoincrement())
+  account_id   Int?
+  user_query   String    @db.Text
+  bot_response String    @db.Text
+  created_at   DateTime  @default(now())
+  accounts     accounts? @relation(fields: [account_id], references: [id])
 
-model tours {
-  id            Int             @id @default(autoincrement())
-  title         String          @db.VarChar(100)
-  location_name String          @db.VarChar(50)
-  price         BigInt
-  category_id   Int
-  description   String?         @db.LongText
-  sub_title     String?         @db.VarChar(100)
-  is_active     Boolean         @default(true)
-  is_deleted    Boolean         @default(false)
-  category      tour_categories @relation(fields: [category_id], references: [id])
-  bookings      bookings[]
+  @@index([account_id], map: "chatbot_logs_account_id_fkey")
 }
 
 model customers {
@@ -59,52 +69,139 @@ model customers {
   bookings      bookings[]
 }
 
-model accounts {
-  id           Int              @id @default(autoincrement())
-  full_name    String           @db.VarChar(50)
-  phone_number String           @db.VarChar(50)
-  birth_date   DateTime         @db.Date
-  username     String           @unique @db.VarChar(50)
-  password     String           @db.VarChar(100)
-  role_id      Int
-  is_deleted   Boolean          @default(false)
-  bookings     bookings[]
-  transactions transactions[]
-  chatbot_logs chatbot_logs[]
+model images {
+  id         Int         @id @default(autoincrement())
+  image_url  String      @db.VarChar(500)
+  sort_order Int
+  is_deleted Boolean     @default(false)
+  provinces  provinces[]
 }
 
-model bookings {
-  id           Int            @id @default(autoincrement())
-  customer_id  Int
+model promotions {
+  id             Int            @id @default(autoincrement())
+  code           String         @unique @db.VarChar(20)
+  discount_type  String
+  discount_value BigInt
+  min_amount     BigInt?
+  max_uses       Int?
+  used_count     Int            @default(0)
+  start_date     DateTime
+  end_date       DateTime
+  is_active      Boolean        @default(true)
+  created_at     DateTime       @default(now())
+  transactions   transactions[]
+}
+
+model provinces {
+  id            Int     @id @default(autoincrement())
+  image_id      Int
+  province_code String  @db.VarChar(50)
+  province_name String  @db.VarChar(50)
+  note          String? @db.VarChar(50)
+  is_deleted    Boolean @default(false)
+  images        images  @relation(fields: [image_id], references: [id])
+
+  @@index([image_id], map: "provinces_image_id_fkey")
+}
+
+model reviews {
+  id         Int      @id @default(autoincrement())
+  tour_id    Int
+  account_id Int
+  rating     Int
+  comment    String?  @db.Text
+  created_at DateTime @default(now())
+  is_deleted Boolean  @default(false)
+  accounts   accounts @relation(fields: [account_id], references: [id])
+  tours      tours    @relation(fields: [tour_id], references: [id])
+
+  @@index([account_id], map: "reviews_account_id_fkey")
+  @@index([tour_id], map: "reviews_tour_id_fkey")
+}
+
+model roles {
+  id          Int     @id @default(autoincrement())
+  role_name   String  @unique @db.VarChar(50)
+  description String? @db.VarChar(200)
+}
+
+model tour_categories {
+  id            Int     @id @default(autoincrement())
+  category_name String  @db.VarChar(50)
+  note          String? @db.VarChar(50)
+  tours         tours[]
+}
+
+model tour_includes {
+  id           Int     @id @default(autoincrement())
   tour_id      Int
-  account_id   Int
-  start_date   DateTime
-  end_date     DateTime
-  total_amount BigInt
-  paid_amount  BigInt         @default(0)
-  is_confirmed Boolean        @default(false)
-  customer     customers      @relation(fields: [customer_id], references: [id])
-  tour         tours          @relation(fields: [tour_id], references: [id])
-  account      accounts       @relation(fields: [account_id], references: [id])
-  transactions transactions[]
+  include_type String
+  title        String  @db.VarChar(100)
+  description  String? @db.Text
+  is_deleted   Boolean @default(false)
+  tours        tours   @relation(fields: [tour_id], references: [id])
+
+  @@index([tour_id], map: "tour_includes_tour_id_fkey")
+}
+
+model tour_schedules {
+  id            Int     @id @default(autoincrement())
+  tour_id       Int
+  day_number    Int
+  title         String  @db.VarChar(200)
+  description   String  @db.Text
+  meal_included Boolean @default(false)
+  is_deleted    Boolean @default(false)
+  tours         tours   @relation(fields: [tour_id], references: [id])
+
+  @@index([tour_id], map: "tour_schedules_tour_id_fkey")
+}
+
+model tours {
+  id              Int              @id @default(autoincrement())
+  title           String           @db.VarChar(100)
+  location_name   String           @db.VarChar(50)
+  price           BigInt
+  category_id     Int
+  description     String?          @db.LongText
+  sub_title       String?          @db.VarChar(100)
+  is_active       Boolean          @default(true)
+  is_deleted      Boolean          @default(false)
+  bookings        bookings[]
+  reviews         reviews[]
+  tour_includes   tour_includes[]
+  tour_schedules  tour_schedules[]
+  tour_categories tour_categories  @relation(fields: [category_id], references: [id])
+  wishlist        wishlist[]
+
+  @@index([category_id], map: "tours_category_id_fkey")
 }
 
 model transactions {
-  id               Int      @id @default(autoincrement())
+  id               Int         @id @default(autoincrement())
   booking_id       Int
   account_id       Int
   service_id       Int
   quantity         Int
-  transaction_date DateTime @default(now())
-  booking          bookings @relation(fields: [booking_id], references: [id])
-  account          accounts @relation(fields: [account_id], references: [id])
+  transaction_date DateTime    @default(now())
+  promotion_id     Int?
+  accounts         accounts    @relation(fields: [account_id], references: [id])
+  bookings         bookings    @relation(fields: [booking_id], references: [id])
+  promotions       promotions? @relation(fields: [promotion_id], references: [id])
+
+  @@index([account_id], map: "transactions_account_id_fkey")
+  @@index([booking_id], map: "transactions_booking_id_fkey")
+  @@index([promotion_id], map: "transactions_promotion_id_fkey")
 }
 
-model chatbot_logs {
-  id           Int      @id @default(autoincrement())
-  account_id   Int?
-  user_query   String   @db.Text
-  bot_response String   @db.Text
-  created_at   DateTime @default(now())
-  account      accounts? @relation(fields: [account_id], references: [id])
+model wishlist {
+  id         Int      @id @default(autoincrement())
+  account_id Int
+  tour_id    Int
+  created_at DateTime @default(now())
+  accounts   accounts @relation(fields: [account_id], references: [id])
+  tours      tours    @relation(fields: [tour_id], references: [id])
+
+  @@unique([account_id, tour_id])
+  @@index([tour_id], map: "wishlist_tour_id_fkey")
 }

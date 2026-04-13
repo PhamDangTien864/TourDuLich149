@@ -1,84 +1,163 @@
-'use client';
+"use client";
 
+import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
-  Map, 
   Users, 
-  ShoppingCart, 
-  ShieldCheck, 
-  ChevronRight,
-  LogOut
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+  MapPin, 
+  Calendar, 
+  Package, 
+  Settings, 
+  LogOut,
+  Menu,
+  X,
+  Home,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  Star,
+  BarChart3,
+  UserCheck,
+  ShieldAlert
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isOpen, onClose }) {
   const pathname = usePathname();
-  
-  // Danh sách các menu khớp với ảnh ní gửi
-  const menus = [
-    { name: "Dashboard", icon: <LayoutDashboard size={22} />, href: "/admin" },
-    { name: "Quản lý Tour", icon: <Map size={22} />, href: "/admin/tours" },
-    { name: "Người dùng", icon: <Users size={22} />, href: "/admin/users" },
-    { name: "Đơn đặt", icon: <ShoppingCart size={22} />, href: "/admin/bookings" },
-    { name: "Phân quyền", icon: <ShieldCheck size={22} />, href: "/admin/roles" },
+  const [activeItem, setActiveItem] = useState('dashboard');
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Auto-detect active item based on pathname
+  useEffect(() => {
+    const currentItem = menuItems.find(item => pathname === item.href);
+    if (currentItem) {
+      setActiveItem(currentItem.id);
+    }
+  }, [pathname]);
+
+  const menuItems = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      href: '/admin/dashboard'
+    },
+    {
+      id: 'tours',
+      label: 'Quản lý Tours',
+      icon: MapPin,
+      href: '/admin/tours'
+    },
+    {
+      id: 'users',
+      label: 'Quản lý Users',
+      icon: Users,
+      href: '/admin/users'
+    },
+    {
+      id: 'bookings',
+      label: 'Quản lý Bookings',
+      icon: Calendar,
+      href: '/admin/bookings'
+    },
+    {
+      id: 'analytics',
+      label: 'Thống kê',
+      icon: BarChart3,
+      href: '/admin/analytics'
+    },
+    {
+      id: 'settings',
+      label: 'Cài đặt',
+      icon: Settings,
+      href: '/admin/settings'
+    }
   ];
 
   return (
-    <aside className="w-72 bg-slate-900 text-white min-h-screen p-8 hidden md:flex flex-col shrink-0 border-r border-white/5 shadow-2xl">
-      {/* Logo VietTravel Luxury */}
-      <div className="mb-12 px-2">
-        <h2 className="text-3xl font-black text-white tracking-tighter flex items-center gap-2">
-          Viet<span className="text-blue-500">Travel</span>
-        </h2>
-        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1 ml-1">
-          Admin Control
-        </p>
-      </div>
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+          onClick={onClose}
+        />
+      )}
 
-      {/* Danh sách Menu */}
-      <nav className="flex-1 space-y-2">
-        {menus.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link 
-              key={item.href} 
-              href={item.href}
-              className={`group flex items-center justify-between p-4 rounded-2xl font-bold transition-all duration-300 ${
-                isActive 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-4">
-                <span className={`${isActive ? 'text-white' : 'group-hover:text-blue-400'} transition-colors`}>
-                  {item.icon}
-                </span>
-                <span className="tracking-tight">{item.name}</span>
-              </div>
-              {isActive && <ChevronRight size={16} className="opacity-50" />}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Footer Sidebar - Tài khoản Admin */}
-      <div className="mt-auto pt-8 border-t border-white/5">
-        <div className="bg-white/5 p-4 rounded-[24px] flex items-center justify-between">
+      {/* Sidebar */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0
+      `}>
+        <div className="flex items-center justify-between h-16 bg-slate-800 px-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-black text-sm">
-              AD
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <LayoutDashboard className="text-white" size={20} />
             </div>
-            <div>
-              <p className="text-xs font-black">Admin</p>
-              <p className="text-[10px] text-slate-500 font-bold">Quản trị viên</p>
-            </div>
+            <span className="text-white font-bold text-lg">VietTravel Admin</span>
           </div>
-          <Link href="/" title="Đăng xuất">
-             <LogOut size={18} className="text-slate-500 hover:text-red-400 transition-colors cursor-pointer" />
-          </Link>
+          <button
+            onClick={onClose}
+            className="lg:hidden text-white hover:bg-slate-700 p-2 rounded-lg"
+          >
+            <X size={20} />
+          </button>
         </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          {menuItems.map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              onClick={() => setActiveItem(item.id)}
+              className={`
+                flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+                ${activeItem === item.id 
+                  ? 'bg-blue-600 text-white shadow-lg' 
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }
+              `}
+            >
+              <item.icon size={20} />
+              <span className="font-medium">{item.label}</span>
+            </Link>
+          ))}
+
+          {/* Bottom Section */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
+            <Link
+              href="/"
+              className="flex items-center gap-3 text-slate-300 hover:text-white px-4 py-3 rounded-xl transition-all duration-200"
+            >
+              <Home size={20} />
+              <span className="font-medium">Về trang chủ</span>
+            </Link>
+            
+            <button
+              onClick={() => {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                window.location.href = '/login';
+              }}
+              className="flex items-center gap-3 text-slate-300 hover:text-white px-4 py-3 rounded-xl transition-all duration-200 w-full"
+            >
+              <LogOut size={20} />
+              <span className="font-medium">Đăng xuất</span>
+            </button>
+          </div>
+        </nav>
       </div>
-    </aside>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => onClose()}
+        className="lg:hidden fixed top-4 left-4 z-50 text-white bg-slate-800 p-2 rounded-lg"
+      >
+        <Menu size={20} />
+      </button>
+    </>
   );
 }

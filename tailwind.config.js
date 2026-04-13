@@ -6,7 +6,12 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        // Đưa font Be Vietnam Pro làm font sans mặc định
+        sans: ["var(--font-be-vietnam)", "ui-sans-serif", "system-ui"],
+      },
+    },
   },
   plugins: [],
 }

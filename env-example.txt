@@ -1,0 +1,14 @@
+# Database
+DATABASE_URL="mysql://root:qvJXcaqFGUfSyQiLLjVbESZDLtxZoYCP@maglev.proxy.rlwy.net:34717/railway"
+
+# JWT Secret
+JWT_SECRET="viet-travel-seceret"
+
+# Base URL
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+
+# Resend Email Service
+RESEND_API_KEY="re_ZEMmGPYC_AHEBSMoAY34CVcpsRAbzCvYH"
+
+# Node Environment
+NODE_ENV="development"

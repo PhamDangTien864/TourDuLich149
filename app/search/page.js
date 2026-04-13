@@ -5,9 +5,10 @@ import Footer from "../components/Footer";
 import Link from "next/link";
 
 export default async function SearchPage({ searchParams }) {
-  const query = searchParams.q || "";
+  // FIX: Phải await searchParams trước khi dùng
+  const params = await searchParams;
+  const query = params.q || "";
 
-  // Tìm kiếm tour theo tiêu đề hoặc địa điểm
   const searchResults = await prisma.tours.findMany({
     where: {
       OR: [
@@ -33,7 +34,12 @@ export default async function SearchPage({ searchParams }) {
             {searchResults.map(tour => (
               <Link href={`/tour/${tour.id}`} key={tour.id} className="group bg-white rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all border border-slate-100">
                 <div className="h-48 bg-slate-100 rounded-2xl mb-6 overflow-hidden">
-                  <img src={tour.sub_title || "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=400"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  {/* FIX LỖI 404: Nếu sub_title không phải là link ảnh thì dùng link mặc định */}
+                  <img 
+                    src={tour.sub_title?.startsWith('http') ? tour.sub_title : "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=400"} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    alt={tour.title}
+                  />
                 </div>
                 <h3 className="text-xl font-black mb-2 text-slate-800 line-clamp-1">{tour.title}</h3>
                 <div className="flex items-center gap-1 text-slate-400 text-sm font-bold mb-4">
@@ -49,7 +55,7 @@ export default async function SearchPage({ searchParams }) {
         ) : (
           <div className="text-center py-32 bg-white rounded-[40px] border-2 border-dashed border-slate-200">
             <Search className="mx-auto text-slate-200 mb-6" size={64} />
-            <h2 className="text-2xl font-black text-slate-400">Không tìm thấy tour nào ní ơi!</h2>
+            <h2 className="text-2xl font-black text-slate-400">Không tìm thấy tour nào!</h2>
             <Link href="/" className="text-blue-600 font-black mt-4 block hover:underline">Quay lại trang chủ</Link>
           </div>
         )}

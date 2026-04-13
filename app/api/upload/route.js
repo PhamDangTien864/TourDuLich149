@@ -13,7 +13,7 @@ export async function POST(request) {
     const file = formData.get('file');
 
     if (!file) {
-      return NextResponse.json({ error: "Chưa chọn ảnh ní ơi!" }, { status: 400 });
+      return NextResponse.json({ error: "Hãy chọn ảnh!" }, { status: 400 });
     }
 
     // Chuyển file sang dạng Buffer để Cloudinary hiểu
@@ -32,6 +32,6 @@ export async function POST(request) {
     return NextResponse.json({ url: uploadResponse.secure_url });
 
   } catch (error) {
-    return NextResponse.json({ error: "Lỗi upload rồi ní!" }, { status: 500 });
+    return NextResponse.json({ error: "Lỗi upload!" }, { status: 500 });
   }
 }
