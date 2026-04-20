@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     // Check if user already reviewed this tour
     const existingReview = await prismaTyped.reviews.findFirst({
       where: {
-        tour_id: parseInt(tour_id),
+        tour_id: Number(tour_id),
         account_id: user.id,
         is_deleted: false
       }
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     // Create review
     const review = await prismaTyped.reviews.create({
       data: {
-        tour_id: parseInt(tour_id),
+        tour_id: Number(tour_id),
         account_id: user.id,
         rating,
         comment
