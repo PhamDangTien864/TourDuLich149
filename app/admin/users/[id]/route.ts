@@ -14,7 +14,7 @@ export async function DELETE(
     }
 
     // Soft delete: set is_deleted = true
-    const deletedUser = await prisma.account.update({
+    const deletedUser = await prisma.accounts.update({
       where: { id: userId },
       data: { is_deleted: true }
     });
