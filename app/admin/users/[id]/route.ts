@@ -14,7 +14,7 @@ export async function DELETE(
     }
 
     // Soft delete: set is_deleted = true
-    const deletedUser = await (prisma as any).account.update({
+    const deletedUser = await prisma.accounts.update({
       where: { id: userId },
       data: { is_deleted: true }
     });
@@ -46,7 +46,7 @@ export async function PATCH(
     }
 
     // Get current user
-    const currentUser = await (prisma as any).account.findUnique({
+    const currentUser = await prisma.accounts.findUnique({
       where: { id: userId }
     });
 
@@ -57,7 +57,7 @@ export async function PATCH(
     // Toggle role: 1 (Admin) <-> 2 (User)
     const newRole = currentUser.role_id === 1 ? 2 : 1;
     
-    const updatedUser = await (prisma as any).accounts.update({
+    const updatedUser = await prisma.accounts.update({
       where: { id: userId },
       data: { role_id: newRole }
     });
