@@ -59,7 +59,7 @@ export async function PATCH(
     
     const updatedUser = await prisma.accounts.update({
       where: { id: userId },
-      data: { role: newRole }
+      data: { role_id: newRole }
     });
 
     return NextResponse.json({ 
