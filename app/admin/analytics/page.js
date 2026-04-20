@@ -50,7 +50,7 @@ export default async function AnalyticsPage() {
     
     // 5. Customer stats
     prisma.accounts.groupBy({
-      by: ['role'],
+      by: ['role_id'],
       _count: { id: true }
     }),
     

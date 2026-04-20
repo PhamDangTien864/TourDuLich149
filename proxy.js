@@ -48,9 +48,10 @@ export async function proxy(request) {
   }
 
   // 4. Neu da login roi ma dinh vao Login/Register -> Cho ve trang chu luon
-  if ((pathname === '/login' || pathname === '/register') && user) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
+  // Bỏ logic này để user đã đăng nhập vẫn có thể vào trang login/register
+  // if ((pathname === '/login' || pathname === '/register') && user) {
+  //   return NextResponse.redirect(new URL('/', request.url));
+  // }
 
   return NextResponse.next();
 }

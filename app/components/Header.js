@@ -14,9 +14,23 @@ export default function Header() {
     if (userData) setUser(JSON.parse(userData));
   }, []);
 
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const userData = localStorage.getItem('user_data');
+      setUser(userData ? JSON.parse(userData) : null);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   const handleLogout = () => {
     localStorage.clear();
     document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    setUser(null); // Cap nhat state ngay lap tuc
     router.push('/login');
     router.refresh();
   };
@@ -41,11 +55,11 @@ export default function Header() {
           {/* Nút Hồ sơ biến hóa theo Role */}
           {user && (
             <Link 
-              href={user.role === 1 ? "/admin" : "/employee/profile"} 
+              href={user.role === 1 ? "/admin" : "/customer/profile"} 
               className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-2 rounded-lg"
             >
-              {user.role === 1 ? <ShieldCheck size={14}/> : <Briefcase size={14}/>}
-              Hồ sơ {user.role === 1 ? 'Admin' : 'Nhân viên'}
+              {user.role === 1 ? <ShieldCheck size={14}/> : <User size={14}/>}
+              Hồ sơ {user.role === 1 ? 'Admin' : 'Customer'}
             </Link>
           )}
         </nav>

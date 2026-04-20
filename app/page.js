@@ -19,11 +19,11 @@ export default async function HomePage() {
       {/* Hero Section - Luxury Style */}
       <section className="relative h-[70vh] md:h-[90vh] flex items-center justify-center overflow-hidden">
         <img 
-          src="https://images.unsplash.com/photo-1552590635-27c2c2128b15?w=2000" 
+          src="https://bizweb.dktcdn.net/100/516/683/products/wot1712904922-1.jpg?v=1718431571087" 
           className="absolute inset-0 w-full h-full object-cover scale-105" 
           alt="Vietnam Travel Hero" 
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-900/20 to-white" />
+        <div className="absolute inset-0 bg-gradient-to-b from-yellow-900/30 via-amber-900/20 to-white" />
         
         <div className="relative z-10 text-center px-4">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-6 py-2 rounded-full border border-white/30 mb-8 animate-bounce">

@@ -7,12 +7,14 @@ import { loginSchema } from '@/lib/validations';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log('Login API called with body:', body);
     
-    // 1. Validate dữ liệu đầu vào
+    // 1. Validate du lieu dau vao
     const validatedData = loginSchema.parse(body);
     const { username, password } = validatedData;
+    console.log('Validated data:', { username, password: '***' });
 
-    // 2. Tìm user trong bảng accounts
+    // 2. Tim user trong bang accounts
     const user = await prisma.accounts.findFirst({
       where: { 
         username: username,
@@ -20,36 +22,54 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    console.log('User found:', user ? 'YES' : 'NO');
+    if (user) {
+      console.log('User details:', { 
+        id: user.id, 
+        username: user.username, 
+        email: user.email, 
+        is_verified: user.is_verified,
+        role_id: user.role_id 
+      });
+    }
+
     if (!user) {
-      return NextResponse.json({ error: "Tài khoản này không tồn tại!" }, { status: 401 });
+      console.log('ERROR: User not found for username:', username);
+      return NextResponse.json({ 
+        error: "Tài khoàn không tôgn ta! Vui lòng kiêm tra lai tên tài khoàn hoac dang ky tài khoàn moi." 
+      }, { status: 401 });
     }
 
-    // 3. Kiểm tra mật khẩu
+    // 3. Kiem tra mat khau
     const isPasswordValid = await comparePassword(password, user.password);
+    console.log('Password validation:', isPasswordValid ? 'SUCCESS' : 'FAILED');
+
     if (!isPasswordValid) {
-      return NextResponse.json({ error: "Mật khẩu sai!" }, { status: 401 });
+      console.log('ERROR: Invalid password for username:', username);
+      return NextResponse.json({ 
+        error: "Mât khâu không chính xác! Vui lòng kiêm tra lai mâât khâu hoac su dung chúc nang quên mâât khâu." 
+      }, { status: 401 });
     }
 
-    // 4. KIỂM TRA XÁC THỰC (is_verified)
-    // Nếu ní sửa role = 1 mà quên sửa cái này thành true là không login được đâu
+    // 4. KIEM TRA XAC THUC (is_verified)
     if (!user.is_verified) {
       return NextResponse.json({ 
-        error: "Tài khoản chưa kích hoạt!" 
+        error: "Tai khoan chua kich hoat!" 
       }, { status: 403 });
     }
 
-    // 5. TẠO TOKEN (Phải đủ 4 trường như interface trong lib/auth.ts)
+    // 5. TAO TOKEN
     const token = generateToken({ 
       id: user.id, 
       name: user.full_name, 
-      role: user.role, 
+      role: user.role_id, 
       is_verified: user.is_verified 
     });
 
-    // 6. Lưu Token vào Cookie để Middleware (proxy.js) đọc được
+    // 6. Luu Token vao Cookie
     const cookieStore = await cookies();
     cookieStore.set('auth_token', token, { 
-      maxAge: 86400, // 1 ngày
+      maxAge: 86400, // 1 ngay
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -61,18 +81,18 @@ export async function POST(req: NextRequest) {
       user: { 
         id: user.id, 
         name: user.full_name, 
-        role: user.role,
+        role: user.role_id, 
         is_verified: user.is_verified
       },
       clientToken: token 
     });
 
   } catch (error: any) {
-    console.error("LOGIN_ERROR_LOG:", error);
-    // Nếu lỗi do Zod (nhập liệu sai format)
+    console.error("LOGIN_ERROR:", error);
+    // Neu loi do Zod
     if (error.name === 'ZodError') {
-      return NextResponse.json({ error: "Định dạng tài khoản/mật khẩu chưa đúng chuẩn!" }, { status: 400 });
+      return NextResponse.json({ error: "Dinh dang tai khoan/mat khau chua dung chuan!" }, { status: 400 });
     }
-    return NextResponse.json({ error: "Lỗi hệ thống (500)" }, { status: 500 });
+    return NextResponse.json({ error: "Loi he thong (500)" }, { status: 500 });
   }
 }

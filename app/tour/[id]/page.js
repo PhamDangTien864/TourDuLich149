@@ -10,8 +10,16 @@ export async function generateMetadata({ params }) {
   // BẮT BUỘC: Phải await params trước khi dùng id
   const { id } = await params; 
   
+  // Validate id
+  if (!id || isNaN(Number(id))) {
+    return {
+      title: "Tour không tìm thấy | VietTravel Luxury",
+      description: "Tour không tồn tại hoặc ID không hợp lệ",
+    };
+  }
+  
   const tour = await prisma.tours.findUnique({ 
-    where: { id: parseInt(id) } 
+    where: { id: Number(id) } 
   });
 
   return {
@@ -24,8 +32,13 @@ export default async function TourDetailPage({ params }) {
   // BẮT BUỘC: Giải nén params bằng await để tránh lỗi P1001/Validation
   const { id } = await params; 
 
+  // Validate id
+  if (!id || isNaN(Number(id))) {
+    return notFound();
+  }
+
   const tour = await prisma.tours.findUnique({
-    where: { id: parseInt(id) },
+    where: { id: Number(id) },
     include: { category: true } // Lấy thông tin loại tour từ bảng tour_categories
   });
 

@@ -28,15 +28,18 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       const field = existing.username === username ? "Username" : "Email";
+      const message = existing.username === username 
+        ? "Tên tài khoàn này déjà été utilisé! Vui lòng chon tên tài khoàn khác."
+        : "Email này déjà été utilisé! Vui lòng su dung email khác hoac kiêm tra lai email.";
       console.log(`Conflict: ${field} already exists`);
-      return NextResponse.json({ error: `${field} đã được sử dụng!` }, { status: 400 });
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
     console.log('Hashing password...');
     const hashedPassword = await hashPassword(password);
 
-    // 2. Tạo tài khoản
-    console.log('Creating user account...');
+    // 2. Tài khoan customer (role_id = 2)
+    console.log('Creating customer account...');
     const user = await prisma.accounts.create({
       data: {
         full_name,
@@ -45,6 +48,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         phone_number,
         birth_date: new Date(birth_date),
+        role_id: 2, // Customer role
         is_verified: false,
       }
     });

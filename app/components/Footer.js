@@ -11,26 +11,6 @@ export default function Footer() {
             <p className="text-slate-400 text-sm leading-relaxed">
               Trải nghiệm du lịch Luxury cùng trí tuệ nhân tạo số 1 Việt Nam. Khám phá những hành trình đáng nhớ.
             </p>
-            <div className="flex gap-3">
-              <a 
-                href="https://www.facebook.com/penixillin/" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                title="Facebook"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12 5.373 12 12 12zm0-10.444c-4.971 0-9 4.029-9 9s4.029 9 9 9-4.971 0-9-4.029-9-9 4.029-9 9-9zm-5.764 14.236l-2.201-2.201c-.413-.413-1.082-.413-1.495 0l-2.611 2.61c-.413.413-.413 1.082 0 1.495l2.201 2.201c.414.414 1.082.414 1.495 0l2.611-2.201c.414-.414.414-1.082 0-1.495l-2.201-2.201zm5.764-14.236l2.201 2.201c.413.413 1.082.413 1.495 0l2.611-2.61c.414-.414.414-1.082 0-1.495l-2.201-2.201c-.413-.413-1.082-.413-1.495 0l-2.611 2.61c-.414.414-.414 1.082 0 1.495l2.201 2.201z"/>
-                </svg>
-              </a>
-              <a 
-                href="/" 
-                className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                title="Website"
-              >
-                <Globe size={18} />
-              </a>
-            </div>
           </div>
 
           {/* Quick Links */}

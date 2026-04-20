@@ -88,18 +88,18 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const accountId = searchParams.get("accountId");
+    const userId = searchParams.get("user_id");
 
-    if (!accountId) {
+    if (!userId) {
       return NextResponse.json(
-        { error: "Thiếu accountId" },
+        { error: "Thiếu user_id" },
         { status: 400 }
       );
     }
 
     const bookings = await prisma.bookings.findMany({
       where: {
-        account_id: parseInt(accountId)
+        account_id: parseInt(userId)
       },
       include: {
         customer: {
@@ -108,7 +108,7 @@ export async function GET(req) {
             phone_number: true
           }
         },
-        tour: {
+        tours: {
           select: {
             title: true,
             location_name: true,
@@ -116,7 +116,6 @@ export async function GET(req) {
           }
         }
       },
-      // FIX TẠI ĐÂY: Thay 'created_at' (ko tồn tại) bằng 'id'
       orderBy: { id: 'desc' }
     });
 
@@ -126,9 +125,9 @@ export async function GET(req) {
         id: booking.id,
         customerName: booking.customer.full_name,
         phone: booking.customer.phone_number,
-        tourTitle: booking.tour.title,
-        location: booking.tour.location_name,
-        tourImage: booking.tour.sub_title,
+        tourTitle: booking.tours.title,
+        location: booking.tours.location_name,
+        tourImage: booking.tours.sub_title,
         amount: Number(booking.total_amount),
         paidAmount: Number(booking.paid_amount),
         startDate: booking.start_date,

@@ -23,8 +23,8 @@ export default async function AdminDashboard() {
     // Tổng số tours
     prisma.tours.count({ where: { is_deleted: false } }),
     
-    // Tổng số users
-    prisma.accounts.count({ where: { is_deleted: false } }),
+    // Tổng số customers
+    prisma.accounts.count({ where: { is_deleted: false, role_id: 2 } }),
     
     // Booking chờ duyệt
     prisma.bookings.count({ where: { is_confirmed: false } }),
@@ -114,7 +114,7 @@ export default async function AdminDashboard() {
           />
           <StatCard 
             icon={<Users size={24} />} 
-            title="Total Users" 
+            title="Total Customers" 
             value={totalUsers}
             subtitle="Accounts" color="bg-blue-500" trend={"+8.2%"}
           />
@@ -210,7 +210,7 @@ export default async function AdminDashboard() {
                       </div>
                       <div className="flex-1">
                         {/* Sửa: booking.customer -> booking.customers */}
-                        <p className="font-bold text-slate-800 text-sm">{booking.customers?.full_name || 'Khách vãng lai'}</p>
+                        <p className="font-bold text-slate-800 text-sm">{booking.customers?.full_name || 'Khách hàng'}</p>
                         {/* Sửa: booking.tour -> booking.tours */}
                         <p className="text-xs text-slate-500">{booking.tours?.title}</p>
                         <div className="mt-1">

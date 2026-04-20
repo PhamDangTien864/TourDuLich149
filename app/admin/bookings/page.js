@@ -17,9 +17,9 @@ export default async function ManageBookings({ searchParams }) {
       where: {
         ...(query && {
           OR: [
-            { customer: { full_name: { contains: query } } },
-            { tour: { title: { contains: query } } },
-            { customer: { phone_number: { contains: query } } }
+            { customers: { full_name: { contains: query } } },
+            { tours: { title: { contains: query } } },
+            { customers: { phone_number: { contains: query } } }
           ]
         }),
         ...(status && {
@@ -27,9 +27,9 @@ export default async function ManageBookings({ searchParams }) {
         })
       },
       include: {
-        customer: { select: { full_name: true, phone_number: true } },
-        tour: { select: { title: true, location_name: true } },
-        account: { select: { full_name: true } }
+        customers: { select: { full_name: true, phone_number: true } },
+        tours: { select: { title: true, location_name: true } },
+        accounts: { select: { full_name: true } }
       },
       orderBy: { start_date: 'desc' },
       skip,
@@ -39,9 +39,9 @@ export default async function ManageBookings({ searchParams }) {
       where: {
         ...(query && {
           OR: [
-            { customer: { full_name: { contains: query } } },
-            { tour: { title: { contains: query } } },
-            { customer: { phone_number: { contains: query } } }
+            { customers: { full_name: { contains: query } } },
+            { tours: { title: { contains: query } } },
+            { customers: { phone_number: { contains: query } } }
           ]
         }),
         ...(status && {
@@ -132,20 +132,20 @@ export default async function ManageBookings({ searchParams }) {
                     <td className="px-6 py-4 text-sm text-slate-900 font-medium">#{booking.id}</td>
                     <td className="px-6 py-4">
                       <div className="space-y-2">
-                        <p className="font-bold text-slate-800">{booking.customer.full_name}</p>
+                        <p className="font-bold text-slate-800">{booking.customers.full_name}</p>
                         <p className="text-sm text-slate-600 flex items-center gap-2">
                           <User size={14} />
-                          {booking.customer.phone_number}
+                          {booking.customers.phone_number}
                         </p>
-                        <p className="text-xs text-blue-600">NV: {booking.account.full_name}</p>
+                        <p className="text-xs text-blue-600">NV: {booking.accounts.full_name}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <p className="font-bold text-slate-800">{booking.tour.title}</p>
+                        <p className="font-bold text-slate-800">{booking.tours.title}</p>
                         <p className="text-sm text-slate-600 flex items-center gap-2">
                           <MapPin size={14} />
-                          {booking.tour.location_name}
+                          {booking.tours.location_name}
                         </p>
                       </div>
                     </td>
@@ -198,12 +198,12 @@ export default async function ManageBookings({ searchParams }) {
                         </Link>
                         <button
                           onClick={() => {
-                            if (confirm(`Xác nhận booking của ${booking.customer.full_name}?`)) {
+                            if (confirm(`Xác nhân booking cua ${booking.customers.full_name}?`)) {
                               // TODO: Add confirm booking API
                             }
                           }}
                           className="bg-green-100 hover:bg-green-200 text-green-600 p-2 rounded-lg transition-colors"
-                          title="Xác nhận booking"
+                          title="Xác nhân booking"
                         >
                           <CheckCircle size={16} />
                         </button>

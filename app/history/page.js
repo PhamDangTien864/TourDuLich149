@@ -16,7 +16,7 @@ export default async function HistoryPage() {
 
   const bookings = await prisma.bookings.findMany({
     where: { account_id: user.id }, // Lấy theo ID người đang đăng nhập
-    include: { tour: true },
+    include: { tours: true },
     orderBy: { start_date: "desc" }
   });
 
