@@ -18,7 +18,7 @@ declare module 'next/server' {
       id: number;
       full_name: string;
       username: string;
-      role: number;
+      role_id: number;
       phone_number: string;
     };
   }
@@ -49,7 +49,7 @@ export async function authenticate(request: NextRequest) {
       id: true,
       full_name: true,
       username: true,
-      role: true,
+      role_id: true,
       phone_number: true
     }
   });
@@ -85,7 +85,7 @@ export function requireRole(allowedRoles: number[]) {
         }, { status: 401 });
       }
 
-      if (!allowedRoles.includes(user.role)) {
+      if (!allowedRoles.includes(user.role_id)) {
         return NextResponse.json({ 
           error: 'Insufficient permissions' 
         }, { status: 403 });

@@ -96,7 +96,7 @@ async function main() {
       full_name: 'Admin User',
       phone_number: '0123456789',
       birth_date: new Date('1990-01-01'),
-      role: 1, // Admin role
+      role_id: 1, // Admin role
       is_deleted: false
     }
   });

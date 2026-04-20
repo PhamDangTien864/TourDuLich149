@@ -119,9 +119,9 @@ export async function POST(req: NextRequest) {
         title: validatedData.title,
         location_name: validatedData.location_name,
         price: BigInt(validatedData.price),
-        category_id: parseInt(validatedData.category_id),
+        category_id: Number(validatedData.category_id),
         description: validatedData.description,
-        sub_title: validatedData.sub_title,
+        sub_title: (validatedData as any).sub_title,
         is_active: true
       }
     });
