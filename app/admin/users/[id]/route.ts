@@ -46,7 +46,7 @@ export async function PATCH(
     }
 
     // Get current user
-    const currentUser = await prisma.account.findUnique({
+    const currentUser = await prisma.accounts.findUnique({
       where: { id: userId }
     });
 
