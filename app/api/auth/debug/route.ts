@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
               id: true,
               username: true,
               full_name: true,
-              role: true,
+              role_id: true,
               is_verified: true,
               is_deleted: true
             }
