@@ -1,13 +1,17 @@
 import { MapPin, Clock } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function TourCard({ tour }) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow border border-gray-100 group">
       <div className="relative h-48 overflow-hidden">
-        <img 
+        <Image 
           src={tour.image_url || "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=500"} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          fill
+          sizes="(max-width: 400px)"
+          alt={tour.title}
         />
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-blue-600 font-bold text-sm">
           {Number(tour.price).toLocaleString('vi-VN')}đ

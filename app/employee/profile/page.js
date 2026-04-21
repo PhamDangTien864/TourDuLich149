@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, MapPin, Phone, Calendar, LogOut, Package, History, Users } from 'lucide-react';
+import Link from 'next/link';
 import Header from "../../components/Header";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -13,45 +14,37 @@ export default function EmployeeProfile() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('auth_token');
-      const userData = localStorage.getItem('user_data');
-      
-      if (!token || !userData) {
-        router.push('/login');
-        return;
+  const loadUserBookings = async (userId) => {
+    try {
+      const res = await fetch(`/api/bookings?accountId=${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data);
       }
+    } catch (error) {
+      console.error('Error loading bookings:', error);
+    }
+  };
 
+  const checkAuth = () => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
       try {
         const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        loadUserBookings(parsedUser.id);
+        setTimeout(function() { setUser(parsedUser) }, 0);
+        setTimeout(function() { loadUserBookings(parsedUser.id) }, 0);
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user_data');
         setUser(null);
       }
-    };
-
-    checkAuth();
-  }, [router]);
-
-  const loadUserBookings = async (userId) => {
-    try {
-      const res = await fetch(`/api/bookings?accountId=${userId}`);
-      const data = await res.json();
-      
-      if (data.success) {
-        setBookings(data.bookings);
-      }
-    } catch (error) {
-      console.error('Error loading bookings:', error);
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    checkAuth();
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('auth_token');
@@ -212,7 +205,7 @@ export default function EmployeeProfile() {
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
           className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          <a 
+          <Link 
             href="/search"
             className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all group"
           >
@@ -221,9 +214,9 @@ export default function EmployeeProfile() {
               <h3 className="text-lg font-black text-slate-800">Tìm tour mới</h3>
             </div>
             <p className="text-slate-600 text-sm">Tìm kiếm các tour có sẵn</p>
-          </a>
+          </Link>
 
-          <a 
+          <Link 
             href="/history"
             className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all group"
           >
@@ -232,9 +225,9 @@ export default function EmployeeProfile() {
               <h3 className="text-lg font-black text-slate-800">Lịch sử</h3>
             </div>
             <p className="text-slate-600 text-sm">Xem tất cả đặt tour</p>
-          </a>
+          </Link>
 
-          <a 
+          <Link 
             href="/"
             className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all group"
           >
@@ -243,7 +236,7 @@ export default function EmployeeProfile() {
               <h3 className="text-lg font-black text-slate-800">Trang chủ</h3>
             </div>
             <p className="text-slate-600 text-sm">Quay lại trang chính</p>
-          </a>
+          </Link>
         </motion.div>
       </main>
     </div>

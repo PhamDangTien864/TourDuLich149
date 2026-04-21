@@ -5,20 +5,13 @@ import {
   LayoutDashboard, 
   Users, 
   MapPin, 
-  Calendar, 
-  Package, 
   Settings, 
   LogOut,
   Menu,
   X,
   Home,
-  FileText,
-  TrendingUp,
-  DollarSign,
-  Star,
   BarChart3,
-  UserCheck,
-  ShieldAlert
+  Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,15 +19,6 @@ import { usePathname } from 'next/navigation';
 export default function AdminSidebar({ isOpen, onClose }) {
   const pathname = usePathname();
   const [activeItem, setActiveItem] = useState('dashboard');
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  // Auto-detect active item based on pathname
-  useEffect(() => {
-    const currentItem = menuItems.find(item => pathname === item.href);
-    if (currentItem) {
-      setActiveItem(currentItem.id);
-    }
-  }, [pathname]);
 
   const menuItems = [
     {
@@ -74,6 +58,14 @@ export default function AdminSidebar({ isOpen, onClose }) {
       href: '/admin/settings'
     }
   ];
+
+  // Auto-detect active item based on pathname
+  useEffect(() => {
+    const currentItem = menuItems.find(item => pathname === item.href);
+    if (currentItem) {
+      setTimeout(function() { setActiveItem(currentItem.id) }, 0);
+    }
+  }, [pathname, menuItems]);
 
   return (
     <>

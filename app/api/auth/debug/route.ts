@@ -3,24 +3,25 @@ import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // 1. Kiêm tra token trong cookies
     const cookieStore = await cookies();
     const token = cookieStore.get('auth_token')?.value;
     
-    let debugInfo: {
-      hasToken: boolean;
-      tokenPreview: string | null;
-      decodedToken: any;
-      dbUser: any;
-      error: string | null;
-    } = {
+    let debugInfo = {
       hasToken: !!token,
       tokenPreview: token ? `${token.substring(0, 20)}...` : null,
-      decodedToken: null,
-      dbUser: null,
-      error: null
+      decodedToken: null as { id?: number; username?: string; role_id?: number } | null,
+      dbUser: null as {
+        id?: number;
+        username?: string;
+        full_name?: string;
+        role_id?: number;
+        is_verified?: boolean;
+        is_deleted?: boolean;
+      } | null,
+      error: null as string | null
     };
 
     // 2. Giai ma token

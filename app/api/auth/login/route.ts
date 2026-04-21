@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     if (!user) {
       console.log('ERROR: User not found for username:', username);
       return NextResponse.json({ 
-        error: "Tài khoàn không tôgn ta! Vui lòng kiêm tra lai tên tài khoàn hoac dang ky tài khoàn moi." 
+        error: "Sai tài khoản hoặc mật khẩu!" 
       }, { status: 401 });
     }
 
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     if (!isPasswordValid) {
       console.log('ERROR: Invalid password for username:', username);
       return NextResponse.json({ 
-        error: "Mât khâu không chính xác! Vui lòng kiêm tra lai mâât khâu hoac su dung chúc nang quên mâât khâu." 
+        error: "Sai tài khoản hoặc mật khẩu!" 
       }, { status: 401 });
     }
 
@@ -87,10 +87,10 @@ export async function POST(req: NextRequest) {
       clientToken: token 
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("LOGIN_ERROR:", error);
     // Neu loi do Zod
-    if (error.name === 'ZodError') {
+    if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json({ error: "Dinh dang tai khoan/mat khau chua dung chuan!" }, { status: 400 });
     }
     return NextResponse.json({ error: "Loi he thong (500)" }, { status: 500 });

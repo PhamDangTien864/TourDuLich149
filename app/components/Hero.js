@@ -1,11 +1,16 @@
+import Image from 'next/image';
+
 export default function Hero() {
   return (
     <section className="relative h-[500px] flex items-center justify-center text-white">
       <div className="absolute inset-0 bg-black/40 z-10"></div>
-      <img 
+      <Image 
         src="https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=1600" 
         className="absolute inset-0 w-full h-full object-cover" 
         alt="Vietnam Travel"
+        fill
+        priority
+        sizes="100vw"
       />
       <div className="relative z-20 text-center px-4">
         <h1 className="text-5xl font-extrabold mb-4 shadow-sm">Website Đặt Tour Du Lịch</h1>

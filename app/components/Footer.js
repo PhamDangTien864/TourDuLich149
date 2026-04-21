@@ -1,4 +1,5 @@
-import { Mail, Phone, MapPin, Globe } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -17,10 +18,10 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="text-lg font-black text-white">Liên kết nhanh</h4>
             <ul className="space-y-2 text-slate-400 text-sm">
-              <li><a href="/" className="hover:text-blue-400 transition-colors">Trang chủ</a></li>
-              <li><a href="/search" className="hover:text-blue-400 transition-colors">Tìm tour</a></li>
-              <li><a href="/history" className="hover:text-blue-400 transition-colors">Lịch sử đặt tour</a></li>
-              <li><a href="/login" className="hover:text-blue-400 transition-colors">Đăng nhập</a></li>
+              <li><Link href="/" className="hover:text-blue-400 transition-colors">Trang chủ</Link></li>
+              <li><Link href="/search" className="hover:text-blue-400 transition-colors">Tìm tour</Link></li>
+              <li><Link href="/history" className="hover:text-blue-400 transition-colors">Lịch sử đặt tour</Link></li>
+              <li><Link href="/login" className="hover:text-blue-400 transition-colors">Đăng nhập</Link></li>
             </ul>
           </div>
 
@@ -28,10 +29,10 @@ export default function Footer() {
           <div className="space-y-4">
             <h4 className="text-lg font-black text-white">Điểm đến nổi bật</h4>
             <ul className="space-y-2 text-slate-400 text-sm">
-              <li><a href="/search?q=Đà Nẵng" className="hover:text-blue-400 transition-colors">Tour Đà Nẵng</a></li>
-              <li><a href="/search?q=Phú Quốc" className="hover:text-blue-400 transition-colors">Tour Phú Quốc</a></li>
-              <li><a href="/search?q=Hà Nội" className="hover:text-blue-400 transition-colors">Tour Hà Nội</a></li>
-              <li><a href="/search?q=TP.HCM" className="hover:text-blue-400 transition-colors">Tour TP.HCM</a></li>
+              <li><Link href="/search?q=Đà Nẵng" className="hover:text-blue-400 transition-colors">Tour Đà Nẵng</Link></li>
+              <li><Link href="/search?q=Phú Quốc" className="hover:text-blue-400 transition-colors">Tour Phú Quốc</Link></li>
+              <li><Link href="/search?q=Hà Nội" className="hover:text-blue-400 transition-colors">Tour Hà Nội</Link></li>
+              <li><Link href="/search?q=TP.HCM" className="hover:text-blue-400 transition-colors">Tour TP.HCM</Link></li>
             </ul>
           </div>
 

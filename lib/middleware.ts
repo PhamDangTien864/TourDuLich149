@@ -4,11 +4,9 @@ import { prisma } from '@/lib/prisma';
 
 // Extend NextRequest interface to include user property
 declare global {
-  namespace NodeJS {
-    interface ProcessEnv {
-      JWT_SECRET?: string;
-      NEXT_PUBLIC_BASE_URL?: string;
-    }
+  interface ProcessEnv {
+    JWT_SECRET?: string;
+    NEXT_PUBLIC_BASE_URL?: string;
   }
 }
 
@@ -57,8 +55,8 @@ export async function authenticate(request: NextRequest) {
   return user;
 }
 
-export function requireAuth(handler: Function) {
-  return async (request: NextRequest, ...args: any[]) => {
+export function requireAuth(handler: (request: NextRequest, ...args: unknown[]) => Promise<NextResponse>) {
+  return async (request: NextRequest, ...args: unknown[]) => {
     const user = await authenticate(request);
     
     if (!user) {
@@ -75,8 +73,8 @@ export function requireAuth(handler: Function) {
 }
 
 export function requireRole(allowedRoles: number[]) {
-  return (handler: Function) => {
-    return async (request: NextRequest, ...args: any[]) => {
+  return (handler: (request: NextRequest, ...args: unknown[]) => Promise<NextResponse>) => {
+    return async (request: NextRequest, ...args: unknown[]) => {
       const user = await authenticate(request);
       
       if (!user) {

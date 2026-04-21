@@ -4,8 +4,7 @@ import { authenticate } from '@/lib/middleware';
 import { reviewSchema } from '@/lib/validations';
 import type { Review } from '@/types/prisma';
 
-// Temporary type assertion until Prisma client is generated
-const prismaTyped = prisma as any;
+const prismaTyped = prisma;
 
 // GET all reviews for a tour
 export async function GET(req: NextRequest) {
@@ -23,7 +22,7 @@ export async function GET(req: NextRequest) {
         is_deleted: false
       },
       include: {
-        account: {
+        accounts: {
           select: {
             id: true,
             full_name: true
@@ -37,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     // Calculate average rating
     const avgRating = reviews.length > 0 
-      ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length 
+      ? reviews.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0) / reviews.length 
       : 0;
 
     return NextResponse.json({
@@ -75,12 +74,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    if (existingReview) {
-      return NextResponse.json({ 
-        error: 'You have already reviewed this tour' 
-      }, { status: 400 });
-    }
-
     // Create review
     const review = await prismaTyped.reviews.create({
       data: {
@@ -90,7 +83,7 @@ export async function POST(req: NextRequest) {
         comment
       },
       include: {
-        account: {
+        accounts: {
           select: {
             id: true,
             full_name: true

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { CheckCircle, Loader2, Phone, User, CreditCard } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { CheckCircle, Loader2, Phone, User, CreditCard, Mail } from "lucide-react";
 import PaymentQR from "./PaymentQR";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,10 +10,42 @@ export default function BookingForm({ amount, tourId }) {
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   const [loading, setLoading] = useState(false);
   const [bookingId, setBookingId] = useState(null);
   const [confirming, setConfirming] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const fetchCustomerDetails = async (userId) => {
+    try {
+      const res = await fetch(`/api/customers/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPhone(data.phone_number || '');
+        setEmail(data.email || '');
+        setBirthDate(data.birth_date ? data.birth_date.split('T')[0] : '');
+      }
+    } catch (error) {
+      console.error('Failed to fetch customer details:', error);
+    }
+  };
+
+  // Lấy thông tin khách hàng đã đăng nhập
+  useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setCustomerName(user.name || '');
+        // Lấy thông tin chi tiết hơn từ API nếu cần
+        fetchCustomerDetails(user.id);
+        setIsLoggedIn(true);
+      } catch (e) {
+        console.error("Lỗi khi đọc dữ liệu user:", e);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,30 +105,66 @@ export default function BookingForm({ amount, tourId }) {
             className="space-y-5"
           >
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Thông tin liên lạc</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">
+                {isLoggedIn ? 'Xác nhận thông tin' : 'Thông tin liên lạc'}
+              </label>
+              
+              {isLoggedIn && (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4 mb-4">
+                  <p className="text-blue-300 text-sm font-medium flex items-center gap-2">
+                    <CheckCircle size={16} className="text-blue-400" />
+                    Đã đăng nhập với tài khoản: {email}
+                  </p>
+                </div>
+              )}
+              
               <div className="relative">
                 <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                 <input 
                   type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Họ và tên của bạn" 
-                  className="w-full bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white" 
+                  className={`w-full bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white ${
+                    isLoggedIn ? 'bg-blue-500/5 border-blue-500/30' : ''
+                  }`}
                 />
               </div>
+              
               <div className="relative">
                 <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                 <input 
                   type="text" value={phone} onChange={(e) => setPhone(e.target.value)}
                   placeholder="Số điện thoại" 
-                  className="w-full bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white" 
+                  className={`w-full bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white ${
+                    isLoggedIn ? 'bg-blue-500/5 border-blue-500/30' : ''
+                  }`}
                 />
               </div>
+              
               <div className="relative">
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                 <input 
                   type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email (nhận thông báo)" 
-                  className="w-full bg-white/5 border border-white/10 rounded-[24px] px-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white" 
+                  className={`w-full bg-white/5 border border-white/10 rounded-[24px] pl-14 pr-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white ${
+                    isLoggedIn ? 'bg-blue-500/5 border-blue-500/30' : ''
+                  }`}
                 />
               </div>
+              
+              {birthDate && (
+                <div className="relative">
+                  <input 
+                    type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-[24px] px-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white bg-blue-500/5 border-blue-500/30"
+                  />
+                </div>
+              )}
+              
+              {isLoggedIn && (
+                <p className="text-blue-300 text-xs font-medium ml-2 mt-2">
+                  ℹ️ Bạn có thể chỉnh sửa thông tin nếu cần thay đổi
+                </p>
+              )}
             </div>
 
             <button 

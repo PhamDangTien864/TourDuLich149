@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { ImagePlus, Loader2, X } from "lucide-react";
+import Image from 'next/image';
 
 export default function ImageUpload({ onUploadSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,7 @@ export default function ImageUpload({ onUploadSuccess }) {
       <div className="relative w-full h-64 border-4 border-dashed border-slate-100 rounded-[40px] flex items-center justify-center overflow-hidden bg-slate-50 group transition-all hover:border-blue-200">
         {preview ? (
           <>
-            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+            <Image src={preview} alt="Preview" className="w-full h-full object-cover" fill sizes="(max-width: 640px)" />
             <button 
               onClick={() => { setPreview(""); onUploadSuccess(""); }}
               className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"

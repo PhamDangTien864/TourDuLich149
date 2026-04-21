@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import AdminLayout from "../components/AdminLayout";
-import { Calendar, DollarSign, User, MapPin, CheckCircle, XCircle, Search, Filter, Eye, Download } from "lucide-react";
+import { User, MapPin, Search, Filter, Eye, Download } from "lucide-react";
 import Link from "next/link";
 
 export default async function ManageBookings({ searchParams }) {

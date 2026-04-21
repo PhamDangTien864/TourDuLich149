@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import AdminLayout from "../components/AdminLayout";
-import { BarChart3, TrendingUp, Users, DollarSign, Calendar, MapPin, Star } from "lucide-react";
+import { TrendingUp, Users, DollarSign, MapPin, Star, Calendar } from "lucide-react";
 
 export default async function AnalyticsPage() {
   // Lấy thống kê chi tiết

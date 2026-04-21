@@ -25,11 +25,11 @@ export default function WishlistPage() {
       }
       
       // Lây wishlist
-      fetchWishlist(parsedUser.id);
+      setTimeout(function() { fetchWishlist(parsedUser.id) }, 0);
     } else {
       router.push('/login');
     }
-  }, []);
+  }, [router]);
 
   const fetchWishlist = async (userId) => {
     try {

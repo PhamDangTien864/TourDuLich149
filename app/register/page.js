@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { User, Phone, Mail, Lock, Calendar, Loader2, ArrowRight, CheckCircle, AtSign } from "lucide-react";
+import { User, Phone, Mail, Lock, Calendar, Loader2, ArrowRight, CheckCircle, AtSign, Eye, EyeOff, Check, X } from "lucide-react";
 import Link from "next/link";
 import Header from "../components/Header";
 import { toast } from "react-hot-toast";
@@ -13,15 +12,124 @@ export default function RegisterPage() {
     full_name: '',
     phone_number: '',
     username: '',
-    email: '', // THÊM TRƯỜNG NÀY
+    email: '', 
     password: '',
     birth_date: ''
   });
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Validation functions
+  const validateField = (name, value) => {
+    const newErrors = { ...errors };
+    
+    switch (name) {
+      case 'full_name':
+        if (!value || value.trim().length < 2) {
+          newErrors.full_name = 'Họ tên phải từ 2 ký tự';
+        } else if (value.length > 100) {
+          newErrors.full_name = 'Họ tên quá dài';
+        } else {
+          delete newErrors.full_name;
+        }
+        break;
+        
+      case 'phone_number':
+        const phoneRegex = /^[0-9]{10,11}$/;
+        if (!value) {
+          newErrors.phone_number = 'Vui lòng nhập số điện thoại';
+        } else if (!phoneRegex.test(value)) {
+          newErrors.phone_number = 'Số điện thoại phải từ 10-11 số';
+        } else {
+          delete newErrors.phone_number;
+        }
+        break;
+        
+      case 'username':
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+        if (!value || value.length < 3) {
+          newErrors.username = 'Username phải từ 3 ký tự';
+        } else if (value.length > 50) {
+          newErrors.username = 'Username tối đa 50 ký tự';
+        } else if (!usernameRegex.test(value)) {
+          newErrors.username = 'Username không được chứa ký tự đặc biệt';
+        } else {
+          delete newErrors.username;
+        }
+        break;
+        
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value) {
+          newErrors.email = 'Vui lòng nhập email';
+        } else if (!emailRegex.test(value)) {
+          newErrors.email = 'Email không đúng định dạng (ví dụ: customer@gmail.com)';
+        } else {
+          delete newErrors.email;
+        }
+        break;
+        
+      case 'password':
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+        if (!value || value.length < 8) {
+          newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+        } else if (!passwordRegex.test(value)) {
+          newErrors.password = 'Mật khẩu phải có chữ hoa, chữ thường và số';
+        } else {
+          delete newErrors.password;
+        }
+        break;
+        
+      case 'birth_date':
+        if (!value) {
+          newErrors.birth_date = 'Vui lòng chọn ngày sinh';
+        } else {
+          const birthDate = new Date(value);
+          if (isNaN(birthDate.getTime())) {
+            newErrors.birth_date = 'Ngày sinh không hợp lệ';
+          } else {
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+            }
+            
+            if (age < 16) {
+              newErrors.birth_date = 'Bạn phải đủ 16 tuổi mới được đăng ký';
+            } else {
+              delete newErrors.birth_date;
+            }
+          }
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+  };
+
+  const handleInputChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
+    validateField(name, value);
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
+    
+    // Validate all fields before submission
+    Object.keys(formData).forEach(key => {
+      validateField(key, formData[key]);
+    });
+    
+    // Check if there are any errors
+    if (Object.keys(errors).length > 0) {
+      toast.error('Vui lòng sửa các lỗi trước khi đăng ký');
+      return;
+    }
+    
     setLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
@@ -50,7 +158,7 @@ export default function RegisterPage() {
           toast.error(data.error || "Đăng ký thất bại!");
         }
       }
-    } catch (error) {
+    } catch {
       toast.error("Không thể kết nối đến server!");
     } finally {
       setLoading(false);
@@ -78,8 +186,20 @@ export default function RegisterPage() {
                     <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Họ và tên</label>
                     <div className="relative group">
                       <User className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={18} />
-                      <input type="text" required value={formData.full_name} onChange={(e) => setFormData({...formData, full_name: e.target.value})} placeholder="Họ tên của ní" className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[24px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" />
+                      <input 
+                        type="text" 
+                        required 
+                        value={formData.full_name} 
+                        onChange={(e) => handleInputChange('full_name', e.target.value)} 
+                        placeholder="Họ tên của ní" 
+                        className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                          errors.full_name ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                        }`} 
+                      />
                     </div>
+                    {errors.full_name && (
+                      <p className="text-red-500 text-xs font-medium ml-4">{errors.full_name}</p>
+                    )}
                   </div>
 
                   {/* Số điện thoại */}
@@ -87,8 +207,20 @@ export default function RegisterPage() {
                     <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Số điện thoại</label>
                     <div className="relative group">
                       <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={18} />
-                      <input type="tel" required value={formData.phone_number} onChange={(e) => setFormData({...formData, phone_number: e.target.value})} placeholder="09xxx" className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[24px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" />
+                      <input 
+                        type="tel" 
+                        required 
+                        value={formData.phone_number} 
+                        onChange={(e) => handleInputChange('phone_number', e.target.value)} 
+                        placeholder="09xxx" 
+                        className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                          errors.phone_number ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                        }`} 
+                      />
                     </div>
+                    {errors.phone_number && (
+                      <p className="text-red-500 text-xs font-medium ml-4">{errors.phone_number}</p>
+                    )}
                   </div>
 
                   {/* Username - Dùng AtSign cho lạ */}
@@ -96,8 +228,20 @@ export default function RegisterPage() {
                     <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Username</label>
                     <div className="relative group">
                       <AtSign className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={18} />
-                      <input type="text" required value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} placeholder="tên_đăng_nhập" className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[24px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" />
+                      <input 
+                        type="text" 
+                        required 
+                        value={formData.username} 
+                        onChange={(e) => handleInputChange('username', e.target.value)} 
+                        placeholder="tên_đăng_nhập" 
+                        className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                          errors.username ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                        }`} 
+                      />
                     </div>
+                    {errors.username && (
+                      <p className="text-red-500 text-xs font-medium ml-4">{errors.username}</p>
+                    )}
                   </div>
 
                   {/* Email - Ô NHẬP RIÊNG BIỆT */}
@@ -105,8 +249,20 @@ export default function RegisterPage() {
                     <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Địa chỉ Email</label>
                     <div className="relative group">
                       <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={18} />
-                      <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="ví dụ: ni@gmail.com" className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[24px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" />
+                      <input 
+                        type="email" 
+                        required 
+                        value={formData.email} 
+                        onChange={(e) => handleInputChange('email', e.target.value)} 
+                        placeholder="ví dụ: ni@gmail.com" 
+                        className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                          errors.email ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                        }`} 
+                      />
                     </div>
+                    {errors.email && (
+                      <p className="text-red-500 text-xs font-medium ml-4">{errors.email}</p>
+                    )}
                   </div>
 
                   {/* Ngày sinh */}
@@ -114,8 +270,19 @@ export default function RegisterPage() {
                     <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Ngày sinh</label>
                     <div className="relative group">
                       <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={18} />
-                      <input type="date" required value={formData.birth_date} onChange={(e) => setFormData({...formData, birth_date: e.target.value})} className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[24px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" />
+                      <input 
+                        type="date" 
+                        required 
+                        value={formData.birth_date} 
+                        onChange={(e) => handleInputChange('birth_date', e.target.value)} 
+                        className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                          errors.birth_date ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                        }`} 
+                      />
                     </div>
+                    {errors.birth_date && (
+                      <p className="text-red-500 text-xs font-medium ml-4">{errors.birth_date}</p>
+                    )}
                   </div>
 
                   {/* Mật khẩu */}
@@ -123,7 +290,49 @@ export default function RegisterPage() {
                     <label className="text-[10px] font-black text-slate-400 ml-4 uppercase tracking-widest">Mật khẩu</label>
                     <div className="relative group">
                       <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={18} />
-                      <input type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} placeholder="••••••••" className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[24px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" />
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        required value={formData.password} 
+                        onChange={(e) => handleInputChange('password', e.target.value)} 
+                        placeholder="••••••••" 
+                        className={`w-full pl-14 pr-16 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                          errors.password ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                        }`} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600 transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-red-500 text-xs font-medium ml-4">{errors.password}</p>
+                    )}
+                    
+                    {/* Password requirements hints */}
+                    <div className="ml-4 mt-2 space-y-1">
+                      <div className="flex items-center gap-2 text-xs">
+                        {formData.password && formData.password.length >= 8 ? (
+                          <Check className="w-3 h-3 text-green-500" />
+                        ) : (
+                          <X className="w-3 h-3 text-gray-400" />
+                        )}
+                        <span className={formData.password && formData.password.length >= 8 ? "text-green-600" : "text-gray-500"}>
+                          Mật khẩu phải ít nhất 8 ký tự
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        {formData.password && /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(formData.password) ? (
+                          <Check className="w-3 h-3 text-green-500" />
+                        ) : (
+                          <X className="w-3 h-3 text-gray-400" />
+                        )}
+                        <span className={formData.password && /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(formData.password) ? "text-green-600" : "text-gray-500"}>
+                          Chứa chữ hoa, chữ thường, số
+                        </span>
+                      </div>
                     </div>
                   </div>
 

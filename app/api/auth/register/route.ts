@@ -16,21 +16,29 @@ export async function POST(req: NextRequest) {
     
     console.log('Validated data:', { username, email, full_name });
 
-    // 1. Check trùng Username hoặc Email
+    // 1. Check trùng Username, Email, hoặc Phone number
     const existing = await prisma.accounts.findFirst({
       where: {
         OR: [
           { username: username },
-          { email: email }
+          { email: email },
+          { phone_number: phone_number }
         ]
       }
     });
 
     if (existing) {
-      const field = existing.username === username ? "Username" : "Email";
-      const message = existing.username === username 
-        ? "Tên tài khoàn này déjà été utilisé! Vui lòng chon tên tài khoàn khác."
-        : "Email này déjà été utilisé! Vui lòng su dung email khác hoac kiêm tra lai email.";
+      let field, message;
+      if (existing.username === username) {
+        field = "Username";
+        message = "Tên tài khoản này đã được sử dụng! Vui lòng chọn tên tài khoản khác.";
+      } else if (existing.email === email) {
+        field = "Email";
+        message = "Email này đã được sử dụng! Vui lòng sử dụng email khác hoặc kiểm tra lại email.";
+      } else {
+        field = "Số điện thoại";
+        message = "Số điện thoại này đã được sử dụng! Vui lòng sử dụng số điện thoại khác.";
+      }
       console.log(`Conflict: ${field} already exists`);
       return NextResponse.json({ error: message }, { status: 400 });
     }
@@ -102,7 +110,13 @@ export async function POST(req: NextRequest) {
     console.error('Register API error:', error);
     
     if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json({ error: "Data không hợp lệ!", details: error.message }, { status: 400 });
+      let parsedErrors;
+      try {
+        parsedErrors = JSON.parse(error.message);
+      } catch (e) {
+        parsedErrors = error.message;
+      }
+      return NextResponse.json({ error: "Data không hợp lệ!", details: parsedErrors }, { status: 400 });
     }
     
     return NextResponse.json({ error: "Lỗi hệ thống!", details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });

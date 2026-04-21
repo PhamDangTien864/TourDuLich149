@@ -4,7 +4,7 @@ interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
-  context?: any;
+  context?: Record<string, unknown>;
   userId?: number;
   requestId?: string;
 }
@@ -21,7 +21,7 @@ class Logger {
     return `[${timestamp}] ${level.toUpperCase()}: ${message}${contextStr}${userStr}${requestStr}`;
   }
 
-  private log(level: LogLevel, message: string, context?: any, userId?: number, requestId?: string) {
+  private log(level: LogLevel, message: string, context?: Record<string, unknown>, userId?: number, requestId?: string) {
     const entry: LogEntry = {
       level,
       message,
@@ -55,24 +55,24 @@ class Logger {
     }
   }
 
-  info(message: string, context?: any, userId?: number, requestId?: string) {
+  info(message: string, context?: Record<string, unknown>, userId?: number, requestId?: string) {
     this.log('info', message, context, userId, requestId);
   }
 
-  warn(message: string, context?: any, userId?: number, requestId?: string) {
+  warn(message: string, context?: Record<string, unknown>, userId?: number, requestId?: string) {
     this.log('warn', message, context, userId, requestId);
   }
 
-  error(message: string, context?: any, userId?: number, requestId?: string) {
+  error(message: string, context?: Record<string, unknown>, userId?: number, requestId?: string) {
     this.log('error', message, context, userId, requestId);
   }
 
-  debug(message: string, context?: any, userId?: number, requestId?: string) {
+  debug(message: string, context?: Record<string, unknown>, userId?: number, requestId?: string) {
     this.log('debug', message, context, userId, requestId);
   }
 
   // API specific logging methods
-  apiError(method: string, endpoint: string, error: any, userId?: number) {
+  apiError(method: string, endpoint: string, error: Error, userId?: number) {
     this.error(`API Error: ${method} ${endpoint}`, {
       error: error.message,
       stack: error.stack,
@@ -85,7 +85,7 @@ class Logger {
     this.info(`API Request: ${method} ${endpoint}`, { method, endpoint }, userId);
   }
 
-  authEvent(event: string, userId?: number, context?: any) {
+  authEvent(event: string, userId?: number, context?: Record<string, unknown>) {
     this.info(`Auth Event: ${event}`, context, userId);
   }
 

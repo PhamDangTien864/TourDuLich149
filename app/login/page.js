@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { User, Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Header from "../components/Header";
 import { toast } from "react-hot-toast";
@@ -11,12 +11,59 @@ import { motion } from "framer-motion";
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Validation functions
+  const validateField = (name, value) => {
+    const newErrors = { ...errors };
+    
+    switch (name) {
+      case 'username':
+        if (!value || value.trim().length < 3) {
+          newErrors.username = 'Username phải từ 3 ký tự';
+        } else if (value.length > 50) {
+          newErrors.username = 'Username tối đa 50 ký tự';
+        } else {
+          delete newErrors.username;
+        }
+        break;
+        
+      case 'password':
+        if (!value || value.length < 6) {
+          newErrors.password = 'Mật khẩu phải từ 6 ký tự';
+        } else {
+          delete newErrors.password;
+        }
+        break;
+    }
+    
+    setErrors(newErrors);
+  };
+
+  const handleInputChange = (name, value) => {
+    if (name === 'username') {
+      setUsername(value);
+    } else if (name === 'password') {
+      setPassword(value);
+    }
+    validateField(name, value);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!username || !password) return toast.error("Nhập tài khoản và mật khẩu!");
+    
+    // Validate all fields before submission
+    validateField('username', username);
+    validateField('password', password);
+    
+    // Check if there are any errors
+    if (Object.keys(errors).length > 0 || !username || !password) {
+      toast.error('Vui lòng sửa các lỗi trước khi đăng nhập');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -89,11 +136,16 @@ export default function LoginPage() {
               <div className="relative group">
                 <User className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={20} />
                 <input 
-                  type="text" required value={username} onChange={(e) => setUsername(e.target.value)}
+                  type="text" required value={username} onChange={(e) => handleInputChange('username', e.target.value)}
                   placeholder="Username" 
-                  className="w-full pl-16 pr-8 py-5 bg-slate-50 border-2 border-transparent rounded-[28px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" 
+                  className={`w-full pl-16 pr-8 py-5 border-2 rounded-[28px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                    errors.username ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                  }`} 
                 />
               </div>
+              {errors.username && (
+                <p className="text-red-500 text-xs font-medium ml-4">{errors.username}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -101,11 +153,23 @@ export default function LoginPage() {
               <div className="relative group">
                 <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors" size={20} />
                 <input 
-                  type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? "text" : "password"} required value={password} onChange={(e) => handleInputChange('password', e.target.value)}
                   placeholder=".........." 
-                  className="w-full pl-16 pr-8 py-5 bg-slate-50 border-2 border-transparent rounded-[28px] focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800" 
+                  className={`w-full pl-16 pr-16 py-5 border-2 rounded-[28px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
+                    errors.password ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
+                  }`} 
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
+              {errors.password && (
+                <p className="text-red-500 text-xs font-medium ml-4">{errors.password}</p>
+              )}
             </div>
 
             <button 

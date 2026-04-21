@@ -32,7 +32,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Build where clause for filtering
-    const where: any = {
+    const where: {
+      is_active: boolean;
+      is_deleted: boolean;
+      category_id?: number;
+      location_name?: { contains: string; mode: 'insensitive' };
+      price?: { gte?: bigint; lte?: bigint };
+    } = {
       is_active: true,
       is_deleted: false
     };
@@ -60,7 +66,7 @@ export async function GET(req: NextRequest) {
     // Get tours with pagination
     const tours = await prisma.tours.findMany({
       where,
-      include: {
+      include: { // Fix: changed 'includes' to 'include'
         category: {
           select: {
             id: true,
@@ -76,7 +82,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Format response
-    const toursFormatted = tours.map(tour => ({
+    const toursFormatted = tours.map((tour) => ({
       ...tour,
       price: tour.price.toString(),
       averageRating: 0, // TODO: Calculate from reviews table
@@ -97,14 +103,11 @@ export async function GET(req: NextRequest) {
     // Cache the result for 5 minutes
     cache.set(cacheKey, response, 5 * 60 * 1000);
 
-    logger.info(`Tours retrieved in ${Date.now() - startTime}ms`, { 
-      count: tours.length, 
-      cacheKey 
-    }, undefined, requestId);
+    logger.info(`Tours retrieved in ${Date.now() - startTime}ms`, { count: tours.length, cacheKey }, undefined, requestId);
 
     return NextResponse.json(response);
-  } catch (error) {
-    logger.apiError('GET', '/api/tours', error, undefined);
+  } catch (error: unknown) {
+    logger.apiError('GET', '/api/tours', error instanceof Error ? error : new Error(String(error)), undefined);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

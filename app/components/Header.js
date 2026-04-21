@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, User, LogOut, ShieldCheck, Briefcase } from "lucide-react";
+import { Search, User, LogOut, ShieldCheck } from "lucide-react";
 
 export default function Header() {
   const [user, setUser] = useState(null);
@@ -11,13 +11,27 @@ export default function Header() {
 
   useEffect(() => {
     const userData = localStorage.getItem('user_data');
-    if (userData) setUser(JSON.parse(userData));
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (e) {
+        console.error("Lỗi parse user_data:", e);
+      }
+    }
   }, []);
 
   useEffect(() => {
     const handleStorageChange = () => {
       const userData = localStorage.getItem('user_data');
-      setUser(userData ? JSON.parse(userData) : null);
+      if (userData) {
+        try {
+          setUser(JSON.parse(userData));
+        } catch (e) {
+          console.error("Lỗi parse user_data:", e);
+        }
+      } else {
+        setUser(null);
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(req, { params }) {
-  const { id } = params;
+  const { id } = await params;
   await prisma.tours.update({
     where: { id: parseInt(id) },
     data: { is_deleted: true }
@@ -11,8 +11,9 @@ export async function DELETE(req, { params }) {
 
 export async function PATCH(req, { params }) {
   const body = await req.json();
+  const { id } = await params;
   const updated = await prisma.tours.update({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(id) },
     data: body
   });
   return Response.json(updated);

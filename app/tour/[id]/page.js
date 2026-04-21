@@ -4,6 +4,7 @@ import Footer from "../../components/Footer";
 import BookingForm from "../../components/BookingForm";
 import { MapPin, Info, CheckCircle2, Globe, Star, ShieldCheck } from "lucide-react";
 import { notFound } from "next/navigation";
+import Image from 'next/image';
 
 // SEO Mượt mà: Tự động đổi tiêu đề trang theo tên Tour
 export async function generateMetadata({ params }) {
@@ -71,10 +72,12 @@ export default async function TourDetailPage({ params }) {
 
             {/* Ảnh Tour - Sử dụng sub_title để chứa link ảnh */}
             <div className="rounded-[48px] overflow-hidden h-[400px] md:h-[650px] shadow-2xl">
-              <img 
+              <Image 
                 src={tour.sub_title || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200"} 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" 
-                alt={tour.title} 
+                alt={tour.title}
+                fill
+                sizes="(max-width: 1200px)"
               />
             </div>
 

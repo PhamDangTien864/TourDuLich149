@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import AdminLayout from "./components/AdminLayout";
 import { 
   Users, Map, TicketCheck, ShieldAlert, 
-  BarChart3, TrendingUp, DollarSign, Calendar,
+  BarChart3, TrendingUp, DollarSign,
   Activity, Ticket, Plus, UserPlus
 } from "lucide-react";
 import Link from "next/link";
@@ -16,8 +16,6 @@ export default async function AdminDashboard() {
     recentBookings,
     totalRevenue,
     monthlyRevenue,
-    activeUsers,
-    completedTours,
     topTours
   ] = await Promise.all([
     // Tổng số tours
@@ -74,7 +72,7 @@ export default async function AdminDashboard() {
   ]);
   
   // Lấy chi tiết top tours
-  const topTourIds = topTours.map(t => t.tour_id);
+  const topTourIds = Array.isArray(topTours) ? topTours.map(t => t.tour_id) : [];
   const topTourDetails = await prisma.tours.findMany({
     where: { id: { in: topTourIds } },
     select: { id: true, title: true, location_name: true }
@@ -145,7 +143,7 @@ export default async function AdminDashboard() {
               </div>
               
               <div className="h-48 flex items-end gap-3 mb-6">
-                {monthlyRevenue.length > 0 ? (
+                {Array.isArray(monthlyRevenue) && monthlyRevenue.length > 0 ? (
                   monthlyRevenue.map((day, index) => (
                     <div key={index} className="flex-1 flex flex-col items-center gap-2">
                       <div 
@@ -169,7 +167,7 @@ export default async function AdminDashboard() {
                 <h3 className="text-2xl font-black text-slate-900">Top Performing Tours</h3>
               </div>
               <div className="space-y-4">
-                {topTours.map((tour, index) => {
+                {Array.isArray(topTours) && topTours.map((tour, index) => {
                   const tourDetail = topTourDetails.find(t => t.id === tour.tour_id);
                   return (
                     <div key={tour.tour_id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
@@ -202,7 +200,7 @@ export default async function AdminDashboard() {
               </div>
               
               <div className="space-y-4">
-                {recentBookings.length > 0 ? (
+                {Array.isArray(recentBookings) && recentBookings.length > 0 ? (
                   recentBookings.map((booking) => (
                     <div key={booking.id} className="flex items-start gap-3 p-4 bg-slate-50 rounded-2xl">
                       <div className="w-8 h-8 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">

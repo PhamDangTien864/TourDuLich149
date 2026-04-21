@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Sparkles } from "lucide-react";
 
 export default async function HomePage() {
@@ -18,10 +19,13 @@ export default async function HomePage() {
       
       {/* Hero Section - Luxury Style */}
       <section className="relative h-[70vh] md:h-[90vh] flex items-center justify-center overflow-hidden">
-        <img 
+        <Image 
           src="https://bizweb.dktcdn.net/100/516/683/products/wot1712904922-1.jpg?v=1718431571087" 
           className="absolute inset-0 w-full h-full object-cover scale-105" 
-          alt="Vietnam Travel Hero" 
+          alt="Vietnam Travel Hero"
+          fill
+          priority
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-yellow-900/30 via-amber-900/20 to-white" />
         
@@ -56,10 +60,12 @@ export default async function HomePage() {
             <Link href={`/tour/${tour.id}`} key={tour.id} className="group block">
               <div className="relative h-[450px] rounded-[50px] overflow-hidden mb-8 shadow-2xl shadow-slate-200/50">
                 {/* FIX LỖI 404: Kiểm tra xem sub_title có phải là link ảnh không */}
-                <img 
+                <Image 
                   src={tour.sub_title?.startsWith('http') ? tour.sub_title : "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"} 
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                  alt={tour.title} 
+                  alt={tour.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 
                 {/* Overlay gradient khi hover */}

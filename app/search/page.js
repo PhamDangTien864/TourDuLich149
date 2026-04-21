@@ -25,7 +25,7 @@ export default async function SearchPage({ searchParams }) {
       <Header />
       <main className="container mx-auto px-4 py-16">
         <div className="mb-12">
-          <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tight">Kết quả cho: "{query}"</h1>
+          <h1 className="text-4xl font-black text-slate-800 mb-2 tracking-tight">Kết quả cho: &quot;{query}&quot;</h1>
           <p className="text-slate-500 font-bold">Tìm thấy {searchResults.length} tour phù hợp</p>
         </div>
 
@@ -37,8 +37,8 @@ export default async function SearchPage({ searchParams }) {
                   {/* FIX LỖI 404: Nếu sub_title không phải là link ảnh thì dùng link mặc định */}
                   <img 
                     src={tour.sub_title?.startsWith('http') ? tour.sub_title : "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=400"} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                    alt={tour.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    alt={tour.title} 
                   />
                 </div>
                 <h3 className="text-xl font-black mb-2 text-slate-800 line-clamp-1">{tour.title}</h3>

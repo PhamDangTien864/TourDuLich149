@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Phone, Calendar, Edit, LogOut, ShieldCheck, MapPin, Clock, Star, CreditCard, Settings, ArrowLeft } from 'lucide-react';
+import { User, Mail, Phone, Calendar, LogOut, ShieldCheck, MapPin, Clock, Star, CreditCard } from 'lucide-react';
 
 export default function CustomerProfile() {
   const [user, setUser] = useState(null);
@@ -11,25 +11,6 @@ export default function CustomerProfile() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const router = useRouter();
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      
-      // Kiêm tra role - chi cho customer (role = 2)
-      if (parsedUser.role !== 2) {
-        router.push('/');
-        return;
-      }
-      
-      // Lây lîch sû bookings
-      fetchBookings(parsedUser.id);
-    } else {
-      router.push('/login');
-    }
-  }, []);
 
   const fetchBookings = async (userId) => {
     try {
@@ -42,6 +23,25 @@ export default function CustomerProfile() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setTimeout(function() { setUser(parsedUser) }, 0);
+      
+      // Kiêm tra role - chi cho customer (role = 2)
+      if (parsedUser.role !== 2) {
+        router.push('/');
+        return;
+      }
+      
+      // Lây lîch sû bookings
+      setTimeout(function() { fetchBookings(parsedUser.id) }, 0);
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.clear();

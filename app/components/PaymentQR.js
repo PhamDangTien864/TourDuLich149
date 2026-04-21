@@ -1,4 +1,6 @@
 'use client';
+import Image from 'next/image';
+
 export default function PaymentQR({ amount, tourId }) {
   // Ní thay số tài khoản ngân hàng của ní vào đây
   const bankId = "vcb"; // vcb = Vietcombank
@@ -8,7 +10,7 @@ export default function PaymentQR({ amount, tourId }) {
   return (
     <div className="bg-white p-6 rounded-[32px] border-2 border-dashed border-blue-100 text-center">
       <p className="font-black mb-4">Quét mã để đặt chỗ ngay</p>
-      <img src={qrUrl} alt="QR Thanh toan" className="mx-auto w-48 h-48 rounded-xl shadow-lg" />
+      <Image src={qrUrl} alt="QR Thanh toan" className="mx-auto w-48 h-48 rounded-xl shadow-lg" width={192} height={192} />
       <p className="text-[10px] text-slate-400 mt-2 italic">*Hệ thống sẽ tự động xác nhận sau khi bạn chuyển khoản</p>
     </div>
   );
