@@ -9,7 +9,7 @@ export default function UserActions({ user }) {
   const router = useRouter();
 
   const handleDelete = async () => {
-    if (!confirm(`Ban co chac chan muon xoa user "${user.full_name}"?`)) {
+    if (!confirm(`Bạn có chắc chắn muốn xóa user "${user.full_name}"?`)) {
       return;
     }
 
@@ -26,11 +26,11 @@ export default function UserActions({ user }) {
         router.refresh(); // Refresh page to update data
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Xóa user that bai!');
+        toast.error(error.error || 'Xóa user thất bại!');
       }
     } catch (error) {
       console.error('Delete user error:', error);
-      toast.error('Có loi xay ra, vui long thu lai!');
+      toast.error('Có lỗi xảy ra, vui lòng thử lại!');
     }
   };
 
@@ -44,15 +44,15 @@ export default function UserActions({ user }) {
       });
 
       if (response.ok) {
-        toast.success('Thay doi vai trò thành công!');
+        toast.success('Thay đổi vai trò thành công!');
         router.refresh();
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Thay doi vai trò that bai!');
+        toast.error(error.error || 'Thay đổi vai trò thất bại!');
       }
     } catch (error) {
       console.error('Toggle role error:', error);
-      toast.error('Có loi xay ra, vui long thu lai!');
+      toast.error('Có lỗi xảy ra, vui lòng thử lại!');
     }
   };
 
@@ -61,21 +61,21 @@ export default function UserActions({ user }) {
       <button
         onClick={handleToggleRole}
         className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-colors"
-        title="Thay doi vai trò"
+        title="Thay đổi vai trò"
       >
         <UserCheck size={16} />
       </button>
       <Link 
         href={`/admin/users/${user.id}/edit`}
         className="bg-yellow-100 hover:bg-yellow-200 text-yellow-600 p-2 rounded-lg transition-colors"
-        title="Sua user"
+        title="Sửa user"
       >
         <Edit size={16} />
       </Link>
       <button
         onClick={handleDelete}
         className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors"
-        title="Xoa user"
+        title="Xóa user"
       >
         <Trash2 size={16} />
       </button>

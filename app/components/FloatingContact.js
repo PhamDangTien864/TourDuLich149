@@ -4,12 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, X, MessageSquare, Bot, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-
-const sampleTours = [
-  { id: 1, name: "Tour Đà Nẵng 3N2Đ", keywords: ["đà nẵng", "biển", "phố cổ"] },
-  { id: 2, name: "Tour Phú Quốc 4N3Đ", keywords: ["phú quốc", "đảo"] },
-  { id: 3, name: "Tour Hà Nội 2N1Đ", keywords: ["hà nội", "thủ đô"] }
-];
+import { sampleTours } from "@/lib/constants";
 
 export default function FloatingContact() {
   const [isOpen, setIsOpen] = useState(false);
@@ -134,7 +129,7 @@ export default function FloatingContact() {
               </svg>
             </motion.a>
 
-            {/* Nút Zalo - CHUẨN ICON CH PLAY (Ảnh ní gửi) */}
+            {/* Nút Zalo - CHUẨN ICON CH PLAY (Ảnh bạn gửi) */}
             <motion.a 
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
               href="https://zalo.me/0862640720" target="_blank" 

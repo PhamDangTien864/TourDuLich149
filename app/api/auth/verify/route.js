@@ -21,7 +21,7 @@ export async function GET(req) {
     return new Response("Lỗi xác thực hoặc tài khoản không tồn tại", { status: 500 });
   }
 
-  // 2. CHỖ QUAN TRỌNG: Phải để redirect ở ngoài try-catch 
+  // 2. LƯU Ý QUAN TRỌNG: Phải để redirect ở ngoài try-catch 
   // để Next.js thực hiện việc chuyển hướng mà không bị catch tóm mất
   redirect("/login?verified=true");
 }

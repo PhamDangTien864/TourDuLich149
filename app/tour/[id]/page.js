@@ -71,7 +71,7 @@ export default async function TourDetailPage({ params }) {
             </div>
 
             {/* Ảnh Tour - Sử dụng sub_title để chứa link ảnh */}
-            <div className="rounded-[48px] overflow-hidden h-[400px] md:h-[650px] shadow-2xl">
+            <div className="rounded-[48px] overflow-hidden h-[400px] md:h-[650px] shadow-2xl relative">
               <Image 
                 src={tour.sub_title || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200"} 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" 

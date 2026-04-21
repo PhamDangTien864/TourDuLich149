@@ -84,7 +84,7 @@ export default function LoginPage() {
         if (data.user.role === 1) {
           router.push('/admin');
         } else {
-          // Customer (role = 2) - redirect ve trang chu
+          // Customer (role = 2) - redirect về trang chủ
           router.push('/');
         }
         router.refresh();

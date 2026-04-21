@@ -36,6 +36,10 @@ RESEND_API_KEY="your-resend-api-key"
 
 # Node Environment
 NODE_ENV="development"
+
+# Payment Information
+NEXT_PUBLIC_BANK_ID="vcb"
+NEXT_PUBLIC_BANK_ACCOUNT="0912345678"
 ```
 
 **Lưu ý:** Thay `username:password` bằng thông tin MySQL của bạn.

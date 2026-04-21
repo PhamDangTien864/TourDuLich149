@@ -9,7 +9,7 @@ export default function TourActions({ tour }) {
   const router = useRouter();
 
   const handleDelete = async () => {
-    if (!confirm(`Ban co chac chan muon xoa tour "${tour.title}"?`)) {
+    if (!confirm(`Bạn có chắc chắn muốn xóa tour "${tour.title}"?`)) {
       return;
     }
 
@@ -26,11 +26,11 @@ export default function TourActions({ tour }) {
         router.refresh(); // Refresh page to update data
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Xóa tour that bai!');
+        toast.error(error.error || 'Xóa tour thất bại!');
       }
     } catch (error) {
       console.error('Delete tour error:', error);
-      toast.error('Có loi xay ra, vui long thu lai!');
+      toast.error('Có lỗi xảy ra, vui lòng thử lại!');
     }
   };
 
@@ -46,14 +46,14 @@ export default function TourActions({ tour }) {
       <Link 
         href={`/admin/tours/${tour.id}/edit`}
         className="bg-yellow-100 hover:bg-yellow-200 text-yellow-600 p-2 rounded-lg transition-colors"
-        title="Sua tour"
+        title="Sửa tour"
       >
         <Edit size={16} />
       </Link>
       <button
         onClick={handleDelete}
         className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors"
-        title="Xoa tour"
+        title="Xóa tour"
       >
         <Trash2 size={16} />
       </button>

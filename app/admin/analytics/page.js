@@ -6,7 +6,7 @@ export default async function AnalyticsPage() {
   // Lấy thống kê chi tiết
   const [
     totalRevenue,
-    monthlyRevenue,
+    rawMonthlyRevenue,
     topTours,
     recentBookings,
     customerStats,
@@ -60,6 +60,13 @@ export default async function AnalyticsPage() {
       _count: { id: true }
     })
   ]);
+
+  // Parse BigInt từ queryRaw để tránh lỗi Next.js Server Component không serialize được BigInt
+  const monthlyRevenue = rawMonthlyRevenue.map(item => ({
+    month: item.month,
+    revenue: Number(item.revenue || 0),
+    bookings: Number(item.bookings || 0)
+  }));
 
   // Lấy thông tin chi tiết cho top tours
   const topTourIds = topTours.map(t => t.tour_id);

@@ -98,7 +98,7 @@ export default function UserProfile() {
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
-            {tab === "profile" ? "Thong tin ca nhan" : "Lich su dat tour"}
+            {tab === "profile" ? "Thông tin cá nhân" : "Lịch sử đặt tour"}
           </button>
         ))}
       </div>
@@ -210,7 +210,7 @@ export default function UserProfile() {
                       ? "bg-green-100 text-green-700" 
                       : "bg-yellow-100 text-yellow-700"
                   }`}>
-                    {booking.is_confirmed ? "Da xac nhan" : "Cho xac nhan"}
+                    {booking.is_confirmed ? "Đã xác nhận" : "Chờ xác nhận"}
                   </div>
                 </div>
               </div>

@@ -48,7 +48,7 @@ export default async function EditUserPage({ params }) {
                 <ArrowLeft size={20} />
               </Link>
               <div>
-                <h1 className="text-3xl font-black mb-2">S thông tin User</h1>
+                <h1 className="text-3xl font-black mb-2">Sửa thông tin User</h1>
                 <p className="text-blue-100">Chỉnh sửa thông tin cho: {user.full_name}</p>
               </div>
             </div>
@@ -65,7 +65,7 @@ export default async function EditUserPage({ params }) {
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
                     <User size={16} className="inline mr-2" />
-                    H và tên
+                    Họ và tên
                   </label>
                   <input
                     type="text"
@@ -162,11 +162,11 @@ export default async function EditUserPage({ params }) {
             <div className="border-t border-slate-200 pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-800 mb-2">Trang thái tài kho n</h3>
+                  <h3 className="font-bold text-slate-800 mb-2">Trạng thái tài khoản</h3>
                   <p className="text-sm text-slate-600">
                     {user.is_verified ? 
-                      <span className="text-green-600">Ðã kích hoat</span> : 
-                      <span className="text-red-600">Chua kích hoat</span>
+                      <span className="text-green-600">Đã kích hoạt</span> : 
+                      <span className="text-red-600">Chưa kích hoạt</span>
                     }
                   </p>
                 </div>
@@ -178,7 +178,7 @@ export default async function EditUserPage({ params }) {
                       defaultChecked={user.is_verified}
                       className="w-5 h-5 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-sm font-bold text-slate-700">Ðã kích hoat</span>
+                    <span className="text-sm font-bold text-slate-700">Đã kích hoạt</span>
                   </label>
                 </div>
               </div>
@@ -190,14 +190,14 @@ export default async function EditUserPage({ params }) {
                 href="/admin/users"
                 className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors"
               >
-                Huy
+                Hủy
               </Link>
               <button
                 type="submit"
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
               >
                 <Save size={20} />
-                Luu thay i
+                Lưu thay đổi
               </button>
             </div>
           </form>

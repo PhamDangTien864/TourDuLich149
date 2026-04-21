@@ -74,8 +74,8 @@
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl p-8 text-white mb-6">
-          <h1 className="text-3xl font-black mb-2">Danh sach yeu thich</h1>
-          <p className="text-pink-100">Cac tour ban da luu lai</p>
+          <h1 className="text-3xl font-black mb-2">Danh sách yêu thích</h1>
+          <p className="text-pink-100">Các tour bạn đã lưu lại</p>
         </div>
 
         {/* Wishlist Stats */}
@@ -83,14 +83,14 @@
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-black text-gray-900">
-                {wishlist.length} tour yeu thich
+                {wishlist.length} tour yêu thích
               </h2>
               <p className="text-gray-600 text-sm mt-1">
-                Tong gia tri: {wishlist.reduce((sum, item) => sum + item.tour.price, 0).toLocaleString()}d
+                Tổng giá trị: {wishlist.reduce((sum, item) => sum + item.tour.price, 0).toLocaleString()}d
               </p>
             </div>
             <button className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black hover:bg-blue-700 transition-colors">
-              Dat tat ca
+              Đặt tất cả
             </button>
           </div>
         </div>
@@ -144,17 +144,17 @@
                         onClick={() => addToBooking(item.tour)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-xl font-black hover:bg-blue-700 transition-colors"
                       >
-                        Dat ngay
+                        Đặt ngay
                       </button>
                     </div>
                   </div>
 
                   <div className="flex gap-2">
                     <button className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl font-black hover:bg-gray-200 transition-colors">
-                      Xem chi tiet
+                      Xem chi tiết
                     </button>
                     <button className="flex-1 bg-purple-100 text-purple-700 px-4 py-2 rounded-xl font-black hover:bg-purple-200 transition-colors">
-                      Chia se
+                      Chia sẻ
                     </button>
                   </div>
                 </div>

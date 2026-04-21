@@ -7,6 +7,7 @@ import { Search, User, LogOut, ShieldCheck } from "lucide-react";
 
 export default function Header() {
   const [user, setUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -49,6 +50,13 @@ export default function Header() {
     router.refresh();
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
@@ -80,10 +88,16 @@ export default function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          <Link href="/search" className="hidden sm:flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl text-slate-400 hover:text-blue-600 transition-all border border-slate-100">
-            <Search size={16} />
-            <span className="text-[10px] font-black uppercase">Tìm kiếm</span>
-          </Link>
+          <form onSubmit={handleSearch} className="hidden sm:flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 hover:border-blue-200 transition-all">
+            <Search size={16} className="text-slate-400" />
+            <input
+              type="text"
+              placeholder="Tìm kiếm tour..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-transparent outline-none text-sm w-40 text-slate-600 placeholder:text-slate-400"
+            />
+          </form>
 
           {user ? (
             <div className="flex items-center gap-4 border-l pl-4 border-slate-100">

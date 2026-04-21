@@ -1,7 +1,7 @@
 import { ShieldCheck, UserCog, Lock, Key, ShieldAlert } from "lucide-react";
 
 export default function ManageRoles() {
-  // Ní để cứng danh sách này luôn cho mình, vừa đẹp vừa không lo lỗi Prisma bảng Roles
+  // Nhớ để cứng danh sách này luôn cho mình, vừa đẹp vừa không lo lỗi Prisma bảng Roles
   const roles = [
     { id: 1, role_name: "Admin", desc: "Toàn quyền hệ thống, quản lý tour và khách hàng." },
     { id: 2, role_name: "Nhân viên", desc: "Quản lý đơn hàng, hỗ trợ khách hàng và xem báo cáo." },
@@ -12,7 +12,7 @@ export default function ManageRoles() {
     <main className="p-10">
       <div className="mb-10">
         <h1 className="text-3xl font-black text-slate-800 tracking-tighter flex items-center gap-3">
-          <ShieldCheck className="text-blue-600" size={32} /> Phân quyền hệ times
+        <ShieldCheck className="text-blue-600" size={32} /> Phân quyền hệ thống
         </h1>
         <p className="text-slate-400 font-bold text-sm uppercase tracking-widest mt-1">
           Hệ thống quản lý cấp độ truy cập VietTravel

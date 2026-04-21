@@ -12,7 +12,7 @@ export default function SettingsPage() {
   // General settings
   const [generalSettings, setGeneralSettings] = useState({
     siteName: 'VietTravel Luxury',
-    siteDescription: 'Trai nghiem du lich Luxury cung tri tue nhan tao so 1 Viet Nam',
+    siteDescription: 'Trải nghiệm du lịch Luxury cùng trí tuệ nhân tạo số 1 Việt Nam',
     contactEmail: 'info@viettravel.com',
     contactPhone: '0862640720',
     address: '484 Lạch Tray, Đổng Quốc Bình, Hải Phòng',
@@ -27,18 +27,18 @@ export default function SettingsPage() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast.success(`Cap nhat cau hinh ${section} thanh cong!`);
+      toast.success(`Cập nhật cấu hình ${section} thành công!`);
     } catch (error) {
-      toast.error('Loi khi cap nhat cau hinh');
+      toast.error('Lỗi khi cập nhật cấu hình');
     } finally {
       setLoading(false);
     }
   };
 
   const tabs = [
-    { id: 'general', label: 'Tong quan', icon: Settings },
-    { id: 'notifications', label: 'Thong bao', icon: Bell },
-    { id: 'security', label: 'Bao mat', icon: Shield },
+    { id: 'general', label: 'Tổng quan', icon: Settings },
+    { id: 'notifications', label: 'Thông báo', icon: Bell },
+    { id: 'security', label: 'Bảo mật', icon: Shield },
     { id: 'database', label: 'Database', icon: Database }
   ];
 
@@ -46,8 +46,8 @@ export default function SettingsPage() {
     <AdminLayout>
       <div>
         <div className="mb-8">
-          <h1 className="text-3xl font-black text-slate-800 mb-2">Cai dat</h1>
-          <p className="text-slate-500">Quan ly cau hinh he thong</p>
+          <h1 className="text-3xl font-black text-slate-800 mb-2">Cài đặt</h1>
+          <p className="text-slate-500">Quản lý cấu hình hệ thống</p>
         </div>
 
         {/* Tabs */}
@@ -79,13 +79,13 @@ export default function SettingsPage() {
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                 <Globe size={20} className="text-blue-600" />
-                Cai dat tong quan
+                Cài đặt tổng quan
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Ten website
+                    Tên website
                   </label>
                   <input
                     type="text"
@@ -97,7 +97,7 @@ export default function SettingsPage() {
                 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Email lien he
+                    Email liên hệ
                   </label>
                   <input
                     type="email"
@@ -109,7 +109,7 @@ export default function SettingsPage() {
                 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    So dien thoai
+                    Số điện thoại
                   </label>
                   <input
                     type="tel"
@@ -121,7 +121,7 @@ export default function SettingsPage() {
                 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Dia chi
+                    Địa chỉ
                   </label>
                   <input
                     type="text"
@@ -133,7 +133,7 @@ export default function SettingsPage() {
                 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Mo ta website
+                    Mô tả website
                   </label>
                   <textarea
                     value={generalSettings.siteDescription}
@@ -170,7 +170,7 @@ export default function SettingsPage() {
               
               <div className="mt-6 flex justify-end">
                 <button
-                  onClick={() => handleSave('tong quan')}
+                  onClick={() => handleSave('tổng quan')}
                   disabled={loading}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                   ) : (
                     <Save size={16} />
                   )}
-                  Luu cau hinh
+                  Lưu cấu hình
                 </button>
               </div>
             </div>
@@ -190,9 +190,9 @@ export default function SettingsPage() {
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                 <Bell size={20} className="text-blue-600" />
-                Cai dat thong bao
+                Cài đặt thông báo
               </h2>
-              <p className="text-slate-500">Cai dat thong bao se duoc them sau...</p>
+              <p className="text-slate-500">Cài đặt thông báo sẽ được thêm sau...</p>
             </div>
           )}
 
@@ -200,9 +200,9 @@ export default function SettingsPage() {
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                 <Shield size={20} className="text-blue-600" />
-                Cai dat bao mat
+                Cài đặt bảo mật
               </h2>
-              <p className="text-slate-500">Cai dat bao mat se duoc them sau...</p>
+              <p className="text-slate-500">Cài đặt bảo mật sẽ được thêm sau...</p>
             </div>
           )}
 
@@ -210,9 +210,9 @@ export default function SettingsPage() {
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                 <Database size={20} className="text-blue-600" />
-                Cai dat Database
+                Cài đặt Database
               </h2>
-              <p className="text-slate-500">Cai dat database se duoc them sau...</p>
+              <p className="text-slate-500">Cài đặt database sẽ được thêm sau...</p>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import AdminLayout from "../components/AdminLayout";
-import { User, MapPin, Search, Filter, Eye, Download } from "lucide-react";
+import { User, MapPin, Search, Filter, Download, Eye, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function ManageBookings({ searchParams }) {
@@ -198,7 +198,7 @@ export default async function ManageBookings({ searchParams }) {
                         </Link>
                         <button
                           onClick={() => {
-                            if (confirm(`Xác nhân booking cua ${booking.customers.full_name}?`)) {
+                            if (confirm(`Xác nhận booking của ${booking.customers.full_name}?`)) {
                               // TODO: Add confirm booking API
                             }
                           }}

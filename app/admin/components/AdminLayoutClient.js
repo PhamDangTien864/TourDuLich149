@@ -37,7 +37,7 @@ export default function AdminLayoutClient({ children }) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          {/* Noi dung trang Admin */}
+          {/* Nội dung trang Admin */}
           {children}
 
           {/* CRITICAL FIX: Boc Chatbot trong Suspense de tranh loi 

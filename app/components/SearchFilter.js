@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { tourCategories, popularLocations } from "@/lib/constants";
 
 export default function SearchFilter({ onFilter }) {
   const [filters, setFilters] = useState({
@@ -17,20 +18,8 @@ export default function SearchFilter({ onFilter }) {
 
   // Mock data - will be replaced with API calls
   useEffect(() => {
-    setCategories([
-      { id: 1, name: "Bien" },
-      { id: 2, name: "Nui" },
-      { id: 3, name: "Thanh pho" }
-    ]);
-    
-    setLocations([
-      "Da Nang",
-      "Phu Quoc", 
-      "Ha Noi",
-      "Sapa",
-      "Da Lat",
-      "Nha Trang"
-    ]);
+    setCategories(tourCategories);
+    setLocations(popularLocations);
   }, []);
 
   const handleFilterChange = (key, value) => {
@@ -67,7 +56,7 @@ export default function SearchFilter({ onFilter }) {
       <div className="relative">
         <input
           type="text"
-          placeholder="Tim kiem tour..."
+          placeholder="Tìm kiếm tour..."
           value={filters.search}
           onChange={(e) => handleFilterChange("search", e.target.value)}
           className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -100,7 +89,7 @@ export default function SearchFilter({ onFilter }) {
             d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
           />
         </svg>
-        {showFilters ? "An bo loc" : "Hien bo loc"}
+        {showFilters ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
       </button>
 
       {/* Filters Panel */}
@@ -174,7 +163,7 @@ export default function SearchFilter({ onFilter }) {
               <div className="flex items-center gap-3">
                 <input
                   type="number"
-                  placeholder="Gia thap nhat"
+                  placeholder="Giá thấp nhất"
                   value={filters.priceRange[0]}
                   onChange={(e) => handlePriceChange("min", e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -182,7 +171,7 @@ export default function SearchFilter({ onFilter }) {
                 <span className="text-gray-500">-</span>
                 <input
                   type="number"
-                  placeholder="Gia cao nhat"
+                  placeholder="Giá cao nhất"
                   value={filters.priceRange[1]}
                   onChange={(e) => handlePriceChange("max", e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -211,7 +200,7 @@ export default function SearchFilter({ onFilter }) {
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  {rating === 0 ? "Tat ca" : `${rating}+ sao`}
+                  {rating === 0 ? "Tất cả" : `${rating}+ sao`}
                 </button>
               ))}
             </div>

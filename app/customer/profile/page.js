@@ -30,13 +30,13 @@ export default function CustomerProfile() {
       const parsedUser = JSON.parse(userData);
       setTimeout(function() { setUser(parsedUser) }, 0);
       
-      // Kiêm tra role - chi cho customer (role = 2)
+      // Kiểm tra role - chỉ cho customer (role = 2)
       if (parsedUser.role !== 2) {
         router.push('/');
         return;
       }
       
-      // Lây lîch sû bookings
+      // Lấy lịch sử bookings
       setTimeout(function() { fetchBookings(parsedUser.id) }, 0);
     } else {
       router.push('/login');
@@ -145,7 +145,7 @@ export default function CustomerProfile() {
             >
               <div className="flex items-center gap-2">
                 <User size={16} />
-                Tôngr quan
+                Tổng quan
               </div>
             </button>
             <button
@@ -158,7 +158,7 @@ export default function CustomerProfile() {
             >
               <div className="flex items-center gap-2">
                 <Calendar size={16} />
-                Lich su
+                Lịch sử
               </div>
             </button>
             <Link href="/wishlist" className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition">
@@ -167,16 +167,10 @@ export default function CustomerProfile() {
                 Yêu thích
               </div>
             </Link>
-            <Link href="/search" className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition">
-              <div className="flex items-center gap-2">
-                <span className="text-purple-500">S</span>
-                Tim tour
-              </div>
-            </Link>
             <Link href="/" className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition">
               <div className="flex items-center gap-2">
                 <span className="text-green-500">H</span>
-                Trang chu
+                Trang chủ
               </div>
             </Link>
           </div>
@@ -194,7 +188,7 @@ export default function CustomerProfile() {
                   </div>
                   <span className="text-3xl font-bold text-gray-800">{stats.totalBookings}</span>
                 </div>
-                <h3 className="text-gray-500 text-sm">Tong bookings</h3>
+                <h3 className="text-gray-500 text-sm">Tổng bookings</h3>
               </div>
               
               <div className="bg-white rounded-2xl shadow-xl p-6">
@@ -204,7 +198,7 @@ export default function CustomerProfile() {
                   </div>
                   <span className="text-3xl font-bold text-green-600">{stats.confirmedBookings}</span>
                 </div>
-                <h3 className="text-gray-500 text-sm">Da xác nhân</h3>
+                <h3 className="text-gray-500 text-sm">Đã xác nhận</h3>
               </div>
               
               <div className="bg-white rounded-2xl shadow-xl p-6">
@@ -214,7 +208,7 @@ export default function CustomerProfile() {
                   </div>
                   <span className="text-3xl font-bold text-blue-600">${stats.totalSpent.toLocaleString()}</span>
                 </div>
-                <h3 className="text-gray-500 text-sm">Tong chi tiêu</h3>
+                <h3 className="text-gray-500 text-sm">Tổng chi tiêu</h3>
               </div>
               
               <div className="bg-white rounded-2xl shadow-xl p-6">
@@ -224,19 +218,19 @@ export default function CustomerProfile() {
                   </div>
                   <span className="text-3xl font-bold text-purple-600">{stats.upcomingBookings}</span>
                 </div>
-                <h3 className="text-gray-500 text-sm">Sap di</h3>
+                <h3 className="text-gray-500 text-sm">Sắp đi</h3>
               </div>
             </div>
 
             {/* Recent Bookings */}
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-800">Booking gan day</h3>
+                <h3 className="text-xl font-bold text-gray-800">Booking gần đây</h3>
                 <button 
                   onClick={() => setActiveTab('bookings')}
                   className="text-blue-600 hover:text-blue-700 font-semibold"
                 >
-                  Xem tat ca
+                  Xem tất cả
                 </button>
               </div>
               
@@ -245,9 +239,9 @@ export default function CustomerProfile() {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Calendar size={32} className="text-gray-400" />
                   </div>
-                  <p className="text-gray-500 mb-4">Chua co booking nao</p>
+                  <p className="text-gray-500 mb-4">Chưa có booking nào</p>
                   <Link href="/search" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                    Tim tour ngay
+                    Tìm tour ngay
                   </Link>
                 </div>
               ) : (
@@ -275,7 +269,7 @@ export default function CustomerProfile() {
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {booking.isConfirmed ? 'Da xác nhân' : 'Cho xác nhân'}
+                            {booking.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                           </span>
                         </div>
                       </div>
@@ -289,16 +283,16 @@ export default function CustomerProfile() {
 
         {activeTab === 'bookings' && (
           <div className="bg-white rounded-2xl shadow-xl p-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-6">Lich su dat tour</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-6">Lịch sử đặt tour</h3>
             
             {bookings.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Calendar size={32} className="text-gray-400" />
                 </div>
-                <p className="text-gray-500 mb-4">Chua co booking nao</p>
+                <p className="text-gray-500 mb-4">Chưa có booking nào</p>
                 <Link href="/search" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                  Tim tour ngay
+                  Tìm tour ngay
                 </Link>
               </div>
             ) : (
@@ -326,7 +320,7 @@ export default function CustomerProfile() {
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {booking.isConfirmed ? 'Da xác nhân' : 'Cho xác nhân'}
+                          {booking.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                         </span>
                       </div>
                     </div>

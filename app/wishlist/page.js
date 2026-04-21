@@ -18,13 +18,13 @@ export default function WishlistPage() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Kiêm tra role - chi cho customer (role = 2)
+      // Kiểm tra role - chỉ cho customer (role = 2)
       if (parsedUser.role !== 2) {
         router.push('/');
         return;
       }
       
-      // Lây wishlist
+      // Lấy wishlist
       setTimeout(function() { fetchWishlist(parsedUser.id) }, 0);
     } else {
       router.push('/login');
@@ -136,16 +136,16 @@ export default function WishlistPage() {
                 Thông tin cá nhân
               </Link>
               <Link href="/history" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition">
-                Lich su dat tour
+                Lịch sử đặt tour
               </Link>
               <Link href="/wishlist" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">
                 Yêu thích
               </Link>
               <Link href="/search" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition">
-                Tim tour
+                Tìm tour
               </Link>
               <Link href="/" className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition">
-                Trang chu
+                Trang chủ
               </Link>
             </div>
           </div>
@@ -172,15 +172,15 @@ export default function WishlistPage() {
               <Heart size={40} className="text-gray-400" />
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">
-              {searchTerm ? 'Không tìm tour nào' : 'Chua co tour yeu thich'}
+              {searchTerm ? 'Không tìm tour nào' : 'Chưa có tour yêu thích'}
             </h3>
             <p className="text-gray-500 mb-6">
               {searchTerm 
-                ? 'Không tìm tour nào phù hoi voi tìm kiêm cua ban.' 
-                : 'Thêm tour yêu thích vào danh sách de dàng dàng theo dõi!'}
+                ? 'Không tìm tour nào phù hợp với tìm kiếm của bạn.' 
+                : 'Thêm tour yêu thích vào danh sách để dễ dàng theo dõi!'}
             </p>
             <Link href="/search" className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition font-semibold">
-              {searchTerm ? 'Xem tat ca' : 'Tim tour'}
+              {searchTerm ? 'Xem tất cả' : 'Tìm tour'}
             </Link>
           </div>
         ) : (
@@ -229,13 +229,13 @@ export default function WishlistPage() {
                       href={`/tour/${item.tour.id}`}
                       className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-semibold text-center"
                     >
-                      Chi tiet
+                      Chi tiết
                     </Link>
                     <Link 
                       href={`/booking?tourId=${item.tour.id}&price=${item.tour.price}&title=${encodeURIComponent(item.tour.title)}`}
                       className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition font-semibold text-center"
                     >
-                      Dat tour
+                      Đặt tour
                     </Link>
                   </div>
                 </div>

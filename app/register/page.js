@@ -191,7 +191,7 @@ export default function RegisterPage() {
                         required 
                         value={formData.full_name} 
                         onChange={(e) => handleInputChange('full_name', e.target.value)} 
-                        placeholder="Họ tên của ní" 
+                        placeholder="Họ tên của bạn" 
                         className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
                           errors.full_name ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
                         }`} 
@@ -233,7 +233,7 @@ export default function RegisterPage() {
                         required 
                         value={formData.username} 
                         onChange={(e) => handleInputChange('username', e.target.value)} 
-                        placeholder="tên_đăng_nhập" 
+                        placeholder="tên đăng nhập" 
                         className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
                           errors.username ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
                         }`} 
@@ -254,7 +254,7 @@ export default function RegisterPage() {
                         required 
                         value={formData.email} 
                         onChange={(e) => handleInputChange('email', e.target.value)} 
-                        placeholder="ví dụ: ni@gmail.com" 
+                        placeholder="ví dụ: bạn@gmail.com" 
                         className={`w-full pl-14 pr-6 py-4 border-2 rounded-[24px] focus:bg-white outline-none transition-all font-bold text-slate-800 ${
                           errors.email ? 'bg-red-50 border-red-500 focus:border-red-600' : 'bg-slate-50 border-transparent focus:border-blue-600'
                         }`} 

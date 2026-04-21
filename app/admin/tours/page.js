@@ -106,7 +106,7 @@ export default async function ManageTours({ searchParams }) {
                     <td className="px-6 py-4 text-sm text-slate-900 font-medium">#{tour.id}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden">
+                        <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden relative">
                           <Image 
                             src={tour.sub_title || "https://images.unsplash.com/photo-1528127269322-539801943592?w=100"} 
                             alt={tour.title}
