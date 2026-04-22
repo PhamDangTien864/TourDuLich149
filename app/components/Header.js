@@ -74,13 +74,23 @@ export default function Header() {
           <Link href="/search" className="text-xs font-black text-slate-500 hover:text-blue-600 uppercase tracking-widest">Tìm tour</Link>
           <Link href="/history" className="text-xs font-black text-slate-500 hover:text-blue-600 uppercase tracking-widest">Lịch sử</Link>
           
+          {/* Tab 'Tôi' cho khách hàng */}
+          {user && user.role === 2 && (
+            <Link 
+              href="/customer/me" 
+              className="text-xs font-black text-slate-500 hover:text-blue-600 uppercase tracking-widest"
+            >
+              Tôi
+            </Link>
+          )}
+          
           {/* Nút Hồ sơ biến hóa theo Role */}
           {user && (
             <Link 
               href={user.role === 1 ? "/admin" : "/customer/profile"} 
               className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-2 rounded-lg"
             >
-              {user.role === 1 ? <ShieldCheck size={14}/> : <User size={14}/>}
+              {user.role === 1 ? <ShieldCheck size={14}/> : <User size={14}/> }
               Hồ sơ {user.role === 1 ? 'Admin' : 'Customer'}
             </Link>
           )}

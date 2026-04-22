@@ -1,6 +1,4 @@
 import { Be_Vietnam_Pro } from "next/font/google";
-// Dùng relative path để Next.js tìm đúng file
-import AdminLayoutClient from './components/AdminLayoutClient'; 
 import FloatingContact from './components/FloatingContact'; 
 import "./globals.css"; // Đảm bảo bạn có import css để nhận biến font
 
@@ -11,15 +9,15 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata = {
-  title: "Quản trị VietTravel Luxury",
-  description: "Hệ thống quản lý tour du lịch",
+  title: "VietTravel Luxury - Du lịch cao cấp",
+  description: "Hệ thống đặt tour du lịch cao cấp",
 };
 
-export default function AdminLayout({ children }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="vi" className={beVietnamPro.variable}>
       <body className="antialiased">
-        <AdminLayoutClient>{children}</AdminLayoutClient>
+        {children}
         <FloatingContact />
       </body>
     </html>

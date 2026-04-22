@@ -235,7 +235,7 @@ export default async function AdminDashboard() {
               <h3 className="text-2xl font-black mb-8">Quick Actions</h3>
               <div className="space-y-4">
                 <QuickAction icon={<Plus size={20} />} label="Add New Tour" href="/admin/tours/create" />
-                <QuickAction icon={<UserPlus size={20} />} label="Create Staff" href="/admin/users/create" />
+                <QuickAction icon={<UserPlus size={20} />} label="Create User" href="/admin/users/create" />
                 <QuickAction icon={<BarChart3 size={20} />} label="View Analytics" href="/admin/analytics" />
                 <QuickAction icon={<ShieldAlert size={20} />} label="Roles & Permissions" href="/admin/roles" />
               </div>

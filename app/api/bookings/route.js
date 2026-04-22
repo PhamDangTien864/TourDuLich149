@@ -6,7 +6,10 @@ export async function POST(req) {
     const body = await req.json();
     const { tourId, amount, customerName, phone, email } = body;
 
+    console.log('Booking request body:', body);
+
     if (!tourId || !amount || !customerName || !phone) {
+      console.log('Missing required fields:', { tourId, amount, customerName, phone });
       return NextResponse.json(
         { error: "Thiếu thông tin bắt buộc" },
         { status: 400 }
@@ -25,7 +28,8 @@ export async function POST(req) {
           phone_number: phone,
           email: email || null,
           is_male: true, 
-          is_deleted: false
+          is_deleted: false,
+          identity_card: null
         }
       });
     } else {
@@ -51,8 +55,8 @@ export async function POST(req) {
         is_confirmed: false
       },
       include: {
-        customer: true,
-        tour: {
+        customers: true,
+        tours: {
           select: {
             title: true,
             location_name: true
@@ -65,11 +69,11 @@ export async function POST(req) {
       success: true,
       booking: {
         id: booking.id,
-        customerName: booking.customer.full_name,
-        phone: booking.customer.phone_number,
-        email: booking.customer.email,
-        tourTitle: booking.tour.title,
-        location: booking.tour.location_name,
+        customerName: booking.customers.full_name,
+        phone: booking.customers.phone_number,
+        email: booking.customers.email,
+        tourTitle: booking.tours.title,
+        location: booking.tours.location_name,
         amount: Number(booking.total_amount),
         startDate: booking.start_date,
         endDate: booking.end_date
@@ -78,8 +82,9 @@ export async function POST(req) {
 
   } catch (error) {
     console.error("Booking error:", error);
+    console.error("Error details:", error.message, error.stack);
     return NextResponse.json(
-      { error: "Lỗi hệ thống, vui lòng thử lại sau" },
+      { error: "Lỗi hệ thống, vui lòng thử lại sau", details: error.message },
       { status: 500 }
     );
   }
@@ -102,7 +107,7 @@ export async function GET(req) {
         account_id: parseInt(userId)
       },
       include: {
-        customer: {
+        customers: {
           select: {
             full_name: true,
             phone_number: true

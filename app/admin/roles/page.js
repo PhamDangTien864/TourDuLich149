@@ -4,8 +4,7 @@ export default function ManageRoles() {
   // Nhớ để cứng danh sách này luôn cho mình, vừa đẹp vừa không lo lỗi Prisma bảng Roles
   const roles = [
     { id: 1, role_name: "Admin", desc: "Toàn quyền hệ thống, quản lý tour và khách hàng." },
-    { id: 2, role_name: "Nhân viên", desc: "Quản lý đơn hàng, hỗ trợ khách hàng và xem báo cáo." },
-    { id: 3, role_name: "Khách hàng", desc: "Quyền hạn cơ bản: xem tour, đặt tour và quản lý lịch sử." }
+    { id: 2, role_name: "Khách hàng", desc: "Quyền hạn cơ bản: xem tour, đặt tour và quản lý lịch sử." }
   ];
 
   return (

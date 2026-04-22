@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { ImagePlus, Loader2, X } from "lucide-react";
 import Image from 'next/image';
 
-export default function ImageUpload({ onUploadSuccess }) {
+export default function ImageUpload({ onUploadSuccess, initialImage }) {
   const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState("");
+  const [preview, setPreview] = useState(initialImage || "");
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];

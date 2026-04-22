@@ -3,7 +3,7 @@ import { verifyToken } from '@/lib/auth';
 
 /**
  * Next.js 16 Middleware
- * Chúc nang: Kiêm soát quyen Admin (1) và Nhan vien (2)
+ * Chúc nang: Kiêm soát quyen Admin (1)
  */
 export async function proxy(request) {
   const token = request.cookies.get('auth_token')?.value;
@@ -24,8 +24,7 @@ export async function proxy(request) {
 
   // 2. Danh sach cac khu vuc bao ve
   const adminPaths = ['/admin'];
-  const employeePaths = ['/employee'];
-  const protectedPaths = [...adminPaths, ...employeePaths, '/booking', '/history', '/payment'];
+  const protectedPaths = [...adminPaths, '/booking', '/history', '/payment'];
 
   const isProtected = protectedPaths.some(path => pathname.startsWith(path));
 
@@ -41,10 +40,6 @@ export async function proxy(request) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // Neu vao khu vuc Nhan vien ma khong phai Nhan vien (2) hoac Admin (1) -> Da ve trang chu
-    if (pathname.startsWith('/employee') && user.role !== 2 && user.role !== 1) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
   }
 
   // 4. Neu da login roi ma dinh vao Login/Register -> Cho ve trang chu luon
@@ -60,7 +55,6 @@ export async function proxy(request) {
 export const config = {
   matcher: [
     '/admin/:path*', 
-    '/employee/:path*', 
     '/booking/:path*', 
     '/history', 
     '/payment/:path*',

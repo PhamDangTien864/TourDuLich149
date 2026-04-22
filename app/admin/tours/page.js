@@ -55,7 +55,7 @@ export default async function ManageTours({ searchParams }) {
               <p className="text-blue-100">Tổng cộng {totalCount} tours trong hệ thống</p>
             </div>
             <Link 
-              href="/admin/tours/new"
+              href="/admin/tours/create"
               className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-lg"
             >
               <Plus size={20} />

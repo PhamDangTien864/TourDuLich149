@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { CheckCircle, Loader2, Phone, User, CreditCard, Mail } from "lucide-react";
 import PaymentQR from "./PaymentQR";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function BookingForm({ amount, tourId }) {
+export default function BookingForm({ price, tourId }) {
+  const router = useRouter();
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -56,21 +58,27 @@ export default function BookingForm({ amount, tourId }) {
 
     setLoading(true);
     try {
+      console.log('Submitting booking:', { tourId, amount: Number(price), customerName, phone, email });
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tourId, amount, customerName, phone, email })
+        body: JSON.stringify({ tourId, amount: Number(price), customerName, phone, email })
       });
 
+      console.log('Response status:', res.status);
       const data = await res.json();
+      console.log('Response data:', data);
+
       if (data.success) {
-        toast.success('Đặt tour thành công! Vui lòng thanh toán.');
-        setBookingId(data.booking.id);
-        setShowPayment(true);
+        toast.success('Đặt tour thành công! Đang chuyển đến trang thanh toán.');
+        console.log('Redirecting to payment:', `/payment?bookingId=${data.booking.id}&amount=${price}&tourId=${tourId}`);
+        router.push(`/payment?bookingId=${data.booking.id}&amount=${price}&tourId=${tourId}`);
       } else {
+        console.error('Booking failed:', data.error);
         toast.error(data.error || 'Đặt tour thất bại!');
       }
     } catch (error) {
+      console.error('Booking error:', error);
       toast.error('Lỗi hệ thống, vui lòng thử lại!');
     } finally {
       setLoading(false);
@@ -182,7 +190,7 @@ export default function BookingForm({ amount, tourId }) {
             <div className="bg-green-500/20 p-4 rounded-2xl border border-green-500/30 text-green-400 flex items-center justify-center gap-2 mx-auto w-fit px-6">
               <CheckCircle size={20} /> <span className="font-black text-sm">ĐẶT TOUR THÀNH CÔNG</span>
             </div>
-            <PaymentQR amount={amount} tourId={tourId} />
+            <PaymentQR amount={price} tourId={tourId} />
             
             <button 
               onClick={handlePaidConfirm}

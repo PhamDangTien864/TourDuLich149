@@ -66,8 +66,8 @@ export async function GET(req: NextRequest) {
     // Get tours with pagination
     const tours = await prisma.tours.findMany({
       where,
-      include: { // Fix: changed 'includes' to 'include'
-        category: {
+      include: {
+        tour_categories: {
           select: {
             id: true,
             category_name: true

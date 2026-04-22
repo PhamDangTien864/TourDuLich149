@@ -1,0 +1,172 @@
+[
+  {
+    "id": 1,
+    "code": "10",
+    "name": "Tỉnh Thái Nguyên"
+  },
+  {
+    "id": 2,
+    "code": "11",
+    "name": "Tỉnh Lạng Sơn"
+  },
+  {
+    "id": 3,
+    "code": "12",
+    "name": "Tỉnh Phú Thọ"
+  },
+  {
+    "id": 4,
+    "code": "13",
+    "name": "Tỉnh Điện Biên"
+  },
+  {
+    "id": 5,
+    "code": "14",
+    "name": "Tỉnh Lai Châu"
+  },
+  {
+    "id": 6,
+    "code": "15",
+    "name": "Tỉnh Sơn La"
+  },
+  {
+    "id": 7,
+    "code": "16",
+    "name": "Tỉnh Thanh Hóa"
+  },
+  {
+    "id": 8,
+    "code": "17",
+    "name": "Tỉnh Nghệ An"
+  },
+  {
+    "id": 9,
+    "code": "18",
+    "name": "Tỉnh Hà Tĩnh"
+  },
+  {
+    "id": 10,
+    "code": "19",
+    "name": "Tỉnh Quảng Trị"
+  },
+  {
+    "id": 11,
+    "code": "20",
+    "name": "Thành phố Huế"
+  },
+  {
+    "id": 12,
+    "code": "21",
+    "name": "Tp Đà Nẵng"
+  },
+  {
+    "id": 13,
+    "code": "22",
+    "name": "Tỉnh Quảng Ngãi"
+  },
+  {
+    "id": 14,
+    "code": "23",
+    "name": "Tỉnh Khánh Hòa"
+  },
+  {
+    "id": 15,
+    "code": "24",
+    "name": "Tỉnh Gia Lai"
+  },
+  {
+    "id": 16,
+    "code": "25",
+    "name": "Tỉnh Đắk Lắk"
+  },
+  {
+    "id": 17,
+    "code": "26",
+    "name": "Tỉnh Lâm Đồng"
+  },
+  {
+    "id": 18,
+    "code": "27",
+    "name": "Tỉnh Tây Ninh"
+  },
+  {
+    "id": 19,
+    "code": "28",
+    "name": "Tỉnh Đồng Nai"
+  },
+  {
+    "id": 20,
+    "code": "29",
+    "name": "Tp Hồ Chí Minh"
+  },
+  {
+    "id": 21,
+    "code": "30",
+    "name": "Tỉnh Vĩnh Long"
+  },
+  {
+    "id": 22,
+    "code": "31",
+    "name": "Tỉnh Đồng Tháp"
+  },
+  {
+    "id": 23,
+    "code": "32",
+    "name": "Tỉnh An Giang"
+  },
+  {
+    "id": 24,
+    "code": "33",
+    "name": "Tp Cần Thơ"
+  },
+  {
+    "id": 25,
+    "code": "34",
+    "name": "Tỉnh Cà Mau"
+  },
+  {
+    "id": 26,
+    "code": "01",
+    "name": "Thành phố Hà Nội"
+  },
+  {
+    "id": 27,
+    "code": "02",
+    "name": "Tỉnh Bắc Ninh"
+  },
+  {
+    "id": 28,
+    "code": "03",
+    "name": "Tỉnh Quảng Ninh"
+  },
+  {
+    "id": 29,
+    "code": "04",
+    "name": "Tp Hải Phòng"
+  },
+  {
+    "id": 30,
+    "code": "05",
+    "name": "Tỉnh Hưng Yên"
+  },
+  {
+    "id": 31,
+    "code": "06",
+    "name": "Tỉnh Ninh Bình"
+  },
+  {
+    "id": 32,
+    "code": "07",
+    "name": "Tỉnh Cao Bằng"
+  },
+  {
+    "id": 33,
+    "code": "08",
+    "name": "Tỉnh Tuyên Quang"
+  },
+  {
+    "id": 34,
+    "code": "09",
+    "name": "Tỉnh Lào Cai"
+  }
+]
