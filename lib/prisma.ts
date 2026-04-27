@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: ['query'], // Hiển thị câu lệnh SQL để bạn dễ làm báo cáo đồ án
+    log: ['error'], // Chỉ log error để giảm overhead
     datasources: {
       db: {
         url: process.env.DATABASE_URL,

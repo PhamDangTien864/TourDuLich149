@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     const token = generateToken({ 
       id: user.id, 
       name: user.full_name, 
-      role: user.role_id, 
+      role_id: user.role_id, 
       is_verified: user.is_verified 
     });
 
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       user: { 
         id: user.id, 
         name: user.full_name, 
-        role: user.role_id, 
+        role_id: user.role_id, 
         is_verified: user.is_verified
       },
       clientToken: token 

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminLayout from '../../components/AdminLayout';
 import { ArrowLeft, Save, MapPin, DollarSign, FileText, ImagePlus } from 'lucide-react';
 import ImageUpload from '../../components/ImageUpload';
 
@@ -56,7 +55,7 @@ export default function CreateTourPage() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <button
@@ -186,6 +185,6 @@ export default function CreateTourPage() {
           </form>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

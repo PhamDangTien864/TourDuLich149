@@ -7,8 +7,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'viet-travel-seceret';
 interface TokenPayload {
   id: number;
   name: string;
-  role: number;
-  is_verified: boolean; // THÊM DÒNG NÀY VÀO ĐÂY
+  role_id: number; // Changed from role to role_id to match database schema
+  is_verified: boolean;
 }
 
 export async function hashPassword(password: string): Promise<string> {

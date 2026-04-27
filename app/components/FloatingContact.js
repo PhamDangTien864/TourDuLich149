@@ -120,7 +120,7 @@ export default function FloatingContact() {
             {/* Nút Facebook */}
             <motion.a 
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-              href="https://facebook.com/penixillin" target="_blank" 
+              href="https://www.facebook.com/phamdangtien888/" target="_blank" 
               className="bg-white p-1 rounded-[22px] shadow-xl hover:-translate-y-1 transition-all"
             >
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none">

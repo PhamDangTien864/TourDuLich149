@@ -7,7 +7,7 @@ export default function TourCard({ tour }) {
     <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow border border-gray-100 group">
       <div className="relative h-48 overflow-hidden">
         <Image 
-          src={tour.image_url || "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=500"} 
+          src={tour.tour_images?.[0]?.image_url || "https://images.pexels.com/photos/17216117/pexels-photo-17216117.jpeg"} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           fill
           sizes="(max-width: 400px)"

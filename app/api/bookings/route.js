@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendBookingConfirmationEmail } from "@/lib/email";
+import { authenticate } from "@/lib/middleware";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { tourId, amount, customerName, phone, email } = body;
+    const { tourId, amount, customerName, phone, email, startDate, endDate } = body;
 
     console.log('Booking request body:', body);
 
@@ -15,6 +17,10 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
+    // Authenticate user to get account_id
+    const user = await authenticate(req);
+    const accountId = user ? user.id : 1; // Fallback to 1 for guest bookings
 
     // Tạo customer mới hoặc tìm customer existing
     let customer = await prisma.customers.findFirst({
@@ -27,7 +33,6 @@ export async function POST(req) {
           full_name: customerName,
           phone_number: phone,
           email: email || null,
-          is_male: true, 
           is_deleted: false,
           identity_card: null
         }
@@ -47,9 +52,9 @@ export async function POST(req) {
       data: {
         customer_id: customer.id,
         tour_id: parseInt(tourId),
-        account_id: 1, 
-        start_date: new Date(), 
-        end_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), 
+        account_id: accountId,
+        start_date: startDate ? new Date(startDate) : new Date(),
+        end_date: endDate ? new Date(endDate) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
         total_amount: BigInt(amount),
         paid_amount: BigInt(0),
         is_confirmed: false
@@ -64,6 +69,19 @@ export async function POST(req) {
         }
       }
     });
+
+    // Gửi email xác nhận
+    if (email) {
+      await sendBookingConfirmationEmail({
+        email,
+        customerName: booking.customers.full_name,
+        tourTitle: booking.tours.title,
+        location: booking.tours.location_name,
+        amount: Number(booking.total_amount),
+        startDate: booking.start_date,
+        endDate: booking.end_date
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -117,7 +135,9 @@ export async function GET(req) {
           select: {
             title: true,
             location_name: true,
-            sub_title: true
+            tour_images: {
+              take: 1
+            }
           }
         }
       },
@@ -128,11 +148,11 @@ export async function GET(req) {
       success: true,
       bookings: bookings.map(booking => ({
         id: booking.id,
-        customerName: booking.customer.full_name,
-        phone: booking.customer.phone_number,
+        customerName: booking.customers.full_name,
+        phone: booking.customers.phone_number,
         tourTitle: booking.tours.title,
         location: booking.tours.location_name,
-        tourImage: booking.tours.sub_title,
+        tourImage: booking.tours.tour_images?.[0]?.image_url,
         amount: Number(booking.total_amount),
         paidAmount: Number(booking.paid_amount),
         startDate: booking.start_date,

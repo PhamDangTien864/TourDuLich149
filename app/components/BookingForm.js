@@ -1,18 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, Loader2, Phone, User, CreditCard, Mail } from "lucide-react";
 import PaymentQR from "./PaymentQR";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function BookingForm({ price, tourId }) {
+const BookingForm = memo(function BookingForm({ price, tourId, originalPrice, bestDiscount }) {
   const router = useRouter();
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [showPayment, setShowPayment] = useState(false);
   const [loading, setLoading] = useState(false);
   const [bookingId, setBookingId] = useState(null);
@@ -58,11 +60,11 @@ export default function BookingForm({ price, tourId }) {
 
     setLoading(true);
     try {
-      console.log('Submitting booking:', { tourId, amount: Number(price), customerName, phone, email });
+      console.log('Submitting booking:', { tourId, amount: Number(price), customerName, phone, email, startDate, endDate });
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tourId, amount: Number(price), customerName, phone, email })
+        body: JSON.stringify({ tourId, amount: Number(price), customerName, phone, email, startDate, endDate })
       });
 
       console.log('Response status:', res.status);
@@ -116,7 +118,19 @@ export default function BookingForm({ price, tourId }) {
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">
                 {isLoggedIn ? 'Xác nhận thông tin' : 'Thông tin liên lạc'}
               </label>
-              
+
+              {bestDiscount && (
+                <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 mb-4">
+                  <p className="text-green-300 text-sm font-bold flex items-center gap-2">
+                    <CheckCircle size={16} className="text-green-400" />
+                    Đã tự động áp dụng mã: {bestDiscount.code}
+                  </p>
+                  <p className="text-green-400 text-xs mt-1">
+                    Giảm {bestDiscount.discount_type === 'percentage' ? `${bestDiscount.discount_value}%` : `${Number(bestDiscount.discount_value).toLocaleString()}đ`}
+                  </p>
+                </div>
+              )}
+
               {isLoggedIn && (
                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4 mb-4">
                   <p className="text-blue-300 text-sm font-medium flex items-center gap-2">
@@ -168,6 +182,23 @@ export default function BookingForm({ price, tourId }) {
                 </div>
               )}
               
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative">
+                  <input 
+                    type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-[24px] px-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white"
+                    placeholder="Ngày đi"
+                  />
+                </div>
+                <div className="relative">
+                  <input 
+                    type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-[24px] px-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white"
+                    placeholder="Ngày về"
+                  />
+                </div>
+              </div>
+              
               {isLoggedIn && (
                 <p className="text-blue-300 text-xs font-medium ml-2 mt-2">
                   ℹ️ Bạn có thể chỉnh sửa thông tin nếu cần thay đổi
@@ -204,4 +235,6 @@ export default function BookingForm({ price, tourId }) {
       </AnimatePresence>
     </div>
   );
-}
+});
+
+export default BookingForm;

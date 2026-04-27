@@ -36,7 +36,7 @@ export async function proxy(request) {
     }
 
     // Neu vao khu vuc Admin ma Role khong phai la 1 (Admin) -> Da ve trang chu
-    if (pathname.startsWith('/admin') && user.role !== 1) {
+    if (pathname.startsWith('/admin') && user.role_id !== 1) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 

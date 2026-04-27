@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import AdminLayout from "../components/AdminLayout";
 import { UserCheck, ShieldAlert, UserPlus, Phone, Calendar, Search, Filter } from "lucide-react";
 import Link from "next/link";
 import UserActions from "./components/UserActions";
@@ -45,23 +44,21 @@ export default async function ManageUsers({ searchParams }) {
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
-    <AdminLayout>
-      <div>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-slate-900 text-white rounded-2xl p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-black mb-2">👥 Quản lý Users</h1>
-              <p className="text-blue-100">Tổng cộng {totalCount} người dùng trong hệ thống</p>
-            </div>
-            <Link 
-              href="/admin/users/create"
-              className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-lg"
-            >
-              <UserPlus size={20} />
-              Thêm User Mới
-            </Link>
+    <div>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-slate-900 text-white rounded-2xl p-6 mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-black mb-2">👥 Quản lý Users</h1>
+            <p className="text-blue-100">Tổng cộng {totalCount} người dùng trong hệ thống</p>
           </div>
+          <Link 
+            href="/admin/users/create"
+            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition-colors flex items-center gap-2 shadow-lg"
+          >
+            <UserPlus size={20} />
+            Thêm User Mới
+          </Link>
         </div>
 
         {/* Search and Filter */}
@@ -131,11 +128,11 @@ export default async function ManageUsers({ searchParams }) {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        user.role === 1 
+                        user.role_id === 1 
                           ? 'bg-blue-600 text-white' 
                           : 'bg-slate-100 text-slate-700'
                       }`}>
-                        {user.role === 1 ? 'Admin' : 'User'}
+                        {user.role_id === 1 ? 'Admin' : 'User'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -193,6 +190,6 @@ export default async function ManageUsers({ searchParams }) {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import BookingForm from "../components/BookingForm"; // Dùng lại form mình đã viết
@@ -9,9 +10,22 @@ import BookingForm from "../components/BookingForm"; // Dùng lại form mình �
 // 1. Phần ruột của trang (Chứa logic lấy tham số từ URL)
 function BookingContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const tourId = searchParams.get('id');
   const price = searchParams.get('price');
   const title = searchParams.get('title');
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      // Block admin from accessing customer pages
+      if (user.role_id === 1) {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [router]);
 
   return (
     <main className="container mx-auto px-4 py-20 md:py-32 flex justify-center">

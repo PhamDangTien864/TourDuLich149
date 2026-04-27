@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function ReviewSystem({ tourId }) {
+const ReviewSystem = memo(function ReviewSystem({ tourId }) {
   const [reviews, setReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
@@ -224,6 +224,14 @@ export default function ReviewSystem({ tourId }) {
               </div>
             </div>
             <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+            {review.admin_reply && (
+              <div className="mt-4 bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-widest">Phản hồi từ Admin</span>
+                </div>
+                <p className="text-blue-800 text-sm leading-relaxed">{review.admin_reply}</p>
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
@@ -236,4 +244,6 @@ export default function ReviewSystem({ tourId }) {
       )}
     </div>
   );
-}
+});
+
+export default ReviewSystem;

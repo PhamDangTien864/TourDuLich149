@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import AdminLayout from "../components/AdminLayout";
 import { Plus, MapPin, Search, Filter } from "lucide-react";
 import Image from 'next/image';
 import Link from "next/link";
@@ -24,7 +23,13 @@ export default async function ManageTours({ searchParams }) {
           ]
         })
       },
-      include: { category: true },
+      include: {
+        tour_categories: true,
+        tour_images: {
+         // where: { is_primary: true },
+          take: 1
+        }
+      },
       orderBy: { id: 'desc' },
       skip,
       take: limit
@@ -45,7 +50,7 @@ export default async function ManageTours({ searchParams }) {
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
-    <AdminLayout>
+    <div>
       <div>
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-slate-900 text-white rounded-2xl p-6 mb-8">
@@ -108,7 +113,7 @@ export default async function ManageTours({ searchParams }) {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden relative">
                           <Image 
-                            src={tour.sub_title || "https://images.unsplash.com/photo-1528127269322-539801943592?w=100"} 
+                            src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=100"} 
                             alt={tour.title}
                             className="w-full h-full object-cover"
                             fill
@@ -118,7 +123,7 @@ export default async function ManageTours({ searchParams }) {
                         <div>
                           <p className="font-bold text-slate-800">{tour.title}</p>
                           <p className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-lg inline-block mt-1">
-                            {tour.category?.category_name}
+                            {tour.tour_categories?.category_name}
                           </p>
                         </div>
                       </div>
@@ -193,6 +198,6 @@ export default async function ManageTours({ searchParams }) {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

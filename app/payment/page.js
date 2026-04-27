@@ -17,6 +17,18 @@ function PaymentContent() {
   const amount = searchParams.get("amount");
   const tourId = searchParams.get("tourId");
 
+  useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      // Block admin from accessing customer pages
+      if (user.role_id === 1) {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [router]);
+
   const handlePaidConfirm = async () => {
     if (!bookingId) {
       toast.error("Không tìm thấy thông tin booking");
@@ -33,7 +45,7 @@ function PaymentContent() {
       if (res.ok) {
         toast.success("Hệ thống đang kiểm tra thanh toán của bạn!", { icon: '💰' });
         setTimeout(() => {
-          router.push("/history");
+          router.push("/customer/bookings");
         }, 2000);
       } else {
         toast.error("Lỗi gửi xác nhận!");

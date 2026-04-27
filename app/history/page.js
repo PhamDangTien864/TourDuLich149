@@ -14,6 +14,12 @@ export default async function HistoryPage() {
     return <div className="p-20 text-center font-black">Vui lòng đăng nhập để xem lịch sử!</div>;
   }
 
+  // Block admin from accessing customer pages
+  if (user.role_id === 1) {
+    // Server component can't redirect directly, so return a message
+    return <div className="p-20 text-center font-black">Admin không thể truy cập trang này. <a href="/admin" className="text-blue-600 underline">Về trang Admin</a></div>;
+  }
+
   const bookings = await prisma.bookings.findMany({
     where: { account_id: user.id }, // Lấy theo ID người đang đăng nhập
     include: { tours: true },

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import AdminLayout from "../components/AdminLayout";
 import { User, MapPin, Search, Filter, Download, Eye, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -59,7 +58,7 @@ export default async function ManageBookings({ searchParams }) {
   });
 
   return (
-    <AdminLayout>
+    <div>
       <div>
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-slate-900 text-white rounded-2xl p-6 mb-8">
@@ -197,9 +196,18 @@ export default async function ManageBookings({ searchParams }) {
                           <Eye size={16} />
                         </Link>
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             if (confirm(`Xác nhận booking của ${booking.customers.full_name}?`)) {
-                              // TODO: Add confirm booking API
+                              try {
+                                await fetch(`/api/bookings/${booking.id}/confirm`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ confirm: true })
+                                });
+                                window.location.reload();
+                              } catch (error) {
+                                alert('Lỗi xác nhận booking');
+                              }
                             }
                           }}
                           className="bg-green-100 hover:bg-green-200 text-green-600 p-2 rounded-lg transition-colors"
@@ -256,6 +264,6 @@ export default async function ManageBookings({ searchParams }) {
           )}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

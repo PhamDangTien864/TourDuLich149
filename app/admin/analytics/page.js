@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { prisma } from "@/lib/prisma";
-import AdminLayout from "../components/AdminLayout";
 import { TrendingUp, Users, DollarSign, MapPin, Star, Calendar, Download, Filter, X } from "lucide-react";
 import { LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import DatePicker from 'react-datepicker';
@@ -115,21 +114,21 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <div>
         <div className="p-8 flex items-center justify-center">
           <div className="text-slate-400 font-bold">Loading analytics...</div>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   if (!analyticsData) {
     return (
-      <AdminLayout>
+      <div>
         <div className="p-8 flex items-center justify-center">
           <div className="text-slate-400 font-bold">No data available</div>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
@@ -149,7 +148,7 @@ export default function AnalyticsPage() {
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
   return (
-    <AdminLayout>
+    <div>
       <div className="p-4 md:p-8">
         <div className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
@@ -425,6 +424,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

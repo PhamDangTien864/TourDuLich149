@@ -18,9 +18,9 @@ export default function WishlistPage() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Kiểm tra role - chỉ cho customer (role = 2)
-      if (parsedUser.role !== 2) {
-        router.push('/');
+      // Block admin from accessing customer pages
+      if (parsedUser.role_id === 1) {
+        router.push('/admin');
         return;
       }
       

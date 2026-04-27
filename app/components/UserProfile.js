@@ -218,8 +218,8 @@ export default function UserProfile() {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-gray-600">
-                    <p>Khách hàng: {booking.customer.full_name}</p>
-                    <p>SDT: {booking.customer.phone_number}</p>
+                    <p>Khách hàng: {booking.customers.full_name}</p>
+                    <p>SDT: {booking.customers.phone_number}</p>
                     <p>Ngày đặt: {new Date(booking.created_at).toLocaleDateString("vi-VN")}</p>
                   </div>
                   <div className="flex gap-2">

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import AdminLayout from '../../../components/AdminLayout';
 import { ArrowLeft, Save, MapPin, DollarSign, FileText, ImagePlus } from 'lucide-react';
 import ImageUpload from '../../../components/ImageUpload';
 
@@ -33,7 +32,7 @@ export default function EditTourPage() {
     try {
       const response = await fetch(`/api/tours/${tourId}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setFormData({
           title: data.title || '',
@@ -41,7 +40,7 @@ export default function EditTourPage() {
           price: data.price ? data.price.toString() : '',
           category_id: data.category_id || 1,
           description: data.description || '',
-          sub_title: data.sub_title || '',
+          sub_title: data.tour_images?.[0]?.image_url || data.sub_title || '',
           max_slots: data.max_slots || 20,
           is_active: data.is_active !== undefined ? data.is_active : true
         });
@@ -91,20 +90,17 @@ export default function EditTourPage() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-slate-600">Đang tải...</p>
-          </div>
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-slate-600">Đang tải...</p>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <button
             onClick={() => router.push('/admin/tours')}
@@ -233,6 +229,5 @@ export default function EditTourPage() {
           </form>
         </div>
       </div>
-    </AdminLayout>
   );
 }

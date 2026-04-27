@@ -12,7 +12,15 @@ export async function GET() {
 
   const items = await prisma.wishlist.findMany({
     where: { account_id: decoded.id },
-    include: { tours: true }
+    include: { 
+      tours: {
+        include: {
+          tour_images: {
+            take: 1
+          }
+        }
+      }
+    }
   });
 
   return NextResponse.json({ success: true, wishlist: items });

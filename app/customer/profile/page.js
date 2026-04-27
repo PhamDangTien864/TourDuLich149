@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Phone, Calendar, LogOut, ShieldCheck, MapPin, Clock, Star, CreditCard } from 'lucide-react';
+import { User, Mail, Phone, Calendar, LogOut, ShieldCheck, MapPin, Clock, Star, CreditCard, Heart } from 'lucide-react';
+import Wishlist from '../../components/Wishlist';
 
 export default function CustomerProfile() {
   const [user, setUser] = useState(null);
@@ -28,16 +29,16 @@ export default function CustomerProfile() {
     const userData = localStorage.getItem('user_data');
     if (userData) {
       const parsedUser = JSON.parse(userData);
-      setTimeout(function() { setUser(parsedUser) }, 0);
+      setUser(parsedUser);
       
-      // Kiểm tra role - chỉ cho customer (role = 2)
-      if (parsedUser.role !== 2) {
-        router.push('/');
+      // Kiểm tra role - chỉ cho customer (role_id = 2 hoặc role = 2)
+      if (parsedUser.role_id === 1 || parsedUser.role === 1) {
+        router.push('/admin');
         return;
       }
       
       // Lấy lịch sử bookings
-      setTimeout(function() { fetchBookings(parsedUser.id) }, 0);
+      fetchBookings(parsedUser.id);
     } else {
       router.push('/login');
     }
@@ -67,9 +68,9 @@ export default function CustomerProfile() {
 
   const stats = {
     totalBookings: bookings.length,
-    confirmedBookings: bookings.filter(b => b.isConfirmed).length,
+    confirmedBookings: bookings.filter(b => b.is_confirmed).length,
     totalSpent: bookings.reduce((sum, b) => sum + (b.amount || 0), 0),
-    upcomingBookings: bookings.filter(b => new Date(b.startDate) > new Date()).length
+    upcomingBookings: bookings.filter(b => new Date(b.start_date) > new Date()).length
   };
 
   return (
@@ -108,16 +109,16 @@ export default function CustomerProfile() {
                 <User size={48} className="text-blue-600" />
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-white mb-2">{user.name}</h1>
+                <h1 className="text-3xl font-bold text-white mb-2">{user.name || user.full_name || 'Customer'}</h1>
                 <p className="text-blue-100 mb-4">Customer Account</p>
                 <div className="flex items-center gap-4 text-white">
                   <div className="flex items-center gap-2">
                     <Mail size={16} />
-                    <span>{user.email}</span>
+                    <span>{user.email || 'Chưa cập nhật'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone size={16} />
-                    <span>{user.phone_number}</span>
+                    <span>{user.phone_number || 'Chưa cập nhật'}</span>
                   </div>
                 </div>
               </div>
@@ -161,12 +162,19 @@ export default function CustomerProfile() {
                 Lịch sử
               </div>
             </button>
-            <Link href="/wishlist" className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition">
+            <button
+              onClick={() => setActiveTab('wishlist')}
+              className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                activeTab === 'wishlist'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <span className="text-pink-500">§</span>
+                <Heart size={16} className="text-pink-500" />
                 Yêu thích
               </div>
-            </Link>
+            </button>
             <Link href="/" className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition">
               <div className="flex items-center gap-2">
                 <span className="text-green-500">H</span>
@@ -206,7 +214,7 @@ export default function CustomerProfile() {
                   <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                     <CreditCard size={24} className="text-yellow-600" />
                   </div>
-                  <span className="text-3xl font-bold text-blue-600">${stats.totalSpent.toLocaleString()}</span>
+                  <span className="text-3xl font-bold text-blue-600">{stats.totalSpent.toLocaleString()}đ</span>
                 </div>
                 <h3 className="text-gray-500 text-sm">Tổng chi tiêu</h3>
               </div>
@@ -258,18 +266,18 @@ export default function CustomerProfile() {
                             </div>
                             <div className="flex items-center gap-1">
                               <Calendar size={14} />
-                              <span>{new Date(booking.startDate).toLocaleDateString('vi-VN')}</span>
+                              <span>{new Date(booking.start_date).toLocaleDateString('vi-VN')}</span>
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xl font-bold text-blue-600">${booking.amount.toLocaleString()}</p>
+                          <p className="text-xl font-bold text-blue-600">{booking.amount.toLocaleString()}đ</p>
                           <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                            booking.isConfirmed 
+                            booking.is_confirmed 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {booking.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                            {booking.is_confirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                           </span>
                         </div>
                       </div>
@@ -309,18 +317,18 @@ export default function CustomerProfile() {
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar size={14} />
-                            <span>{new Date(booking.startDate).toLocaleDateString('vi-VN')}</span>
+                            <span>{new Date(booking.start_date).toLocaleDateString('vi-VN')}</span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-blue-600">${booking.amount.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-blue-600">{booking.amount.toLocaleString()}đ</p>
                         <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          booking.isConfirmed 
+                          booking.is_confirmed 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {booking.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
+                          {booking.is_confirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                         </span>
                       </div>
                     </div>
@@ -328,6 +336,12 @@ export default function CustomerProfile() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'wishlist' && (
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <Wishlist />
           </div>
         )}
       </div>

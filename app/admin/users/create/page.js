@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminLayout from '../../components/AdminLayout';
 import { ArrowLeft, Save, User, Mail, Phone, ShieldCheck } from 'lucide-react';
 
 export default function CreateUserPage() {
@@ -45,7 +44,7 @@ export default function CreateUserPage() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <button
@@ -173,6 +172,6 @@ export default function CreateUserPage() {
           </form>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

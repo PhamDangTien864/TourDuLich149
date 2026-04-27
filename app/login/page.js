@@ -81,10 +81,10 @@ export default function LoginPage() {
         
         toast.success(`Chào mừng ${data.user.name} đã trở lại!`);
         
-        if (data.user.role === 1) {
+        if (data.user.role_id === 1) {
           router.push('/admin');
         } else {
-          // Customer (role = 2) - redirect về trang chủ
+          // Customer (role_id = 2) - redirect về trang chủ
           router.push('/');
         }
         router.refresh();
@@ -172,19 +172,37 @@ export default function LoginPage() {
               )}
             </div>
 
-            <button 
-              type="submit" disabled={loading} 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-[28px] font-black text-lg shadow-xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-3"
-            >
-              {loading ? <Loader2 className="animate-spin" /> : <>Tiếp tục <ArrowRight size={22} /></>}
-            </button>
-          </form>
+            <div className="space-y-2">
+              <button
+                onClick={handleLogin}
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 py-4 rounded-2xl font-bold text-white transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30"
+              >
+                {loading ? <Loader2 className="animate-spin" /> : 'Đăng Nhập'}
+              </button>
 
-          <div className="mt-10 text-center">
-            <p className="text-slate-500 font-bold text-sm">
-              Bạn chưa có tài khoản? <Link href="/register" className="text-blue-600 hover:underline">Đăng ký ngay</Link>
-            </p>
-          </div>
+              <div className="flex items-center justify-between text-sm">
+                <button
+                  onClick={() => router.push('/forgot-password')}
+                  className="text-blue-400 hover:text-blue-300 transition"
+                >
+                  Quên mật khẩu?
+                </button>
+                <button
+                  onClick={() => router.push('/register')}
+                  className="text-blue-400 hover:text-blue-300 transition"
+                >
+                  Đăng ký tài khoản
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-10 text-center">
+              <p className="text-slate-500 font-bold text-sm">
+                Bạn chưa có tài khoản? <Link href="/register" className="text-blue-600 hover:underline">Đăng ký ngay</Link>
+              </p>
+            </div>
+          </form>
         </motion.div>
       </main>
     </div>

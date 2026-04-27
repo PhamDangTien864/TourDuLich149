@@ -1,5 +1,6 @@
 import { Be_Vietnam_Pro } from "next/font/google";
-import FloatingContact from './components/FloatingContact'; 
+import FloatingContact from './components/FloatingContact';
+import { Toaster } from 'react-hot-toast';
 import "./globals.css"; // Đảm bảo bạn có import css để nhận biến font
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
       <body className="antialiased">
         {children}
         <FloatingContact />
+        <Toaster />
       </body>
     </html>
   );

@@ -16,13 +16,15 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get('category');
     const location = searchParams.get('location');
+    const q = searchParams.get('q');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
+    const sortBy = searchParams.get('sortBy') || 'newest';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
 
     // Create cache key based on filters
-    const cacheKey = `${CACHE_KEYS.TOURS}:${JSON.stringify({ category, location, minPrice, maxPrice, page, limit })}`;
+    const cacheKey = `${CACHE_KEYS.TOURS}:${JSON.stringify({ category, location, q, minPrice, maxPrice, sortBy, page, limit })}`;
 
     // Try to get from cache first
     const cached = cache.get(cacheKey);
@@ -37,6 +39,8 @@ export async function GET(req: NextRequest) {
       is_deleted: boolean;
       category_id?: number;
       location_name?: { contains: string; mode: 'insensitive' };
+      title?: { contains: string; mode: 'insensitive' };
+      OR?: Array<{ title?: { contains: string; mode: 'insensitive' }; location_name?: { contains: string; mode: 'insensitive' } }>;
       price?: { gte?: bigint; lte?: bigint };
     } = {
       is_active: true,
@@ -54,6 +58,16 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    // Search by q parameter (title or location_name)
+    if (q) {
+      console.log('Searching for:', q);
+      where.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { location_name: { contains: q, mode: 'insensitive' } }
+      ];
+      console.log('Where clause with OR:', JSON.stringify(where));
+    }
+
     if (minPrice || maxPrice) {
       where.price = {};
       if (minPrice) where.price.gte = BigInt(parseInt(minPrice));
@@ -62,6 +76,16 @@ export async function GET(req: NextRequest) {
 
     // Get total count for pagination
     const total = await prisma.tours.count({ where });
+
+    // Build orderBy based on sortBy parameter
+    let orderBy: any = { id: 'desc' };
+    if (sortBy === 'price_asc') {
+      orderBy = { price: 'asc' };
+    } else if (sortBy === 'price_desc') {
+      orderBy = { price: 'desc' };
+    } else {
+      orderBy = { id: 'desc' }; // newest
+    }
 
     // Get tours with pagination
     const tours = await prisma.tours.findMany({
@@ -72,23 +96,75 @@ export async function GET(req: NextRequest) {
             id: true,
             category_name: true
           }
+        },
+        tour_images: {
+          take: 1
         }
       },
-      orderBy: {
-        id: 'desc'
-      },
+      orderBy,
       skip: (page - 1) * limit,
       take: limit
     });
 
-    // Format response
-    const toursFormatted = tours.map((tour) => ({
-      ...tour,
-      price: tour.price.toString(),
-      averageRating: 0, // TODO: Calculate from reviews table
-      totalReviews: 0, // TODO: Count from reviews table
-      totalBookings: 0 // TODO: Count from bookings table
-    }));
+    // Get all reviews and bookings in single queries to avoid N+1
+    const tourIds = tours.map(t => t.id);
+    const [allReviews, allBookings, bookingCounts] = await Promise.all([
+      tourIds.length > 0 ? prisma.reviews.findMany({
+        where: { tour_id: { in: tourIds }, is_deleted: false },
+        select: { tour_id: true, rating: true }
+      }) : [],
+      tourIds.length > 0 ? prisma.bookings.groupBy({
+        by: ['tour_id'],
+        where: { tour_id: { in: tourIds } },
+        _count: { id: true }
+      }) : [],
+      tourIds.length > 0 ? prisma.bookings.groupBy({
+        by: ['tour_id'],
+        where: { 
+          tour_id: { in: tourIds },
+          status: { not: 'cancelled' }
+        },
+        _count: { id: true }
+      }) : []
+    ]);
+
+    // Aggregate reviews and bookings by tour_id
+    const reviewsByTour: Record<number, number[]> = allReviews.reduce((acc, r) => {
+      if (!acc[r.tour_id]) acc[r.tour_id] = [];
+      if (r.rating !== null) acc[r.tour_id].push(r.rating);
+      return acc;
+    }, {} as Record<number, number[]>);
+
+    const bookingsByTour: Record<number, number> = allBookings.reduce((acc, b) => {
+      acc[b.tour_id] = b._count.id;
+      return acc;
+    }, {} as Record<number, number>);
+
+    const activeBookingsByTour: Record<number, number> = bookingCounts.reduce((acc, b) => {
+      acc[b.tour_id] = b._count.id;
+      return acc;
+    }, {} as Record<number, number>);
+
+    // Format response with pre-calculated stats
+    const toursFormatted = tours.map(tour => {
+      const tourReviews = reviewsByTour[tour.id] || [];
+      const averageRating = tourReviews.length > 0
+        ? tourReviews.reduce((sum: number, r: number) => sum + r, 0) / tourReviews.length
+        : 0;
+
+      const activeBookings = activeBookingsByTour[tour.id] || 0;
+      const remainingSlots = tour.max_slots ? Math.max(0, tour.max_slots - activeBookings) : null;
+
+      return {
+        ...tour,
+        price: tour.price.toString(),
+        averageRating: Math.round(averageRating * 10) / 10,
+        totalReviews: tourReviews.length,
+        totalBookings: bookingsByTour[tour.id] || 0,
+        remainingSlots,
+        maxSlots: tour.max_slots
+      };
+    });
 
     const response = {
       tours: toursFormatted,

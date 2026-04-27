@@ -13,6 +13,11 @@ export default function CustomerMePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [confirmAction, setConfirmAction] = useState(null); // 'profile' or 'password'
   
   // Profile data
   const [profile, setProfile] = useState({
@@ -31,13 +36,21 @@ export default function CustomerMePage() {
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
-    confirmPassword: '',
-    emailVerification: ''
+    confirmPassword: ''
   });
 
   useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      // Block admin from accessing customer pages
+      if (user.role_id === 1) {
+        router.push('/admin');
+        return;
+      }
+    }
     fetchProfile();
-  }, []);
+  }, [router]);
 
   const fetchProfile = async () => {
     try {
@@ -72,6 +85,20 @@ export default function CustomerMePage() {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!profile.full_name || !profile.phone_number || !profile.email) {
+      setErrorMessage('Chưa đủ thông tin!');
+      setShowErrorModal(true);
+      return;
+    }
+
+    setShowConfirmModal(true);
+    setConfirmAction('profile');
+  };
+
+  const executeProfileUpdate = async () => {
+    setShowConfirmModal(false);
     setSaving(true);
     
     try {
@@ -85,7 +112,10 @@ export default function CustomerMePage() {
       });
 
       if (res.ok) {
-        toast.success('Cập nhật thông tin thành công!');
+        setShowSuccessModal(true);
+        setConfirmAction('profile');
+        // Refresh profile data to show updated values
+        await fetchProfile();
       } else {
         toast.error('Cập nhật thất bại!');
       }
@@ -99,16 +129,31 @@ export default function CustomerMePage() {
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!passwordData.currentPassword) {
+      setErrorMessage('Chưa đủ thông tin!');
+      setShowErrorModal(true);
+      return;
+    }
+    
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('Mật khẩu mới không khớp!');
+      setErrorMessage('Mật khẩu mới không khớp!');
+      setShowErrorModal(true);
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      toast.error('Mật khẩu phải có ít nhất 6 ký tự!');
+      setErrorMessage('Mật khẩu phải có ít nhất 6 ký tự!');
+      setShowErrorModal(true);
       return;
     }
 
+    setShowConfirmModal(true);
+    setConfirmAction('password');
+  };
+
+  const executePasswordChange = async () => {
+    setShowConfirmModal(false);
     setSaving(true);
     
     try {
@@ -121,18 +166,17 @@ export default function CustomerMePage() {
         body: JSON.stringify({
           userId: user.id,
           currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
-          emailVerification: passwordData.emailVerification
+          newPassword: passwordData.newPassword
         })
       });
 
       if (res.ok) {
-        toast.success('Đổi mật khẩu thành công!');
+        setShowSuccessModal(true);
+        setConfirmAction('password');
         setPasswordData({
           currentPassword: '',
           newPassword: '',
-          confirmPassword: '',
-          emailVerification: ''
+          confirmPassword: ''
         });
       } else {
         const data = await res.json();
@@ -305,9 +349,13 @@ export default function CustomerMePage() {
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none transition disabled:bg-slate-100"
                       >
                         <option value="">Chọn quận/huyện</option>
-                        {DISTRICTS.filter(d => d.provinceCode === profile.province_id).map(district => (
-                          <option key={district.id} value={district.id}>{district.name}</option>
-                        ))}
+                        {(() => {
+                          const selectedProvince = PROVINCES.find(p => p.id === Number(profile.province_id));
+                          const provinceCode = selectedProvince ? selectedProvince.code : null;
+                          return DISTRICTS.filter(d => d.provinceCode === provinceCode).map(district => (
+                            <option key={district.id} value={district.id}>{district.name}</option>
+                          ));
+                        })()}
                       </select>
                     </div>
                     
@@ -322,9 +370,13 @@ export default function CustomerMePage() {
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none transition disabled:bg-slate-100"
                       >
                         <option value="">Chọn phường/xã</option>
-                        {WARDS.filter(w => w.districtCode === profile.district_id).map(ward => (
-                          <option key={ward.id} value={ward.id}>{ward.name}</option>
-                        ))}
+                        {(() => {
+                          const selectedDistrict = DISTRICTS.find(d => d.id === Number(profile.district_id));
+                          const districtCode = selectedDistrict ? selectedDistrict.districtCode : null;
+                          return WARDS.filter(w => w.districtCode === districtCode).map(ward => (
+                            <option key={ward.id} value={ward.id}>{ward.name}</option>
+                          ));
+                        })()}
                       </select>
                     </div>
                   </div>
@@ -399,22 +451,6 @@ export default function CustomerMePage() {
                   />
                 </div>
 
-                <div className="border-t pt-6">
-                  <p className="text-sm font-bold text-slate-600 mb-4">
-                    Hoặc xác nhận qua email:
-                  </p>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                      type="email"
-                      value={passwordData.emailVerification}
-                      onChange={(e) => setPasswordData({ ...passwordData, emailVerification: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 outline-none transition"
-                      placeholder="Nhập email để xác nhận"
-                    />
-                  </div>
-                </div>
-
                 <button
                   type="submit"
                   disabled={saving}
@@ -428,6 +464,89 @@ export default function CustomerMePage() {
         </div>
       </main>
       <Footer />
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-black text-slate-800 mb-2">
+              Lỗi
+            </h3>
+            <p className="text-slate-600 mb-6">
+              {errorMessage}
+            </p>
+            <button
+              onClick={() => setShowErrorModal(false)}
+              className="w-full px-6 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-black text-slate-800 mb-4">
+              {confirmAction === 'profile' ? 'Xác nhận lưu thông tin' : 'Xác nhận đổi mật khẩu'}
+            </h3>
+            <p className="text-slate-600 mb-6">
+              {confirmAction === 'profile' 
+                ? 'Bạn có chắc chắn muốn lưu thông tin cá nhân?' 
+                : 'Bạn có chắc chắn muốn đổi mật khẩu?'}
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 px-6 py-3 rounded-xl font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmAction === 'profile' ? executeProfileUpdate : executePasswordChange}
+                disabled={saving}
+                className="flex-1 px-6 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {saving ? 'Đang xử lý...' : 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-black text-slate-800 mb-2">
+              {confirmAction === 'profile' ? 'Lưu thông tin thành công!' : 'Đổi mật khẩu thành công!'}
+            </h3>
+            <p className="text-slate-600 mb-6">
+              {confirmAction === 'profile' 
+                ? 'Thông tin cá nhân của bạn đã được cập nhật.' 
+                : 'Mật khẩu của bạn đã được thay đổi.'}
+            </p>
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full px-6 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

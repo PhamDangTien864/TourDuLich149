@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import AdminLayout from "../components/AdminLayout";
 import { Settings, Save, Bell, Shield, Database, Globe } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -43,7 +42,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <AdminLayout>
+    <div>
       <div>
         <div className="mb-8">
           <h1 className="text-3xl font-black text-slate-800 mb-2">Cài đặt</h1>
@@ -185,38 +184,195 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Other tabs */}
+          {/* Notifications Settings */}
           {activeTab === 'notifications' && (
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                 <Bell size={20} className="text-blue-600" />
                 Cài đặt thông báo
               </h2>
-              <p className="text-slate-500">Cài đặt thông báo sẽ được thêm sau...</p>
+              
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                  <div>
+                    <p className="font-bold text-slate-800">Thông báo booking mới</p>
+                    <p className="text-sm text-slate-500">Nhận thông báo khi có booking mới</p>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 rounded text-blue-600" />
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                  <div>
+                    <p className="font-bold text-slate-800">Thông báo đánh giá mới</p>
+                    <p className="text-sm text-slate-500">Nhận thông báo khi có đánh giá mới</p>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 rounded text-blue-600" />
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                  <div>
+                    <p className="font-bold text-slate-800">Thông báo email</p>
+                    <p className="text-sm text-slate-500">Gửi thông báo qua email</p>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-5 h-5 rounded text-blue-600" />
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => handleSave('thông báo')}
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Save size={16} />
+                  )}
+                  Lưu cấu hình
+                </button>
+              </div>
             </div>
           )}
 
+          {/* Security Settings */}
           {activeTab === 'security' && (
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                 <Shield size={20} className="text-blue-600" />
                 Cài đặt bảo mật
               </h2>
-              <p className="text-slate-500">Cài đặt bảo mật sẽ được thêm sau...</p>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    SMTP Host
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="smtp.gmail.com"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    SMTP Port
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="587"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    SMTP Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="your-email@gmail.com"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    SMTP Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                  <div>
+                    <p className="font-bold text-slate-800">Bảo mật 2FA</p>
+                    <p className="text-sm text-slate-500">Bật xác thực 2 yếu tố cho admin</p>
+                  </div>
+                  <input type="checkbox" className="w-5 h-5 rounded text-blue-600" />
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => handleSave('bảo mật')}
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Save size={16} />
+                  )}
+                  Lưu cấu hình
+                </button>
+              </div>
             </div>
           )}
 
+          {/* Database Settings */}
           {activeTab === 'database' && (
             <div className="p-6">
               <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                 <Database size={20} className="text-blue-600" />
                 Cài đặt Database
               </h2>
-              <p className="text-slate-500">Cài đặt database sẽ được thêm sau...</p>
+              
+              <div className="space-y-6">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="font-bold text-green-800 mb-2">📊 Thống kê Database</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-black text-green-600">1,234</p>
+                      <p className="text-xs text-green-700 font-bold">Tours</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-black text-green-600">5,678</p>
+                      <p className="text-xs text-green-700 font-bold">Bookings</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-black text-green-600">9,012</p>
+                      <p className="text-xs text-green-700 font-bold">Users</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-black text-green-600">45.2 MB</p>
+                      <p className="text-xs text-green-700 font-bold">Size</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                    <Database size={18} />
+                    Backup Database
+                  </button>
+                  
+                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                    <Database size={18} />
+                    Restore Database
+                  </button>
+                  
+                  <button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+                    <Database size={18} />
+                    Optimize Database
+                  </button>
+                </div>
+                
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                  <p className="font-bold text-yellow-800">⚠️ Lưu ý</p>
+                  <p className="text-sm text-yellow-700 mt-2">
+                    Backup database định kỳ để tránh mất dữ liệu. Khuyến nghị backup hàng ngày.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 }

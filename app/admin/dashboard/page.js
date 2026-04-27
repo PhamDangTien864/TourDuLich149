@@ -7,14 +7,14 @@ export default function DashboardRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/admin');
+    // Remove redirect to avoid loop
+    // router.replace('/admin');
   }, [router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-slate-600">Redirecting to dashboard...</p>
+        <p className="text-slate-600">Dashboard content should be here</p>
       </div>
     </div>
   );

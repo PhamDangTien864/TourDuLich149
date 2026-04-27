@@ -113,3 +113,28 @@ export async function PATCH(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const userId = parseInt(id);
+
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+    }
+
+    // Soft delete customer
+    await prisma.customers.update({
+      where: { id: userId },
+      data: { is_deleted: true }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting customer:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
