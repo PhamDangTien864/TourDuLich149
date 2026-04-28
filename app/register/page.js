@@ -41,7 +41,7 @@ export default function RegisterPage() {
         if (!value) {
           newErrors.phone_number = 'Vui lòng nhập số điện thoại';
         } else if (!phoneRegex.test(value)) {
-          newErrors.phone_number = 'Số điện thoại phải từ 10-11 số';
+          newErrors.phone_number = 'Số điện thoại phải đủ 10 số';
         } else {
           delete newErrors.phone_number;
         }
