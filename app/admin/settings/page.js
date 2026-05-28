@@ -27,7 +27,7 @@ export default function SettingsPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.success(`Cập nhật cấu hình ${section} thành công!`);
-    } catch (error) {
+    } catch {
       toast.error('Lỗi khi cập nhật cấu hình');
     } finally {
       setLoading(false);

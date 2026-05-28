@@ -1,14 +1,35 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { authenticate } from "@/lib/middleware";
+import bcrypt from "bcrypt";
 
 export async function POST(req) {
   try {
+    // Authenticate user - chỉ admin mới có thể tạo user
+    const user = await authenticate(req);
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Check if user is admin (role_id = 1)
+    if (user.role_id !== 1) {
+      return NextResponse.json({ error: 'Chỉ admin mới có thể tạo user' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { username, full_name, email, phone_number, password, role_id } = body;
 
     if (!username || !full_name || !email || !phone_number || !password) {
       return NextResponse.json(
         { error: "Thiếu thông tin bắt buộc" },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: "Mật khẩu phải có ít nhất 6 ký tự" },
         { status: 400 }
       );
     }
@@ -37,15 +58,27 @@ export async function POST(req) {
       );
     }
 
-    const user = await prisma.accounts.create({
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Validate role_id - chỉ admin mới có thể tạo admin
+    const requestedRoleId = parseInt(role_id) || 2;
+    if (requestedRoleId === 1 && user.role_id !== 1) {
+      return NextResponse.json(
+        { error: "Không có quyền tạo admin" },
+        { status: 403 }
+      );
+    }
+
+    const newUser = await prisma.accounts.create({
       data: {
         username,
         full_name,
         email,
         phone_number,
-        password, // Note: In production, this should be hashed
-        role_id: parseInt(role_id) || 2, // Default to customer
-        is_verified: true, // Admin-created users are auto-verified
+        password: hashedPassword,
+        role_id: requestedRoleId,
+        is_verified: true,
         is_deleted: false
       }
     });
@@ -53,17 +86,16 @@ export async function POST(req) {
     return NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        username: user.username,
-        full_name: user.full_name,
-        email: user.email,
-        phone_number: user.phone_number,
-        role_id: user.role_id
+        id: newUser.id,
+        username: newUser.username,
+        full_name: newUser.full_name,
+        email: newUser.email,
+        phone_number: newUser.phone_number,
+        role_id: newUser.role_id
       }
     });
 
-  } catch (error) {
-    console.error("Create user error:", error);
+  } catch {
     return NextResponse.json(
       { error: "Lỗi hệ thống, vui lòng thử lại sau" },
       { status: 500 }

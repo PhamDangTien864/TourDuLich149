@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import Link from "next/link";
-import { Send, X, Bot, User } from "lucide-react";
+import { Send, X, Bot } from "lucide-react";
 import { sampleTours } from "@/lib/constants";
 
-export default function Chatbot() {
+const Chatbot = memo(function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([{ sender: "bot", text: "Chào bạn! Bạn cần mình tìm tour nào? ✈️" }]);
   const [input, setInput] = useState("");
@@ -115,4 +115,6 @@ export default function Chatbot() {
       </div>
     </div>
   );
-}
+});
+
+export default Chatbot;

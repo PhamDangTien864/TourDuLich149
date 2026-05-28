@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, MapPin, Users, CreditCard, Clock, Filter, Loader2, X, Download } from 'lucide-react';
+import { Calendar, MapPin, Users, CreditCard, Clock, Filter, Loader2, Download } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import Header from '../components/Header';
@@ -28,11 +29,7 @@ export default function MyBookingsPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showFilter, setShowFilter] = useState(false);
 
-  useEffect(() => {
-    fetchBookings();
-  }, [filterStatus]);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
       const userData = localStorage.getItem('user_data');
@@ -59,7 +56,12 @@ export default function MyBookingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, filterStatus]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchBookings();
+  }, [fetchBookings]);
 
   const handleCancelBooking = async (bookingId) => {
     if (!confirm('Bạn có chắc muốn hủy booking này?')) return;
@@ -179,7 +181,7 @@ export default function MyBookingsPage() {
                 <div className="flex flex-col md:flex-row">
                   <div className="md:w-64 h-48 md:h-auto bg-slate-200">
                     {booking.tours.tour_images?.[0] ? (
-                      <img
+                      <Image
                         src={booking.tours.tour_images[0].image_url}
                         alt={booking.tours.title}
                         className="w-full h-full object-cover"

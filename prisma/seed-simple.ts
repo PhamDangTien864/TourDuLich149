@@ -43,6 +43,7 @@ async function main() {
       update: {},
       create: {
         title: 'Tour Da Nang 3N2D',
+        slug: 'tour-da-nang-3n2d',
         location_name: 'Da Nang',
         price: BigInt(2999000),
         category_id: categories[0].id,
@@ -57,6 +58,7 @@ async function main() {
       update: {},
       create: {
         title: 'Tour Phu Quoc 4N3D',
+        slug: 'tour-phu-quoc-4n3d',
         location_name: 'Phu Quoc',
         price: BigInt(4999000),
         category_id: categories[0].id,
@@ -71,6 +73,7 @@ async function main() {
       update: {},
       create: {
         title: 'Tour Ha Noi 2N1D',
+        slug: 'tour-ha-noi-2n1d',
         location_name: 'Ha Noi',
         price: BigInt(1999000),
         category_id: categories[2].id,
@@ -86,7 +89,7 @@ async function main() {
   console.log('Creating admin user...');
   const hashedAdminPassword = await hashPassword('admin123');
   
-  const adminUser = await prisma.accounts.upsert({
+  await prisma.accounts.upsert({
     where: { username: 'admin' },
     update: {},
     create: {

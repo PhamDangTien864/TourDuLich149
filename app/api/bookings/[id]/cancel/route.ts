@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { authenticate } from '@/lib/middleware';
+import { BookingStatus } from '@/lib/booking-service';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     // Check if booking can be cancelled (not already cancelled or completed)
-    if (booking.status === 'cancelled' || booking.status === 'completed') {
+    if (booking.status === BookingStatus.CANCELLED || booking.status === BookingStatus.COMPLETED) {
       return NextResponse.json({ 
         error: 'Cannot cancel this booking' 
       }, { status: 400 });
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Update booking status to cancelled
     await prisma.bookings.update({
       where: { id: bookingId },
-      data: { status: 'cancelled' }
+      data: { status: BookingStatus.CANCELLED }
     });
 
     return NextResponse.json({ 

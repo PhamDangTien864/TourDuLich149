@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { ErrorHandler } from '@/lib/errors';
+import { errorResponse } from '@/lib/api-response';
 
 export async function DELETE(
   req: NextRequest,
@@ -26,9 +28,8 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error("DELETE_TOUR_ERROR:", error);
-    return NextResponse.json({ 
-      error: "Failed to delete tour" 
-    }, { status: 500 });
+    const bookingError = ErrorHandler.handle(error);
+    ErrorHandler.log(bookingError, 'DELETE_TOUR_ERROR');
+    return errorResponse(bookingError.message, bookingError.statusCode);
   }
 }

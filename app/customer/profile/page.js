@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Phone, Calendar, LogOut, ShieldCheck, MapPin, Clock, Star, CreditCard, Heart } from 'lucide-react';
+import { User, Mail, Phone, Calendar, LogOut, ShieldCheck, MapPin, Clock, CreditCard, Heart } from 'lucide-react';
 import Wishlist from '../../components/Wishlist';
 
 export default function CustomerProfile() {
@@ -29,14 +29,15 @@ export default function CustomerProfile() {
     const userData = localStorage.getItem('user_data');
     if (userData) {
       const parsedUser = JSON.parse(userData);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(parsedUser);
-      
+
       // Kiểm tra role - chỉ cho customer (role_id = 2 hoặc role = 2)
       if (parsedUser.role_id === 1 || parsedUser.role === 1) {
         router.push('/admin');
         return;
       }
-      
+
       // Lấy lịch sử bookings
       fetchBookings(parsedUser.id);
     } else {

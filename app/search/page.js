@@ -1,22 +1,25 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect, Suspense } from 'react';
-import { Search, MapPin, ArrowRight, SlidersHorizontal, DollarSign, Calendar, Star, X, Loader2 } from "lucide-react";
+import { Search, MapPin, ArrowRight, SlidersHorizontal, DollarSign, Calendar, X, Loader2, Bus, Plane, Car, Map, Star, TrendingUp, Flame, Clock, Users } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Link from "next/link";
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ErrorHandler } from '@/lib/errors';
 
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchResults, setSearchResults] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalTours, setTotalTours] = useState(0);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // grid, map
+  const [categories, setCategories] = useState([]);
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   const query = searchParams.get('q') || "";
   const minPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : 0;
@@ -25,19 +28,33 @@ function SearchContent() {
   const sortBy = searchParams.get('sortBy') || "newest";
   const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1;
   const minRating = searchParams.get('minRating') ? Number(searchParams.get('minRating')) : 0;
+  const transportType = searchParams.get('transportType') || "";
+  const departureDate = searchParams.get('departureDate') || "";
+  const minSlots = searchParams.get('minSlots') ? Number(searchParams.get('minSlots')) : 0;
+
+  // Debounce query to reduce API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     const fetchTours = async () => {
-      setLoading(true);
       try {
         const params = new URLSearchParams();
-        if (query) params.append('q', query);
+        if (debouncedQuery) params.append('q', debouncedQuery);
         if (minPrice > 0) params.append('minPrice', minPrice.toString());
         if (maxPrice < 100000000) params.append('maxPrice', maxPrice.toString());
         if (category) params.append('category', category.toString());
         if (sortBy) params.append('sortBy', sortBy);
         params.append('page', page.toString());
         params.append('limit', '10'); // 10 tours per page
+        if (minRating > 0) params.append('minRating', minRating.toString());
+        if (transportType) params.append('transportType', transportType);
+        if (departureDate) params.append('departureDate', departureDate);
+        if (minSlots > 0) params.append('minSlots', minSlots.toString());
 
         console.log('Search params:', params.toString());
         const res = await fetch(`/api/tours?${params.toString()}`);
@@ -48,12 +65,10 @@ function SearchContent() {
         setCurrentPage(page);
         console.log('Fetched tours:', data.tours?.length || 0, 'Total:', data.pagination?.total);
       } catch (error) {
-        console.error('Error fetching tours:', error);
+        ErrorHandler.log(ErrorHandler.handle(error), 'Error fetching tours');
         setSearchResults([]);
         setTotalPages(1);
         setTotalTours(0);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -63,13 +78,13 @@ function SearchContent() {
         const data = await res.json();
         setCategories(data || []);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        ErrorHandler.log(ErrorHandler.handle(error), 'Error fetching categories');
       }
     };
 
     fetchTours();
     fetchCategories();
-  }, [query, minPrice, maxPrice, category, sortBy, page, minRating]);
+  }, [debouncedQuery, minPrice, maxPrice, category, sortBy, page, minRating, transportType, departureDate, minSlots]);
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
@@ -85,6 +100,9 @@ function SearchContent() {
     if (formData.get('minDuration')) params.append('minDuration', formData.get('minDuration'));
     if (formData.get('maxDuration')) params.append('maxDuration', formData.get('maxDuration'));
     if (formData.get('availability')) params.append('availability', formData.get('availability'));
+    if (formData.get('transportType')) params.append('transportType', formData.get('transportType'));
+    if (formData.get('departureDate')) params.append('departureDate', formData.get('departureDate'));
+    if (formData.get('minSlots')) params.append('minSlots', formData.get('minSlots'));
     params.append('page', '1'); // Reset to page 1 when filtering
 
     router.push(`/search?${params.toString()}`);
@@ -136,16 +154,35 @@ function SearchContent() {
                 <p className="text-xs font-bold text-slate-400">Tìm tour theo nhu cầu của bạn</p>
               </div>
             </div>
-            {(query || minPrice > 0 || maxPrice < 100000000 || category || minRating > 0) && (
-              <button
-                type="button"
-                onClick={() => router.push('/search')}
-                className="flex items-center gap-2 text-red-500 hover:text-red-600 font-bold text-sm transition"
-              >
-                <X size={16} />
-                Xóa bộ lọc
-              </button>
-            )}
+            <div className="flex items-center gap-4">
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <MapPin size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('map')}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'map' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <Map size={18} />
+                </button>
+              </div>
+              {(query || minPrice > 0 || maxPrice < 100000000 || category || minRating > 0 || transportType || departureDate || minSlots > 0) && (
+                <button
+                  type="button"
+                  onClick={() => router.push('/search')}
+                  className="flex items-center gap-2 text-red-500 hover:text-red-600 font-bold text-sm transition"
+                >
+                  <X size={16} />
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -176,6 +213,9 @@ function SearchContent() {
               <option value="newest"> Mới nhất</option>
               <option value="price_asc"> Giá thấp</option>
               <option value="price_desc"> Giá cao</option>
+              <option value="best_selling"> Bán chạy</option>
+              <option value="rating"> Đánh giá cao</option>
+              <option value="popular"> Phổ biến</option>
             </select>
 
             <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
@@ -213,7 +253,34 @@ function SearchContent() {
 
           {/* Advanced Filters */}
           {showAdvancedFilters && (
-            <div className="mt-4 pt-4 border-t border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="mt-4 pt-4 border-t border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Transport Type Filter */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 mb-2 block">Phương tiện</label>
+                <select
+                  name="transportType"
+                  defaultValue={transportType || ""}
+                  className="w-full px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl font-bold text-sm text-slate-700 focus:outline-none focus:border-blue-500 transition-all cursor-pointer"
+                >
+                  <option value=""> Tất cả</option>
+                  <option value="bus"> Xe khách</option>
+                  <option value="train"> Tàu hỏa</option>
+                  <option value="flight"> Máy bay</option>
+                  <option value="private_car"> Xe riêng</option>
+                </select>
+              </div>
+
+              {/* Departure Date Filter */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 mb-2 block">Ngày khởi hành</label>
+                <input
+                  type="date"
+                  name="departureDate"
+                  defaultValue={departureDate || ""}
+                  className="w-full px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl font-bold text-sm text-slate-700 focus:outline-none focus:border-blue-500 transition-all"
+                />
+              </div>
+
               {/* Rating Filter */}
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-2 block">Đánh giá tối thiểu</label>
@@ -227,6 +294,21 @@ function SearchContent() {
                   <option value="3"> 3+ sao</option>
                   <option value="2"> 2+ sao</option>
                   <option value="1"> 1+ sao</option>
+                </select>
+              </div>
+
+              {/* Available Slots Filter */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 mb-2 block">Số chỗ trống tối thiểu</label>
+                <select
+                  name="minSlots"
+                  defaultValue={minSlots || ""}
+                  className="w-full px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl font-bold text-sm text-slate-700 focus:outline-none focus:border-green-500 transition-all cursor-pointer"
+                >
+                  <option value=""> Tất cả</option>
+                  <option value="5"> 5+ chỗ</option>
+                  <option value="10"> 10+ chỗ</option>
+                  <option value="20"> 20+ chỗ</option>
                 </select>
               </div>
 
@@ -274,16 +356,43 @@ function SearchContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {searchResults.map(tour => (
                 <Link href={`/tour/${tour.id}`} key={tour.id} className="group bg-white rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all border border-slate-100">
-                  <div className="h-48 bg-slate-100 rounded-2xl mb-6 overflow-hidden">
-                    <img
+                  <div className="h-48 bg-slate-100 rounded-2xl mb-6 overflow-hidden relative">
+                    <Image
                       src={tour.tour_images?.[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=400"}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       alt={tour.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      quality={75}
                     />
+                    {/* Badges */}
+                    <div className="absolute top-4 left-4 flex gap-2">
+                      {tour.transport_type && (
+                        <div className="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-black uppercase flex items-center gap-1">
+                          {tour.transport_type === 'bus' && <Bus size={12} />}
+                          {tour.transport_type === 'flight' && <Plane size={12} />}
+                          {tour.transport_type === 'train' && <Car size={12} />}
+                          {tour.transport_type === 'private_car' && <Car size={12} />}
+                          {tour.transport_type}
+                        </div>
+                      )}
+                      {tour.max_slots && tour.max_slots > 10 && (
+                        <div className="bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-black uppercase flex items-center gap-1">
+                          <Users size={12} />
+                          Còn chỗ
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <h3 className="text-xl font-black mb-2 text-slate-800 line-clamp-1">{tour.title}</h3>
-                  <div className="flex items-center gap-1 text-slate-400 text-sm font-bold mb-4">
-                    <MapPin size={14} /> {tour.location_name}
+                  <div className="flex items-center gap-2 text-slate-400 text-sm font-bold mb-4">
+                    <MapPin size={14} className="text-blue-500" /> {tour.location_name}
+                    {tour.duration_days && (
+                      <>
+                        <span>•</span>
+                        <Clock size={14} /> {tour.duration_days} ngày
+                      </>
+                    )}
                   </div>
                   <div className="flex justify-between items-center pt-4 border-t border-slate-50">
                      <p className="text-xl font-black text-blue-600">{Number(tour.price).toLocaleString()}đ</p>

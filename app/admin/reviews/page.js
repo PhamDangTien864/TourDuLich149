@@ -190,7 +190,7 @@ export default async function ManageReviews({ searchParams }) {
                                   method: 'DELETE'
                                 });
                                 window.location.reload();
-                              } catch (error) {
+                              } catch {
                                 alert('Lỗi xóa đánh giá');
                               }
                             }

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function GET(request) {
+export async function GET() {
   try {
     const posts = await prisma.$queryRaw`
       SELECT * FROM posts 
@@ -20,7 +20,7 @@ export async function POST(request) {
     const body = await request.json();
     const { title, excerpt, content, category, image_url, is_active } = body;
 
-    const result = await prisma.$queryRaw`
+    await prisma.$queryRaw`
       INSERT INTO posts (title, excerpt, content, category, image_url, is_active)
       VALUES (${title}, ${excerpt}, ${content}, ${category}, ${image_url}, ${is_active !== undefined ? is_active : true})
     `;

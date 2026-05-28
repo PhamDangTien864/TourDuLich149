@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { ErrorHandler } from '@/lib/errors';
+import { errorResponse } from '@/lib/api-response';
 
 // GET - Fetch user by ID
 export async function GET(
@@ -27,8 +29,9 @@ export async function GET(
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("GET_USER_ERROR:", error);
-    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
+    const bookingError = ErrorHandler.handle(error);
+    ErrorHandler.log(bookingError, 'GET_USER_ERROR');
+    return errorResponse(bookingError.message, bookingError.statusCode);
   }
 }
 
@@ -57,10 +60,9 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error("DELETE_USER_ERROR:", error);
-    return NextResponse.json({ 
-      error: "Failed to delete user" 
-    }, { status: 500 });
+    const bookingError = ErrorHandler.handle(error);
+    ErrorHandler.log(bookingError, 'DELETE_USER_ERROR');
+    return errorResponse(bookingError.message, bookingError.statusCode);
   }
 }
 
@@ -108,9 +110,8 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error("PATCH_USER_ERROR:", error);
-    return NextResponse.json({ 
-      error: "Failed to update user" 
-    }, { status: 500 });
+    const bookingError = ErrorHandler.handle(error);
+    ErrorHandler.log(bookingError, 'PATCH_USER_ERROR');
+    return errorResponse(bookingError.message, bookingError.statusCode);
   }
 }

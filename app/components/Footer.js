@@ -1,7 +1,8 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
+import { memo } from "react";
 
-export default function Footer() {
+export default memo(function Footer() {
   return (
     <footer className="bg-slate-900 text-white mt-20">
       <div className="container mx-auto px-4 py-16">
@@ -58,10 +59,10 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400 text-sm">
-          <p> 2026 VietTravel - Hệ thống đặt tour du lịch</p>
-          <p className="mt-2"> VietTravel - Hướng tới trải nghiệm du lịch tốt nhất</p>
+          <p>© 2026 VietTravel - Hệ thống đặt tour du lịch</p>
+          <p className="mt-2">VietTravel - Hướng tới trải nghiệm du lịch tốt nhất</p>
         </div>
       </div>
     </footer>
   );
-}
+});

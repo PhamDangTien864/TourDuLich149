@@ -10,10 +10,8 @@ import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 export default function TourActions({ tour }) {
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    setIsDeleting(true);
     try {
       const response = await fetch(`/api/tours/${tour.id}`, {
         method: 'DELETE',
@@ -33,8 +31,6 @@ export default function TourActions({ tour }) {
     } catch (error) {
       console.error('Delete tour error:', error);
       toast.error('Có lỗi xảy ra, vui lòng thử lại!');
-    } finally {
-      setIsDeleting(false);
     }
   };
 

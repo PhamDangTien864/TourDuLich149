@@ -1,36 +1,23 @@
 'use client';
 import { useState } from 'react';
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { X, Link } from "lucide-react";
 import Image from 'next/image';
 
 export default function ImageUpload({ onUploadSuccess, initialImage }) {
-  const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(initialImage || "");
+  const [imageUrl, setImageUrl] = useState(initialImage || "");
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleUrlChange = (e) => {
+    const url = e.target.value;
+    setImageUrl(url);
+    setPreview(url);
+    onUploadSuccess(url);
+  };
 
-    setLoading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      
-      if (data.url) {
-        setPreview(data.url);
-        onUploadSuccess(data.url); // Gửi link ảnh về Form chính
-      }
-    } catch (error) {
-      alert("Lỗi tải ảnh!");
-    } finally {
-      setLoading(false);
-    }
+  const handleClear = () => {
+    setPreview("");
+    setImageUrl("");
+    onUploadSuccess("");
   };
 
   return (
@@ -42,27 +29,32 @@ export default function ImageUpload({ onUploadSuccess, initialImage }) {
           <>
             <Image src={preview} alt="Preview" className="w-full h-full object-cover" fill sizes="(max-width: 640px)" />
             <button 
-              onClick={() => { setPreview(""); onUploadSuccess(""); }}
+              onClick={handleClear}
               className="absolute top-4 right-4 bg-red-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition"
             >
               <X size={20} />
             </button>
           </>
         ) : (
-          <label className="flex flex-col items-center cursor-pointer">
-            {loading ? (
-              <Loader2 className="animate-spin text-blue-600" size={40} />
-            ) : (
-              <>
-                <div className="bg-blue-50 p-5 rounded-3xl text-blue-600 mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                  <ImagePlus size={32} />
-                </div>
-                <span className="text-slate-400 font-bold text-sm">Nhấn để tải ảnh lên</span>
-              </>
-            )}
-            <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
-          </label>
+          <div className="flex flex-col items-center p-6 w-full">
+            <div className="bg-blue-50 p-5 rounded-3xl text-blue-600 mb-3">
+              <Link size={32} />
+            </div>
+            <span className="text-slate-400 font-bold text-sm mb-3">Nhập URL ảnh từ Google</span>
+          </div>
         )}
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-slate-600">URL ảnh</label>
+        <input
+          type="url"
+          value={imageUrl}
+          onChange={handleUrlChange}
+          placeholder="https://example.com/image.jpg"
+          className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800"
+        />
+        <p className="text-xs text-slate-400">Nhập URL ảnh từ Google Drive, Google Photos, hoặc bất kỳ nguồn nào khác</p>
       </div>
     </div>
   );

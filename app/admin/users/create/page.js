@@ -36,7 +36,7 @@ export default function CreateUserPage() {
       } else {
         setError(data.error || 'Lỗi khi tạo user');
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối server');
     } finally {
       setLoading(false);

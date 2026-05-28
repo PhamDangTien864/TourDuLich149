@@ -23,7 +23,7 @@ export async function GET() {
     });
 
     return NextResponse.json({ success: true, user });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Lỗi server' }, { status: 500 });
   }
 }

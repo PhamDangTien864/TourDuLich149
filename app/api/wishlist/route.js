@@ -1,27 +1,23 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
+import { requireAuth } from '@/lib/middleware';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { WishlistService } from '@/lib/services/wishlist-service';
+import { ErrorHandler } from '@/lib/errors';
 
-export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('auth_token')?.value;
-  const decoded = verifyToken(token);
+export async function GET(req) {
+  return requireAuth(async (request) => {
+    try {
+      const user = request.user;
+      
+      const items = await WishlistService.getWishlistByUserId(user.id);
 
-  if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const items = await prisma.wishlist.findMany({
-    where: { account_id: decoded.id },
-    include: { 
-      tours: {
-        include: {
-          tour_images: {
-            take: 1
-          }
-        }
-      }
+      return successResponse({ wishlist: items });
+    } catch (error) {
+      console.error('Get wishlist error:', error);
+      const bookingError = ErrorHandler.handle(error);
+      ErrorHandler.log(bookingError);
+      
+      return errorResponse(bookingError.message, bookingError.statusCode);
     }
-  });
-
-  return NextResponse.json({ success: true, wishlist: items });
+  })(req);
 }

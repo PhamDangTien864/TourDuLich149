@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { CreditCard, Search, Filter, Eye, Download } from "lucide-react";
+import { Search, Filter, Eye, Download } from "lucide-react";
 import Link from "next/link";
 
 export default async function ManageTransactions({ searchParams }) {

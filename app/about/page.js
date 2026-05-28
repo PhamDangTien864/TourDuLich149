@@ -3,6 +3,21 @@ import Footer from "../components/Footer";
 import { Award, Users, Globe, ShieldCheck, Target, Heart } from "lucide-react";
 import Image from "next/image";
 
+// Cache this static page for 1 hour (3600 seconds)
+export const revalidate = 3600;
+export const dynamic = 'force-static';
+
+export const metadata = {
+  title: "Về VietTravel Luxury - Hành trình 20 năm đồng hành cùng du khách",
+  description: "Được thành lập từ năm 2004, VietTravel đã phục vụ hơn 500.000 khách hàng. Khám phá câu chuyện và giá trị cốt lõi của chúng tôi.",
+  keywords: "về VietTravel, lịch sử VietTravel, giá trị cốt lõi, công ty du lịch",
+  openGraph: {
+    title: "Về VietTravel Luxury - Hành trình 20 năm đồng hành cùng du khách",
+    description: "Được thành lập từ năm 2004, VietTravel đã phục vụ hơn 500.000 khách hàng.",
+    type: 'website',
+  },
+};
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">

@@ -10,8 +10,11 @@ export default function TourCard({ tour }) {
           src={tour.tour_images?.[0]?.image_url || "https://images.pexels.com/photos/17216117/pexels-photo-17216117.jpeg"} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           fill
-          sizes="(max-width: 400px)"
+          sizes="(max-width: 400px) 100vw, (max-width: 768px) 50vw, 33vw"
           alt={tour.title}
+          quality={75}
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwDsAAAABJRU5ErkJggg=="
         />
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-blue-600 font-bold text-sm">
           {Number(tour.price).toLocaleString('vi-VN')}đ
@@ -23,8 +26,8 @@ export default function TourCard({ tour }) {
           <span className="flex items-center gap-1"><MapPin size={14}/> {tour.location || 'Việt Nam'}</span>
           <span className="flex items-center gap-1"><Clock size={14}/> {tour.duration || '3 ngày'}</span>
         </div>
-        <Link href={`/tour/${tour.id}`}>
-          <button className="w-full bg-blue-50 text-blue-600 font-bold py-2 rounded-xl hover:bg-blue-600 hover:text-white transition">
+        <Link href={`/tour/${tour.id}`} className="block">
+          <button className="w-full bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-600 hover:text-white transition active:scale-95 min-h-[48px]">
             Xem chi tiết
           </button>
         </Link>

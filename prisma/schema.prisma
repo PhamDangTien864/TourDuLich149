@@ -15,42 +15,69 @@ model accounts {
   username     String         @unique(map: "username") @db.VarChar(50)
   password     String         @db.VarChar(255)
   email        String         @unique(map: "email") @db.VarChar(100)
-  role_id      Int            @default(2)
-  is_deleted   Boolean        @default(false)
-  is_verified  Boolean        @default(false)
+  role_id      Int?           @default(2)
+  google_id    String?        @db.VarChar(255)
+  facebook_id  String?        @db.VarChar(255)
+  avatar_url   String?        @db.Text
+  otp_secret   String?        @db.VarChar(255)
+  otp_enabled  Boolean?       @default(false)
+  backup_codes String?        @db.Text
+  is_deleted   Boolean?       @default(false)
+  is_verified  Boolean?       @default(false)
   created_at   DateTime?      @default(now()) @db.DateTime(0)
   updated_at   DateTime?      @default(now()) @updatedAt @db.DateTime(0)
-  roles        roles          @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "accounts_roles_fkey")
+  roles        roles?         @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   bookings     bookings[]
+  posts        posts[]
   reviews      reviews[]
   transactions transactions[]
   wishlist     wishlist[]
 
-  @@index([role_id], map: "fk_1")
+  @@index([role_id])
+  @@index([is_deleted], map: "idx_accounts_deleted")
+  @@index([is_verified], map: "idx_accounts_verified")
 }
 
 model bookings {
-  id           Int            @id @default(autoincrement())
-  customer_id  Int?
-  tour_id      Int
-  account_id   Int
-  start_date   DateTime       @db.DateTime(0)
-  end_date     DateTime       @db.DateTime(0)
-  total_amount BigInt
-  paid_amount  BigInt?        @default(0)
-  status       String?        @default("pending") @db.VarChar(50)
-  is_confirmed Boolean?       @default(false)
-  is_deleted   Boolean?       @default(false)
-  created_at   DateTime?      @default(now()) @db.DateTime(0)
-  updated_at   DateTime?      @default(now()) @updatedAt @db.DateTime(0)
-  accounts     accounts       @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_accounts_fkey")
-  customers    customers?     @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "bookings_customers_fkey")
-  tours        tours          @relation(fields: [tour_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_tours_fkey")
-  transactions transactions[]
+  id                     Int                    @id @default(autoincrement())
+  customer_id            Int?
+  tour_id                Int
+  account_id             Int
+  cancellation_policy_id Int?
+  start_date             DateTime               @db.DateTime(0)
+  end_date               DateTime               @db.DateTime(0)
+  total_amount           BigInt
+  paid_amount            BigInt?                @default(0)
+  status                 String?                @default("PENDING") @db.VarChar(50)
+  idempotency_key        String?                @unique(map: "idempotency_key") @db.VarChar(255)
+  version                Int?                   @default(0)
+  total_passengers       Int?                   @default(1)
+  adults_count           Int?                   @default(1)
+  children_count         Int?                   @default(0)
+  special_requests       String?                @db.Text
+  pickup_location        String?                @db.VarChar(255)
+  dropoff_location       String?                @db.VarChar(255)
+  is_confirmed           Boolean?               @default(false)
+  is_deleted             Boolean?               @default(false)
+  created_at             DateTime?              @default(now()) @db.DateTime(0)
+  updated_at             DateTime?              @default(now()) @updatedAt @db.DateTime(0)
+  booking_logs           booking_logs[]
+  booking_passengers     booking_passengers[]
+  booking_payments       booking_payments[]
+  customers              customers?             @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tours                  tours                  @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  accounts               accounts               @relation(fields: [account_id], references: [id], onUpdate: NoAction)
+  cancellation_policies  cancellation_policies? @relation(fields: [cancellation_policy_id], references: [id], onUpdate: NoAction)
+  booking_status_enum    booking_status_enum?   @relation(fields: [status], references: [status], onDelete: NoAction, onUpdate: NoAction)
+  transactions           transactions[]
 
-  @@index([customer_id], map: "fk_1")
-  @@index([tour_id], map: "fk_2")
-  @@index([account_id], map: "fk_3")
+  @@index([customer_id])
+  @@index([tour_id])
+  @@index([account_id])
+  @@index([account_id, status], map: "idx_bookings_account_status")
+  @@index([tour_id, status], map: "idx_bookings_tour_status")
+  @@index([cancellation_policy_id])
+  @@index([status], map: "idx_bookings_enum_status")
 }
 
 model customers {
@@ -62,10 +89,20 @@ model customers {
   address       String?    @db.VarChar(255)
   birth_date    DateTime?  @db.Date
   email         String?    @db.VarChar(100)
+  province_id   Int?
+  district_id   Int?
+  ward_id       Int?
   is_deleted    Boolean?   @default(false)
   created_at    DateTime?  @default(now()) @db.DateTime(0)
   updated_at    DateTime?  @default(now()) @updatedAt @db.DateTime(0)
   bookings      bookings[]
+  provinces     provinces? @relation(fields: [province_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  districts     districts? @relation(fields: [district_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  wards         wards?     @relation(fields: [ward_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([province_id])
+  @@index([district_id])
+  @@index([ward_id])
 }
 
 model images {
@@ -81,6 +118,7 @@ model images {
 model promotions {
   id             Int            @id @default(autoincrement())
   code           String         @unique(map: "code") @db.VarChar(50)
+  category_name  String?        @db.VarChar(100)
   discount_type  String?        @db.VarChar(50)
   discount_value BigInt
   min_amount     BigInt?        @default(0)
@@ -91,40 +129,42 @@ model promotions {
   description    String?        @db.Text
   created_at     DateTime?      @default(now()) @db.DateTime(0)
   updated_at     DateTime?      @default(now()) @updatedAt @db.DateTime(0)
-  category_name  String?        @db.VarChar(100)
   transactions   transactions[]
 }
 
 model provinces {
-  id            Int       @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   image_id      Int?
-  province_code String    @unique(map: "province_code") @db.VarChar(50)
-  province_name String    @db.VarChar(100)
-  note          String?   @db.VarChar(100)
-  is_deleted    Boolean?  @default(false)
-  created_at    DateTime? @default(now()) @db.DateTime(0)
-  updated_at    DateTime? @default(now()) @updatedAt @db.DateTime(0)
-  images        images?   @relation(fields: [image_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "provinces_images_fkey")
+  province_code String      @unique(map: "province_code") @db.VarChar(50)
+  province_name String      @db.VarChar(100)
+  note          String?     @db.VarChar(100)
+  is_deleted    Boolean?    @default(false)
+  created_at    DateTime?   @default(now()) @db.DateTime(0)
+  updated_at    DateTime?   @default(now()) @updatedAt @db.DateTime(0)
+  customers     customers[]
+  districts     districts[]
+  images        images?     @relation(fields: [image_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tours         tours[]
 
-  @@index([image_id], map: "fk_1")
+  @@index([image_id])
 }
 
 model reviews {
-  id          Int       @id @default(autoincrement())
-  tour_id     Int
-  account_id  Int
-  rating      Int?
-  comment     String?   @db.Text
-  is_deleted  Boolean?  @default(false)
-  created_at  DateTime? @default(now()) @db.DateTime(0)
-  updated_at  DateTime? @default(now()) @updatedAt @db.DateTime(0)
-  admin_reply String?   @db.Text
-  accounts    accounts  @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reviews_accounts_fkey")
-  tours       tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reviews_tours_fkey")
+  id            Int             @id @default(autoincrement())
+  tour_id       Int
+  account_id    Int
+  rating        Int?            @db.TinyInt
+  comment       String?         @db.Text
+  admin_reply   String?         @db.Text
+  is_deleted    Boolean?        @default(false)
+  created_at    DateTime?       @default(now()) @db.DateTime(0)
+  updated_at    DateTime?       @default(now()) @updatedAt @db.DateTime(0)
+  review_images review_images[]
+  tours         tours           @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  accounts      accounts        @relation(fields: [account_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([tour_id], map: "fk_1")
-  @@index([account_id], map: "fk_2")
+  @@index([tour_id])
+  @@index([account_id])
 }
 
 model roles {
@@ -148,45 +188,66 @@ model tour_categories {
 }
 
 model tours {
-  id              Int              @id @default(autoincrement())
-  title           String           @db.VarChar(255)
-  province_id     Int?
-  location_name   String?          @db.VarChar(100)
-  price           BigInt
-  category_id     Int?
-  description     String?          @db.Text
-  sub_title       String?          @db.VarChar(255)
-  max_slots       Int?             @default(20)
-  is_active       Boolean?         @default(true)
-  is_deleted      Boolean?         @default(false)
-  created_at      DateTime?        @default(now()) @db.DateTime(0)
-  updated_at      DateTime?        @default(now()) @updatedAt @db.DateTime(0)
-  bookings        bookings[]
-  reviews         reviews[]
-  tour_images     tour_images[]
-  provinces       provinces?       @relation(fields: [province_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "tours_provinces_fkey")
-  tour_categories tour_categories? @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "tours_tour_categories_fkey")
-  wishlist        wishlist[]
+  id                    Int                     @id @default(autoincrement())
+  slug                  String                  @unique(map: "slug") @db.VarChar(255)
+  title                 String                  @db.VarChar(255)
+  province_id           Int?
+  location_name         String?                 @db.VarChar(100)
+  price                 BigInt
+  category_id           Int?
+  description           String?                 @db.Text
+  sub_title             String?                 @db.VarChar(255)
+  max_slots             Int?                    @default(20)
+  start_date            DateTime?               @db.DateTime(0)
+  end_date              DateTime?               @db.DateTime(0)
+  duration_days         Int?                    @default(1)
+  pickup_location       String?                 @db.VarChar(255)
+  dropoff_location      String?                 @db.VarChar(255)
+  difficulty_level      String?                 @db.VarChar(50)
+  min_age               Int?                    @default(0)
+  max_age               Int?
+  is_active             Boolean?                @default(true)
+  is_deleted            Boolean?                @default(false)
+  created_at            DateTime?               @default(now()) @db.DateTime(0)
+  updated_at            DateTime?               @default(now()) @updatedAt @db.DateTime(0)
+  bookings              bookings[]
+  cancellation_policies cancellation_policies[]
+  departure_schedules   departure_schedules[]
+  reviews               reviews[]
+  tour_exclusions       tour_exclusions[]
+  tour_images           tour_images[]
+  tour_inclusions       tour_inclusions[]
+  tour_itinerary        tour_itinerary[]
+  tour_categories       tour_categories?        @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  provinces             provinces?              @relation(fields: [province_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  wishlist              wishlist[]
 
-  @@index([category_id], map: "fk_1")
-  @@index([province_id], map: "fk_2")
+  @@index([category_id])
+  @@index([province_id])
+  @@index([category_id, is_active], map: "idx_tours_category_active")
+  @@index([province_id, is_active], map: "idx_tours_province_active")
 }
 
 model transactions {
-  id               Int         @id @default(autoincrement())
-  booking_id       Int
-  account_id       Int
-  promotion_id     Int?
-  amount           BigInt?     @default(0)
-  transaction_type String?     @default("payment") @db.VarChar(50)
-  created_at       DateTime?   @default(now()) @db.DateTime(0)
-  accounts         accounts    @relation(fields: [account_id], references: [id], onUpdate: NoAction, map: "transactions_accounts_fkey")
-  bookings         bookings    @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "transactions_bookings_fkey")
-  promotions       promotions? @relation(fields: [promotion_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "transactions_promotions_fkey")
+  id                 Int         @id @default(autoincrement())
+  booking_id         Int
+  account_id         Int
+  promotion_id       Int?
+  amount             BigInt?     @default(0)
+  transaction_type   String?     @default("payment") @db.VarChar(50)
+  vnp_txn_ref        String?     @db.VarChar(255)
+  vnp_transaction_no String?     @db.VarChar(255)
+  vnp_bank_code      String?     @db.VarChar(50)
+  vnp_response_code  String?     @db.VarChar(10)
+  created_at         DateTime?   @default(now()) @db.DateTime(0)
+  bookings           bookings    @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  accounts           accounts    @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  promotions         promotions? @relation(fields: [promotion_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
-  @@index([booking_id], map: "fk_1")
-  @@index([account_id], map: "fk_2")
-  @@index([promotion_id], map: "fk_3")
+  @@index([booking_id])
+  @@index([account_id])
+  @@index([promotion_id])
+  @@index([transaction_type], map: "idx_transactions_type")
 }
 
 model tour_images {
@@ -196,9 +257,9 @@ model tour_images {
   is_primary Boolean?  @default(false)
   created_at DateTime? @default(now()) @db.DateTime(0)
   updated_at DateTime? @default(now()) @db.DateTime(0)
-  tours      tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tour_images_tours_fkey")
+  tours      tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([tour_id], map: "fk_1")
+  @@index([tour_id])
 }
 
 model wishlist {
@@ -206,48 +267,218 @@ model wishlist {
   account_id Int
   tour_id    Int
   created_at DateTime? @default(now()) @db.DateTime(0)
-  accounts   accounts  @relation(fields: [account_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "wishlist_accounts_fkey")
-  tours      tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "wishlist_tours_fkey")
+  accounts   accounts  @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tours      tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([account_id], map: "fk_1")
-  @@index([tour_id], map: "fk_2")
+  @@index([account_id])
+  @@index([tour_id])
 }
 
 model districts {
-  id            Int       @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   province_id   Int
-  district_code String?   @db.VarChar(20)
-  district_name String    @db.VarChar(100)
-  is_deleted    Boolean?  @default(false)
-  created_at    DateTime? @default(now()) @db.DateTime(0)
-  updated_at    DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  district_code String?     @db.VarChar(20)
+  district_name String      @db.VarChar(100)
+  is_deleted    Boolean?    @default(false)
+  created_at    DateTime?   @default(now()) @db.DateTime(0)
+  updated_at    DateTime?   @default(now()) @updatedAt @db.DateTime(0)
+  customers     customers[]
+  provinces     provinces   @relation(fields: [province_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  wards         wards[]
 
-  @@index([province_id], map: "fk_1")
+  @@index([province_id])
   @@index([province_id], map: "idx_districts_province")
 }
 
 model wards {
-  id          Int       @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   district_id Int
-  ward_code   String?   @db.VarChar(20)
-  ward_name   String    @db.VarChar(100)
-  is_deleted  Boolean?  @default(false)
-  created_at  DateTime? @default(now()) @db.DateTime(0)
-  updated_at  DateTime? @default(now()) @db.DateTime(0)
+  ward_code   String?     @db.VarChar(20)
+  ward_name   String      @db.VarChar(100)
+  is_deleted  Boolean?    @default(false)
+  created_at  DateTime?   @default(now()) @db.DateTime(0)
+  updated_at  DateTime?   @default(now()) @db.DateTime(0)
+  customers   customers[]
+  districts   districts   @relation(fields: [district_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([district_id], map: "fk_1")
+  @@index([district_id])
   @@index([district_id], map: "idx_wards_district")
 }
 
 model posts {
-  id         Int      @id @default(autoincrement())
-  title      String   @db.VarChar(255)
-  excerpt    String?  @db.Text
-  content    String   @db.Text
-  category   String?  @db.VarChar(100)
-  image_url  String?  @db.VarChar(500)
-  views      Int      @default(0)
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now()) @db.DateTime(0)
-  updated_at DateTime @updatedAt @db.DateTime(0)
+  id         Int       @id @default(autoincrement())
+  title      String    @db.VarChar(255)
+  excerpt    String?   @db.Text
+  content    String    @db.Text
+  category   String?   @db.VarChar(100)
+  image_url  String?   @db.VarChar(500)
+  views      Int?      @default(0)
+  is_active  Boolean?  @default(true)
+  account_id Int?
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  updated_at DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  accounts   accounts? @relation(fields: [account_id], references: [id], onUpdate: NoAction)
+
+  @@index([account_id])
+}
+
+model booking_passengers {
+  id           Int       @id @default(autoincrement())
+  booking_id   Int
+  full_name    String    @db.VarChar(100)
+  birth_date   DateTime  @db.Date
+  gender       String    @db.VarChar(10)
+  phone_number String    @db.VarChar(50)
+  is_child     Boolean?  @default(false)
+  created_at   DateTime? @default(now()) @db.DateTime(0)
+  bookings     bookings  @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([booking_id])
+}
+
+model booking_payments {
+  id                  Int                  @id @default(autoincrement())
+  booking_id          Int
+  amount              BigInt
+  payment_method      String               @db.VarChar(50)
+  payment_status      String?              @default("PENDING") @db.VarChar(50)
+  payment_type        String?              @default("FULL") @db.VarChar(50)
+  transaction_id      String?              @db.VarChar(255)
+  paid_at             DateTime?            @db.DateTime(0)
+  created_at          DateTime?            @default(now()) @db.DateTime(0)
+  bookings            bookings             @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  payment_status_enum payment_status_enum? @relation(fields: [payment_status], references: [status], onDelete: NoAction, onUpdate: NoAction)
+  payment_type_enum   payment_type_enum?   @relation(fields: [payment_type], references: [type], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([booking_id])
+  @@index([payment_status], map: "idx_payment_enum_status")
+  @@index([payment_type], map: "idx_payment_enum_type")
+}
+
+model booking_logs {
+  id              Int              @id @default(autoincrement())
+  booking_id      Int
+  status_from     String?          @db.VarChar(50)
+  status_to       String           @db.VarChar(50)
+  action          String           @db.VarChar(100)
+  actor_id        Int?
+  actor_type      String?          @db.VarChar(50)
+  notes           String?          @db.Text
+  created_at      DateTime?        @default(now()) @db.DateTime(0)
+  bookings        bookings         @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  actor_type_enum actor_type_enum? @relation(fields: [actor_type], references: [type], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([booking_id])
+  @@index([actor_type], map: "idx_logs_enum_actor")
+}
+
+model tour_itinerary {
+  id            Int       @id @default(autoincrement())
+  tour_id       Int
+  day_number    Int
+  title         String    @db.VarChar(255)
+  description   String?   @db.Text
+  activities    String?   @db.Text
+  meals         String?   @db.VarChar(100)
+  accommodation String?   @db.VarChar(255)
+  created_at    DateTime? @default(now()) @db.DateTime(0)
+  updated_at    DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  tours         tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tour_id])
+}
+
+model tour_inclusions {
+  id          Int       @id @default(autoincrement())
+  tour_id     Int
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  icon        String?   @db.VarChar(50)
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+  tours       tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tour_id])
+}
+
+model tour_exclusions {
+  id          Int       @id @default(autoincrement())
+  tour_id     Int
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  icon        String?   @db.VarChar(50)
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+  tours       tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tour_id])
+}
+
+model departure_schedules {
+  id              Int       @id @default(autoincrement())
+  tour_id         Int
+  departure_date  DateTime  @db.DateTime(0)
+  available_slots Int?      @default(20)
+  total_slots     Int?      @default(20)
+  is_active       Boolean?  @default(true)
+  created_at      DateTime? @default(now()) @db.DateTime(0)
+  updated_at      DateTime? @default(now()) @updatedAt @db.DateTime(0)
+  tours           tours     @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tour_id])
+}
+
+model cancellation_policies {
+  id             Int        @id @default(autoincrement())
+  tour_id        Int?
+  days_before    Int
+  refund_percent Int
+  description    String?    @db.Text
+  is_default     Boolean?   @default(false)
+  created_at     DateTime?  @default(now()) @db.DateTime(0)
+  bookings       bookings[]
+  tours          tours?     @relation(fields: [tour_id], references: [id], onUpdate: NoAction)
+
+  @@index([tour_id])
+}
+
+model audit_logs {
+  id          Int       @id @default(autoincrement())
+  user_id     Int?
+  action      String    @db.VarChar(100)
+  entity_type String    @db.VarChar(50)
+  entity_id   Int?
+  old_values  String?   @db.Text
+  new_values  String?   @db.Text
+  ip_address  String?   @db.VarChar(50)
+  user_agent  String?   @db.VarChar(500)
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+}
+
+model actor_type_enum {
+  type         String         @id @db.VarChar(50)
+  booking_logs booking_logs[]
+}
+
+model booking_status_enum {
+  status   String     @id @db.VarChar(50)
+  bookings bookings[]
+}
+
+model payment_status_enum {
+  status           String             @id @db.VarChar(50)
+  booking_payments booking_payments[]
+}
+
+model payment_type_enum {
+  type             String             @id @db.VarChar(50)
+  booking_payments booking_payments[]
+}
+
+model review_images {
+  id         Int       @id @default(autoincrement())
+  review_id  Int
+  image_url  String    @db.VarChar(500)
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  reviews    reviews   @relation(fields: [review_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([review_id])
 }

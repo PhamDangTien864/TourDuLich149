@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ErrorHandler } from '@/lib/errors';
+import { errorResponse } from '@/lib/api-response';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +14,8 @@ export async function POST(req: NextRequest) {
     });
     
   } catch (error: unknown) {
-    console.error("LOGIN_TEST_ERROR:", error);
-    return NextResponse.json({ error: "Test API error" }, { status: 500 });
+    const bookingError = ErrorHandler.handle(error);
+    ErrorHandler.log(bookingError);
+    return errorResponse(bookingError.message, bookingError.statusCode);
   }
 }

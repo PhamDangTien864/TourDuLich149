@@ -6,18 +6,28 @@ import { CheckCircle, Loader2, Phone, User, CreditCard, Mail } from "lucide-reac
 import PaymentQR from "./PaymentQR";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useUser } from "@/lib/hooks/useUser";
+import { useTours } from "@/lib/hooks/useTours";
+import { useBookings } from "@/lib/hooks/useBookings";
+import { useForm } from "@/lib/hooks/useForm";
 
-const BookingForm = memo(function BookingForm({ price, tourId, originalPrice, bestDiscount }) {
+const BookingForm = memo(function BookingForm({ price, tourId, bestDiscount }) {
   const router = useRouter();
+  const { user } = useAuth();
+  const { getUser } = useUser();
+  const { getTourById } = useTours();
+  const { createBooking } = useBookings();
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [showPayment, setShowPayment] = useState(false);
+  const [tourInfo, setTourInfo] = useState(null);
+  const [showPayment] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [bookingId, setBookingId] = useState(null);
+  const [bookingId] = useState(null);
   const [confirming, setConfirming] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -30,7 +40,7 @@ const BookingForm = memo(function BookingForm({ price, tourId, originalPrice, be
         setEmail(data.email || '');
         setBirthDate(data.birth_date ? data.birth_date.split('T')[0] : '');
       }
-    } catch (error) {
+    } catch {
       console.error('Failed to fetch customer details:', error);
     }
   };
@@ -50,6 +60,24 @@ const BookingForm = memo(function BookingForm({ price, tourId, originalPrice, be
       }
     }
   }, []);
+
+  // Lấy thông tin tour để hiển thị ngày đi/về cố định
+  useEffect(() => {
+    if (tourId) {
+      fetch(`/api/tours/${tourId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.tour) {
+            setTourInfo(data.tour);
+            setStartDate(data.tour.start_date);
+            setEndDate(data.tour.end_date);
+          }
+        })
+        .catch(error => {
+          console.error('Failed to fetch tour info:', error);
+        });
+    }
+  }, [tourId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,8 +107,8 @@ const BookingForm = memo(function BookingForm({ price, tourId, originalPrice, be
         console.error('Booking failed:', data.error);
         toast.error(data.error || 'Đặt tour thất bại!');
       }
-    } catch (error) {
-      console.error('Booking error:', error);
+    } catch (_error) {
+      console.error('Booking error:', _error);
       toast.error('Lỗi hệ thống, vui lòng thử lại!');
     } finally {
       setLoading(false);
@@ -99,7 +127,7 @@ const BookingForm = memo(function BookingForm({ price, tourId, originalPrice, be
         toast.success("Hệ thống đang kiểm tra thanh toán của bạn!", { icon: '💰' });
         // Có thể chuyển hướng về trang lịch sử sau 2s
       }
-    } catch (error) {
+    } catch {
       toast.error("Lỗi gửi xác nhận!");
     } finally {
       setConfirming(false);
@@ -182,28 +210,26 @@ const BookingForm = memo(function BookingForm({ price, tourId, originalPrice, be
                 </div>
               )}
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="relative">
-                  <input 
-                    type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-[24px] px-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white"
-                    placeholder="Ngày đi"
-                  />
+              {tourInfo && (tourInfo.start_date || tourInfo.end_date) && (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4">
+                  <p className="text-blue-300 text-xs font-bold uppercase tracking-widest mb-2">Lịch trình tour</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-slate-400 text-xs mb-1">Ngày đi</p>
+                      <p className="text-white font-bold">
+                        {tourInfo.start_date ? new Date(tourInfo.start_date).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 text-xs mb-1">Ngày về</p>
+                      <p className="text-white font-bold">
+                        {tourInfo.end_date ? new Date(tourInfo.end_date).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="relative">
-                  <input 
-                    type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-[24px] px-6 py-5 outline-none focus:border-blue-500 transition font-bold text-white"
-                    placeholder="Ngày về"
-                  />
-                </div>
-              </div>
-              
-              {isLoggedIn && (
-                <p className="text-blue-300 text-xs font-medium ml-2 mt-2">
-                  ℹ️ Bạn có thể chỉnh sửa thông tin nếu cần thay đổi
-                </p>
               )}
+              
             </div>
 
             <button 

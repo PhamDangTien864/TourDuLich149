@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -39,20 +39,7 @@ export default function CustomerMePage() {
     confirmPassword: ''
   });
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      const user = JSON.parse(userData);
-      // Block admin from accessing customer pages
-      if (user.role_id === 1) {
-        router.push('/admin');
-        return;
-      }
-    }
-    fetchProfile();
-  }, [router]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const userData = localStorage.getItem('user_data');
       if (!userData) {
@@ -81,7 +68,21 @@ export default function CustomerMePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      // Block admin from accessing customer pages
+      if (user.role_id === 1) {
+        router.push('/admin');
+        return;
+      }
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProfile();
+  }, [fetchProfile, router]);
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -119,7 +120,7 @@ export default function CustomerMePage() {
       } else {
         toast.error('Cập nhật thất bại!');
       }
-    } catch (error) {
+    } catch {
       toast.error('Lỗi hệ thống!');
     } finally {
       setSaving(false);
@@ -182,7 +183,7 @@ export default function CustomerMePage() {
         const data = await res.json();
         toast.error(data.error || 'Đổi mật khẩu thất bại!');
       }
-    } catch (error) {
+    } catch {
       toast.error('Lỗi hệ thống!');
     } finally {
       setSaving(false);

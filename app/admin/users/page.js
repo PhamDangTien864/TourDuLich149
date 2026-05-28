@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { UserCheck, ShieldAlert, UserPlus, Phone, Calendar, Search, Filter } from "lucide-react";
+import { UserPlus, Phone, Search, Filter } from "lucide-react";
 import Link from "next/link";
 import UserActions from "./components/UserActions";
 

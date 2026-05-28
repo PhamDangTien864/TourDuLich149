@@ -2,8 +2,7 @@
 -- 0. DỌN DẸP VÀ KHỞI TẠO DATABASE
 -- =====================================================
 SET FOREIGN_KEY_CHECKS = 0;
-DROP DATABASE IF EXISTS travel_booking_db;
-CREATE DATABASE travel_booking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS travel_booking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE travel_booking_db;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -67,6 +66,17 @@ CREATE TABLE tour_categories (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Dữ liệu mẫu cho danh mục tour
+INSERT INTO tour_categories (id, category_name, note) VALUES
+(1, 'Du lịch biển', 'Các tour du lịch biển, đảo'),
+(2, 'Du lịch văn hóa', 'Các tour khám phá văn hóa, lịch sử'),
+(3, 'Du lịch sinh thái', 'Các tour khám phá thiên nhiên, sinh thái'),
+(4, 'Du lịch nghỉ dưỡng', 'Các tour nghỉ dưỡng, thư giãn'),
+(5, 'Du lịch mạo hiểm', 'Các tour thể thao mạo hiểm'),
+(6, 'Du lịch ẩm thực', 'Các tour khám phá ẩm thực địa phương'),
+(7, 'Du lịch tâm linh', 'Các tour tham quan chùa chiền, di tích tâm linh'),
+(8, 'Du lịch hội nghị', 'Các tour kết hợp hội nghị, sự kiện');
+
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     role_name VARCHAR(50) UNIQUE NOT NULL,
@@ -85,9 +95,15 @@ CREATE TABLE customers (
     address VARCHAR(255),
     birth_date DATE,
     email VARCHAR(100),
+    province_id INT COMMENT 'Tỉnh/Thành phố',
+    district_id INT COMMENT 'Quận/Huyện',
+    ward_id INT COMMENT 'Xã/Phường',
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (province_id) REFERENCES provinces(id) ON DELETE SET NULL,
+    FOREIGN KEY (district_id) REFERENCES districts(id) ON DELETE SET NULL,
+    FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE SET NULL
 );
 
 CREATE TABLE accounts (
@@ -116,6 +132,9 @@ CREATE TABLE tours (
     description TEXT,
     sub_title VARCHAR(255),
     max_slots INT DEFAULT 20,
+    start_date DATETIME COMMENT 'Ngày đi theo lịch trình công ty',
+    end_date DATETIME COMMENT 'Ngày về theo lịch trình công ty',
+    duration_days INT DEFAULT 1 COMMENT 'Số ngày tour',
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -187,6 +206,8 @@ CREATE TABLE reviews (
     account_id INT NOT NULL,
     rating INT,
     comment TEXT,
+    images TEXT COMMENT 'Danh sách URL ảnh review, phân cách bằng dấu phẩy',
+    admin_reply TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -4321,12 +4342,11 @@ CREATE TABLE IF NOT EXISTS posts (
   image_url VARCHAR(500),
   views INT DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
+  account_id INT COMMENT 'Admin hoặc nhân viên viết bài',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Thêm trường admin_reply vào bảng reviews
-ALTER TABLE reviews ADD COLUMN admin_reply TEXT NULL AFTER comment;
 
 -- Thêm dữ liệu mẫu cho posts
 INSERT INTO posts (title, excerpt, content, category, image_url, views) VALUES

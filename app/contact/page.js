@@ -2,6 +2,17 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { MapPin, Phone, Mail, Send, Clock } from "lucide-react";
 
+export const metadata = {
+  title: "Liên hệ VietTravel Luxury - Hỗ trợ 24/7",
+  description: "Liên hệ với VietTravel Luxury để được tư vấn miễn phí. Hotline 1900 1234, địa chỉ 123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh.",
+  keywords: "liên hệ VietTravel, hotline, địa chỉ, email, hỗ trợ khách hàng",
+  openGraph: {
+    title: "Liên hệ VietTravel Luxury - Hỗ trợ 24/7",
+    description: "Liên hệ với VietTravel Luxury để được tư vấn miễn phí.",
+    type: 'website',
+  },
+};
+
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white">

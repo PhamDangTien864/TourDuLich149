@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { tourCategories, popularLocations } from "@/lib/constants";
 
@@ -12,15 +12,9 @@ export default function SearchFilter({ onFilter }) {
     location: "",
     rating: 0
   });
-  const [categories, setCategories] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const [categories] = useState(tourCategories);
+  const [locations] = useState(popularLocations);
   const [showFilters, setShowFilters] = useState(false);
-
-  // Mock data - will be replaced with API calls
-  useEffect(() => {
-    setCategories(tourCategories);
-    setLocations(popularLocations);
-  }, []);
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };

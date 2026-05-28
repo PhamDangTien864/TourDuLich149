@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, X, MessageSquare, Bot, User } from 'lucide-react';
+import { Send, X, MessageSquare, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { sampleTours } from "@/lib/constants";

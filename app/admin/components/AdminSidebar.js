@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Users, MapPin, Settings, 
   LogOut, X, Home, BarChart3, Calendar,
@@ -11,7 +10,6 @@ import { usePathname } from 'next/navigation';
 
 export default function AdminSidebar({ isOpen, onClose, isCollapsed, setSidebarCollapsed }) {
   const pathname = usePathname();
-  const [activeItem, setActiveItem] = useState('dashboard');
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
@@ -23,12 +21,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setSidebarC
     { id: 'settings', label: 'Cài đặt', icon: Settings, href: '/admin/settings' }
   ];
 
-  useEffect(() => {
-    const currentItem = menuItems.find(item => pathname === item.href);
-    if (currentItem) {
-      setActiveItem(currentItem.id);
-    }
-  }, [pathname]);
+  const activeItem = menuItems.find(item => pathname === item.href)?.id || 'dashboard';
 
   return (
     <div className={`

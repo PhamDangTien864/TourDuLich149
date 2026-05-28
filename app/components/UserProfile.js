@@ -1,70 +1,65 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("profile");
-  const [userData, setUserData] = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Mock data - will be replaced with API calls
-  useEffect(() => {
-    const mockUser = {
+  const mockUser = {
+    id: 1,
+    full_name: "Nguyen Van A",
+    username: "nguyenvana",
+    phone_number: "0123456789",
+    birth_date: "1990-01-01",
+    role: "user"
+  };
+
+  const mockBookings = [
+    {
       id: 1,
-      full_name: "Nguyen Van A",
-      username: "nguyenvana",
-      phone_number: "0123456789",
-      birth_date: "1990-01-01",
-      role: "user"
-    };
-
-    const mockBookings = [
-      {
+      tour: {
         id: 1,
-        tour: {
-          id: 1,
-          title: "Tour Da Nang 3N2D",
-          location_name: "Da Nang",
-          price: 2999000
-        },
-        start_date: "2024-02-15",
-        end_date: "2024-02-17",
-        total_amount: 5998000,
-        paid_amount: 5998000,
-        is_confirmed: true,
-        customer: {
-          full_name: "Nguyen Van A",
-          phone_number: "0123456789"
-        },
-        created_at: "2024-01-10"
+        title: "Tour Da Nang 3N2D",
+        location_name: "Da Nang",
+        price: 2999000
       },
-      {
+      start_date: "2024-02-15",
+      end_date: "2024-02-17",
+      total_amount: 5998000,
+      paid_amount: 5998000,
+      is_confirmed: true,
+      customer: {
+        full_name: "Nguyen Van A",
+        phone_number: "0123456789"
+      },
+      created_at: "2024-01-10"
+    },
+    {
+      id: 2,
+      tour: {
         id: 2,
-        tour: {
-          id: 2,
-          title: "Tour Phu Quoc 4N3D",
-          location_name: "Phu Quoc",
-          price: 4999000
-        },
-        start_date: "2024-03-20",
-        end_date: "2024-03-23",
-        total_amount: 9998000,
-        paid_amount: 0,
-        is_confirmed: false,
-        customer: {
-          full_name: "Nguyen Van A",
-          phone_number: "0123456789"
-        },
-        created_at: "2024-01-15"
-      }
-    ];
+        title: "Tour Phu Quoc 4N3D",
+        location_name: "Phu Quoc",
+        price: 4999000
+      },
+      start_date: "2024-03-20",
+      end_date: "2024-03-23",
+      total_amount: 9998000,
+      paid_amount: 0,
+      is_confirmed: false,
+      customer: {
+        full_name: "Nguyen Van A",
+        phone_number: "0123456789"
+      },
+      created_at: "2024-01-15"
+    }
+  ];
 
-    setUserData(mockUser);
-    setBookings(mockBookings);
-    setLoading(false);
-  }, []);
+  const [userData] = useState(mockUser);
+  const [bookings] = useState(mockBookings);
+  const [loading] = useState(false);
 
   if (loading) {
     return (

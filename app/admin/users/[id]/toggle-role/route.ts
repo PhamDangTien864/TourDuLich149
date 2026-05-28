@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { ErrorHandler } from '@/lib/errors';
+import { errorResponse } from '@/lib/api-response';
 
 export async function PATCH(
   req: NextRequest,
@@ -37,9 +39,8 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error("TOGGLE_ROLE_ERROR:", error);
-    return NextResponse.json({ 
-      error: "Failed to toggle user role" 
-    }, { status: 500 });
+    const bookingError = ErrorHandler.handle(error);
+    ErrorHandler.log(bookingError, 'TOGGLE_ROLE_ERROR');
+    return errorResponse(bookingError.message, bookingError.statusCode);
   }
 }

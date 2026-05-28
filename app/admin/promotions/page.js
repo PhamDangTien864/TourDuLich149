@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Plus, Edit, Trash2, CheckCircle, XCircle, Search, Filter, Download } from "lucide-react";
+import { Plus, Edit, Trash2, CheckCircle, XCircle, Search, Filter } from "lucide-react";
 import Link from "next/link";
 
 export default async function ManagePromotions({ searchParams }) {
@@ -183,7 +183,7 @@ export default async function ManagePromotions({ searchParams }) {
                                   body: JSON.stringify({ is_active: !promo.is_active })
                                 });
                                 window.location.reload();
-                              } catch (error) {
+                              } catch {
                                 alert('Lỗi cập nhật trạng thái');
                               }
                             }
@@ -201,7 +201,7 @@ export default async function ManagePromotions({ searchParams }) {
                                   method: 'DELETE'
                                 });
                                 window.location.reload();
-                              } catch (error) {
+                              } catch {
                                 alert('Lỗi xóa mã khuyến mãi');
                               }
                             }

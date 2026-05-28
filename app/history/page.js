@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 import Header from "../components/Header";
-import { Ticket, Calendar, CheckCircle, Clock } from "lucide-react";
 
 export default async function HistoryPage() {
   // Lấy User ID từ Token trong Cookies

@@ -1,4 +1,5 @@
-import { FileText, Calendar, Eye, ArrowLeft } from "lucide-react";
+import Image from 'next/image';
+import { Calendar, Eye, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -49,7 +50,7 @@ export default async function BlogDetailPage({ params }) {
 
         <article className="max-w-4xl mx-auto">
           <div className="relative h-64 md:h-96 rounded-3xl overflow-hidden mb-8">
-            <img 
+            <Image
               src={post.image_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200"} 
               alt={post.title}
               className="w-full h-full object-cover"

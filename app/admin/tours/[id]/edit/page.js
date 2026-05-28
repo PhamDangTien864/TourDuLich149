@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, MapPin, DollarSign, FileText, ImagePlus } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, DollarSign, FileText } from 'lucide-react';
 import ImageUpload from '../../../components/ImageUpload';
 
 export default function EditTourPage() {
@@ -24,11 +24,7 @@ export default function EditTourPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchTour();
-  }, [tourId]);
-
-  const fetchTour = async () => {
+  const fetchTour = useCallback(async () => {
     try {
       const response = await fetch(`/api/tours/${tourId}`);
       const data = await response.json();
@@ -47,12 +43,17 @@ export default function EditTourPage() {
       } else {
         setError('Không thể tải thông tin tour');
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối server');
     } finally {
       setLoading(false);
     }
-  };
+  }, [tourId]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchTour();
+  }, [fetchTour]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,7 +78,7 @@ export default function EditTourPage() {
       } else {
         setError(data.error || 'Lỗi khi cập nhật tour');
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối server');
     } finally {
       setSaving(false);

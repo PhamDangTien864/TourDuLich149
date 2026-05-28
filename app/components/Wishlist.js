@@ -1,40 +1,13 @@
   "use client";
 
-  import { useState, useEffect } from "react";
+  import Image from 'next/image';
   import { useRouter } from "next/navigation";
-  import { Heart, MapPin, Calendar } from "lucide-react";
+  import { Heart, MapPin } from "lucide-react";
+  import { useWishlist } from "@/lib/hooks/useWishlist";
 
   export default function Wishlist() {
-    const [wishlist, setWishlist] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { wishlist, loading, removeFromWishlist } = useWishlist();
     const router = useRouter();
-
-    useEffect(() => {
-      const fetchWishlist = async () => {
-        try {
-          const response = await fetch('/api/wishlist');
-          const data = await response.json();
-          if (data.success) {
-            setWishlist(data.wishlist || []);
-          }
-        } catch (error) {
-          console.error('Error fetching wishlist:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchWishlist();
-    }, []);
-
-    const removeFromWishlist = async (tourId) => {
-      try {
-        await fetch(`/api/wishlist/${tourId}`, { method: 'DELETE' });
-        setWishlist(wishlist.filter(item => item.tour.id !== tourId));
-      } catch (error) {
-        console.error('Error removing from wishlist:', error);
-      }
-    };
 
     const viewTourDetail = (tourId) => {
       router.push(`/tour/${tourId}`);
@@ -65,7 +38,7 @@
                 className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
               >
                 <div className="relative">
-                  <img
+                  <Image
                     src={item.tours.tour_images?.[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"}
                     alt={item.tours.title}
                     className="w-full h-48 object-cover"

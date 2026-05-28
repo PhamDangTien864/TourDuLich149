@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function GET(request) {
+export async function GET() {
   try {
     const promotions = await prisma.promotions.findMany({
       orderBy: { created_at: 'desc' }
     });
     return NextResponse.json(promotions);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Error fetching promotions' }, { status: 500 });
   }
 }

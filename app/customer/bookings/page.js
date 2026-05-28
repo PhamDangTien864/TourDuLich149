@@ -1,11 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, MapPin, CreditCard, CheckCircle, Clock, XCircle } from 'lucide-react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { TourCardSkeleton } from '../../components/Skeleton';
 
 export default function BookingHistory() {
   const router = useRouter();
@@ -41,7 +41,7 @@ export default function BookingHistory() {
         } else {
           setError(data.error || 'Không thể tải lịch sử đặt tour');
         }
-      } catch (err) {
+      } catch {
         setError('Lỗi kết nối server');
       } finally {
         setLoading(false);
@@ -138,7 +138,7 @@ export default function BookingHistory() {
                     <div className="flex-1">
                       <div className="flex items-start gap-4">
                         <div className="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0">
-                          <img
+                          <Image
                             src={booking.tourImage || "https://images.unsplash.com/photo-1528127269322-539801943592?w=200"}
                             alt={booking.tourTitle}
                             className="w-full h-full object-cover"

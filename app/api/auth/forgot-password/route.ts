@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
 
     // Generate reset token (valid for 1 hour)
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     // Store reset token in user record (using existing fields or add new logic)
     // Since we can't modify schema, we'll use a simple approach with localStorage

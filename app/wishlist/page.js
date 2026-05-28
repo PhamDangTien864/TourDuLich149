@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Heart, Trash2, Search, Calendar, MapPin, Star, ArrowLeft } from 'lucide-react';
+import { Heart, Trash2, Search, MapPin, ArrowLeft } from 'lucide-react';
 
 export default function WishlistPage() {
   const [user, setUser] = useState(null);
@@ -11,25 +11,6 @@ export default function WishlistPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      
-      // Block admin from accessing customer pages
-      if (parsedUser.role_id === 1) {
-        router.push('/admin');
-        return;
-      }
-      
-      // Lấy wishlist
-      setTimeout(function() { fetchWishlist(parsedUser.id) }, 0);
-    } else {
-      router.push('/login');
-    }
-  }, [router]);
 
   const fetchWishlist = async (userId) => {
     try {
@@ -42,6 +23,25 @@ export default function WishlistPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUser(parsedUser);
+
+      // Block admin from accessing customer pages
+      if (parsedUser.role_id === 1) {
+        router.push('/admin');
+        return;
+      }
+    } else {
+      router.push('/login');
+      return;
+    }
+    fetchWishlist(parsedUser.id);
+  }, [router]);
 
   const handleRemoveFromWishlist = async (wishlistId) => {
     try {

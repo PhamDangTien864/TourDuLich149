@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { User, LogOut, ShieldCheck, Menu, X } from "lucide-react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { ErrorHandler } from "@/lib/errors";
 
 const Header = memo(function Header() {
-  const [user, setUser] = useState(null);
+  const { user, loading: authLoading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -14,47 +16,16 @@ const Header = memo(function Header() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        console.log('User data from localStorage:', parsedUser);
-        setUser(parsedUser);
-      } catch (e) {
-        console.error("Lỗi parse user_data:", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const userData = localStorage.getItem('user_data');
-      if (userData) {
-        try {
-          setUser(JSON.parse(userData));
-        } catch (e) {
-          console.error("Lỗi parse user_data:", e);
-        }
-      } else {
-        setUser(null);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
-  useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch('/api/tour-categories', { cache: 'force-cache' });
+        const res = await fetch('/api/tour-categories', { 
+          cache: 'force-cache',
+          next: { revalidate: 3600 } // Cache for 1 hour
+        });
         const data = await res.json();
         setCategories(data || []);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        ErrorHandler.log(ErrorHandler.handle(error), 'Error fetching categories');
       }
     };
     fetchCategories();
@@ -71,27 +42,13 @@ const Header = memo(function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [searchOpen]);
 
-  const handleSearchSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const params = new URLSearchParams();
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen(prev => !prev);
+  }, []);
 
-    if (formData.get('q')) params.append('q', formData.get('q'));
-    if (formData.get('category')) params.append('category', formData.get('category'));
-    if (formData.get('minPrice')) params.append('minPrice', formData.get('minPrice'));
-    if (formData.get('maxPrice')) params.append('maxPrice', formData.get('maxPrice'));
-
-    router.push(`/search?${params.toString()}`);
-    setSearchOpen(false);
-  };
-
-  const handleLogout = () => {
-    localStorage.clear();
-    document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    setUser(null); // Cap nhat state ngay lap tuc
-    router.push('/login');
-    router.refresh();
-  };
+  const toggleSearch = useCallback(() => {
+    setSearchOpen(prev => !prev);
+  }, []);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-white via-blue-50/30 to-white backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
@@ -226,7 +183,7 @@ const Header = memo(function Header() {
           {user ? (
             <div className="hidden md:flex items-center gap-4 border-l pl-4 border-slate-100">
               <span className="text-[10px] font-black text-slate-400 hidden lg:block">Hi, {user.name}</span>
-              <button onClick={handleLogout} className="text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all">
+              <button onClick={logout} className="text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all">
                 <LogOut size={20} />
               </button>
             </div>
@@ -344,7 +301,7 @@ const Header = memo(function Header() {
             {user && (
               <button 
                 onClick={() => {
-                  handleLogout();
+                  logout();
                   setMobileMenuOpen(false);
                 }}
                 className="flex items-center gap-2 text-xs font-black text-red-500 uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-red-50 transition-all"

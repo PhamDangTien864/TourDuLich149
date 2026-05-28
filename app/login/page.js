@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Header from "../components/Header";
 import { toast } from "react-hot-toast";

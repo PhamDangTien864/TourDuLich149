@@ -1,171 +1,335 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { sendBookingConfirmationEmail } from "@/lib/email";
-import { authenticate } from "@/lib/middleware";
+import { requireAuth } from "@/lib/middleware";
+import { 
+  SlotReservationService, 
+  BookingValidationService, 
+  BookingStatus,
+  BookingStateMachine,
+  PaymentService,
+  PaymentType,
+  PassengerValidationService
+} from "@/lib/booking-service";
+import { CacheInvalidator, CACHE_KEYS } from "@/lib/cache";
+import { bookingRequestSchema } from "@/lib/validations";
+import { successResponse, errorResponse, validationErrorResponse, conflictResponse } from "@/lib/api-response";
 
 export async function POST(req) {
-  try {
-    const body = await req.json();
-    const { tourId, amount, customerName, phone, email, startDate, endDate } = body;
-
-    console.log('Booking request body:', body);
-
-    if (!tourId || !amount || !customerName || !phone) {
-      console.log('Missing required fields:', { tourId, amount, customerName, phone });
-      return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
-        { status: 400 }
-      );
-    }
-
-    // Authenticate user to get account_id
-    const user = await authenticate(req);
-    const accountId = user ? user.id : 1; // Fallback to 1 for guest bookings
-
-    // Tạo customer mới hoặc tìm customer existing
-    let customer = await prisma.customers.findFirst({
-      where: { phone_number: phone, is_deleted: false }
-    });
-
-    if (!customer) {
-      customer = await prisma.customers.create({
-        data: {
-          full_name: customerName,
-          phone_number: phone,
-          email: email || null,
-          is_deleted: false,
-          identity_card: null
-        }
-      });
-    } else {
-      await prisma.customers.update({
-        where: { id: customer.id },
-        data: { 
-          full_name: customerName,
-          ...(email && { email: email })
-        }
-      });
-    }
-
-    // Tạo booking
-    const booking = await prisma.bookings.create({
-      data: {
-        customer_id: customer.id,
-        tour_id: parseInt(tourId),
-        account_id: accountId,
-        start_date: startDate ? new Date(startDate) : new Date(),
-        end_date: endDate ? new Date(endDate) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        total_amount: BigInt(amount),
-        paid_amount: BigInt(0),
-        is_confirmed: false
-      },
-      include: {
-        customers: true,
-        tours: {
-          select: {
-            title: true,
-            location_name: true
-          }
-        }
+  return requireAuth(async (request) => {
+    try {
+      const user = request.user;
+      const accountId = user.id;
+      const body = await req.json();
+      
+      // Generate or use provided idempotency key
+      const idempotencyKey = body.idempotencyKey || `booking_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      
+      // Validate with Zod using centralized validation
+      const validationResult = bookingRequestSchema.safeParse(body);
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors.map(e => e.message);
+        return validationErrorResponse(errors);
       }
-    });
 
-    // Gửi email xác nhận
-    if (email) {
-      await sendBookingConfirmationEmail({
-        email,
-        customerName: booking.customers.full_name,
-        tourTitle: booking.tours.title,
-        location: booking.tours.location_name,
-        amount: Number(booking.total_amount),
-        startDate: booking.start_date,
-        endDate: booking.end_date
-      });
-    }
+      const validatedData = validationResult.data;
+      const { 
+        tourId, 
+        departureScheduleId,
+        amount, 
+        customerName, 
+        phone, 
+        email, 
+        startDate, 
+        endDate,
+        adultsCount,
+        childrenCount,
+        passengers,
+        specialRequests,
+        pickupLocation,
+        dropoffLocation
+      } = validatedData;
 
-    return NextResponse.json({
-      success: true,
-      booking: {
-        id: booking.id,
-        customerName: booking.customers.full_name,
-        phone: booking.customers.phone_number,
-        email: booking.customers.email,
-        tourTitle: booking.tours.title,
-        location: booking.tours.location_name,
-        amount: Number(booking.total_amount),
-        startDate: booking.start_date,
-        endDate: booking.end_date
-      }
-    });
-
-  } catch (error) {
-    console.error("Booking error:", error);
-    console.error("Error details:", error.message, error.stack);
-    return NextResponse.json(
-      { error: "Lỗi hệ thống, vui lòng thử lại sau", details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(req) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("user_id");
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Thiếu user_id" },
-        { status: 400 }
-      );
-    }
-
-    const bookings = await prisma.bookings.findMany({
-      where: {
-        account_id: parseInt(userId)
-      },
-      include: {
-        customers: {
-          select: {
-            full_name: true,
-            phone_number: true
-          }
+      // Check for existing booking with same idempotency key
+      const existingBooking = await prisma.bookings.findFirst({
+        where: { 
+          idempotency_key: idempotencyKey,
+          account_id: accountId
         },
-        tours: {
-          select: {
-            title: true,
-            location_name: true,
-            tour_images: {
-              take: 1
+        include: {
+          customers: true,
+          tours: {
+            select: {
+              title: true,
+              location_name: true
             }
           }
         }
-      },
-      orderBy: { id: 'desc' }
-    });
+      });
 
-    return NextResponse.json({
-      success: true,
-      bookings: bookings.map(booking => ({
-        id: booking.id,
-        customerName: booking.customers.full_name,
-        phone: booking.customers.phone_number,
-        tourTitle: booking.tours.title,
-        location: booking.tours.location_name,
-        tourImage: booking.tours.tour_images?.[0]?.image_url,
-        amount: Number(booking.total_amount),
-        paidAmount: Number(booking.paid_amount),
-        startDate: booking.start_date,
-        endDate: booking.end_date,
-        isConfirmed: booking.is_confirmed
-      }))
-    });
+      if (existingBooking) {
+        // Return existing booking
+        return successResponse({
+          booking: {
+            id: existingBooking.id,
+            customerName: existingBooking.customers.full_name,
+            phone: existingBooking.customers.phone_number,
+            email: existingBooking.customers.email,
+            tourTitle: existingBooking.tours.title,
+            location: existingBooking.tours.location_name,
+            amount: Number(existingBooking.total_amount),
+            startDate: existingBooking.start_date,
+            endDate: existingBooking.end_date,
+            status: existingBooking.status
+          }
+        }, 'Booking đã tồn tại với idempotency key này');
+      }
 
-  } catch (error) {
-    console.error("Get bookings error:", error);
-    return NextResponse.json(
-      { error: "Lỗi hệ thống" },
-      { status: 500 }
-    );
-  }
+      // Validate booking data
+      const validation = BookingValidationService.validateBookingData({
+        tourId,
+        adultsCount,
+        childrenCount,
+        startDate,
+        endDate
+      });
+
+      if (!validation.valid) {
+        return errorResponse("Dữ liệu không hợp lệ", 400, validation.errors);
+      }
+
+      // Check for duplicate booking
+      const isDuplicate = await BookingValidationService.checkDuplicateBooking(
+        tourId,
+        accountId,
+        new Date(startDate),
+        new Date(endDate)
+      );
+
+      if (isDuplicate) {
+        return conflictResponse("Bạn đã có booking trùng thời gian cho tour này");
+      }
+
+      // Wrap entire booking creation in transaction for atomicity
+      const booking = await prisma.$transaction(async (tx) => {
+        const totalPassengers = adultsCount + childrenCount;
+
+        // Reserve slots with transaction
+        const reservation = await SlotReservationService.reserveSlot(
+          tourId,
+          departureScheduleId,
+          totalPassengers,
+          accountId,
+          tx
+        );
+
+        if (!reservation.success) {
+          throw new Error(reservation.error || "Không thể đặt chỗ");
+        }
+
+        // Tạo customer mới hoặc tìm customer existing
+        let customer = await tx.customers.findFirst({
+          where: { phone_number: phone, is_deleted: false }
+        });
+
+        if (!customer) {
+          customer = await tx.customers.create({
+            data: {
+              full_name: customerName,
+              phone_number: phone,
+              email: email || null,
+              is_deleted: false,
+              identity_card: null
+            }
+          });
+        } else {
+          await tx.customers.update({
+            where: { id: customer.id },
+            data: { 
+              full_name: customerName,
+              ...(email && { email: email })
+            }
+          });
+        }
+
+        // Tạo booking with idempotency key
+        const newBooking = await tx.bookings.create({
+          data: {
+            customer_id: customer.id,
+            tour_id: tourId,
+            account_id: accountId,
+            departure_schedule_id: departureScheduleId,
+            start_date: new Date(startDate),
+            end_date: new Date(endDate),
+            total_amount: BigInt(amount),
+            paid_amount: BigInt(0),
+            status: BookingStatus.PENDING,
+            total_passengers: totalPassengers,
+            adults_count: adultsCount,
+            children_count: childrenCount,
+            special_requests: specialRequests || null,
+            pickup_location: pickupLocation || null,
+            dropoff_location: dropoffLocation || null,
+            is_confirmed: false,
+            idempotency_key: idempotencyKey
+          },
+          include: {
+            customers: true,
+            tours: {
+              select: {
+                title: true,
+                location_name: true
+              }
+            }
+          }
+        });
+
+        // Create booking passengers if provided
+        if (passengers && passengers.length > 0) {
+          const passengerResult = await PassengerValidationService.createBookingPassengers(
+            newBooking.id,
+            passengers,
+            tx
+          );
+
+          if (!passengerResult.success) {
+            throw new Error(passengerResult.error);
+          }
+        }
+
+        // Log booking creation
+        await tx.booking_logs.create({
+          data: {
+            booking_id: newBooking.id,
+            status_from: null,
+            status_to: BookingStatus.PENDING,
+            action: 'booking_created',
+            actor_id: accountId,
+            actor_type: 'customer',
+            notes: 'Booking được tạo thành công'
+          }
+        });
+
+        // Create initial payment record
+        const paymentResult = await PaymentService.createPayment(
+          newBooking.id,
+          Number(amount),
+          'pending', // Will be updated when payment method is selected
+          PaymentType.FULL,
+          undefined,
+          tx
+        );
+
+        // Transition to awaiting payment
+        await BookingStateMachine.transition(
+          newBooking.id,
+          BookingStatus.AWAITING_PAYMENT,
+          accountId,
+          'customer',
+          'Booking chờ thanh toán'
+        );
+
+        return newBooking;
+      });
+
+      // Gửi email xác nhận (outside transaction)
+      if (email) {
+        try {
+          await sendBookingConfirmationEmail({
+            email,
+            customerName: booking.customers.full_name,
+            tourTitle: booking.tours.title,
+            location: booking.tours.location_name,
+            amount: Number(booking.total_amount),
+            startDate: booking.start_date,
+            endDate: booking.end_date
+          });
+        } catch (emailError) {
+          console.error('Email send error:', emailError);
+          // Don't fail booking if email fails
+        }
+      }
+
+      // Invalidate user bookings cache
+      CacheInvalidator.invalidateUserBookings(accountId);
+
+      // Invalidate tour cache if departure schedule was used
+      if (departureScheduleId) {
+        CacheInvalidator.invalidateDepartureSchedule(departureScheduleId);
+      }
+
+      return successResponse({
+        booking: {
+          id: booking.id,
+          customerName: booking.customers.full_name,
+          phone: booking.customers.phone_number,
+          email: booking.customers.email,
+          tourTitle: booking.tours.title,
+          location: booking.tours.location_name,
+          amount: Number(booking.total_amount),
+          startDate: booking.start_date,
+          endDate: booking.end_date,
+          status: booking.status
+        }
+      }, 'Booking được tạo thành công');
+
+    } catch (error) {
+      console.error("Booking error:", error);
+      return errorResponse("Lỗi hệ thống, vui lòng thử lại sau", 500, error.message);
+    }
+  })(req);
+}
+
+export async function GET(req) {
+  return requireAuth(async (request) => {
+    try {
+      const user = request.user;
+      const { searchParams } = new URL(req.url);
+      const userId = searchParams.get("user_id") || user.id;
+
+      const bookings = await prisma.bookings.findMany({
+        where: {
+          account_id: parseInt(userId)
+        },
+        include: {
+          customers: {
+            select: {
+              full_name: true,
+              phone_number: true
+            }
+          },
+          tours: {
+            select: {
+              title: true,
+              location_name: true,
+              tour_images: {
+                take: 1
+              }
+            }
+          }
+        },
+        orderBy: { id: 'desc' }
+      });
+
+      return successResponse({
+        bookings: bookings.map(booking => ({
+          id: booking.id,
+          customerName: booking.customers.full_name,
+          phone: booking.customers.phone_number,
+          tourTitle: booking.tours.title,
+          location: booking.tours.location_name,
+          tourImage: booking.tours.tour_images?.[0]?.image_url,
+          amount: Number(booking.total_amount),
+          paidAmount: Number(booking.paid_amount),
+          startDate: booking.start_date,
+          endDate: booking.end_date,
+          isConfirmed: booking.is_confirmed
+        }))
+      });
+
+    } catch (error) {
+      console.error("Get bookings error:", error);
+      return errorResponse("Lỗi hệ thống", 500);
+    }
+  })(req);
 }

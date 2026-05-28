@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, MapPin, DollarSign, FileText, ImagePlus } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, DollarSign, FileText } from 'lucide-react';
 import ImageUpload from '../../components/ImageUpload';
 
 export default function CreateTourPage() {
@@ -43,7 +43,7 @@ export default function CreateTourPage() {
       } else {
         setError(data.error || 'Lỗi khi tạo tour');
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối server');
     } finally {
       setLoading(false);

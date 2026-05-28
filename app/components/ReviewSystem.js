@@ -74,7 +74,7 @@ const ReviewSystem = memo(function ReviewSystem({ tourId }) {
       });
 
       if (res.ok) {
-        const data = await res.json();
+        await res.json();
         // Refresh reviews
         const reviewsRes = await fetch(`/api/reviews?tour_id=${tourId}`);
         if (reviewsRes.ok) {
