@@ -64,11 +64,11 @@ model bookings {
   booking_logs           booking_logs[]
   booking_passengers     booking_passengers[]
   booking_payments       booking_payments[]
-  customers              customers?             @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  tours                  tours                  @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   accounts               accounts               @relation(fields: [account_id], references: [id], onUpdate: NoAction)
   cancellation_policies  cancellation_policies? @relation(fields: [cancellation_policy_id], references: [id], onUpdate: NoAction)
+  customers              customers?             @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   booking_status_enum    booking_status_enum?   @relation(fields: [status], references: [status], onDelete: NoAction, onUpdate: NoAction)
+  tours                  tours                  @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   transactions           transactions[]
 
   @@index([customer_id])
@@ -96,8 +96,8 @@ model customers {
   created_at    DateTime?  @default(now()) @db.DateTime(0)
   updated_at    DateTime?  @default(now()) @updatedAt @db.DateTime(0)
   bookings      bookings[]
-  provinces     provinces? @relation(fields: [province_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   districts     districts? @relation(fields: [district_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  provinces     provinces? @relation(fields: [province_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   wards         wards?     @relation(fields: [ward_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([province_id])
@@ -160,8 +160,8 @@ model reviews {
   created_at    DateTime?       @default(now()) @db.DateTime(0)
   updated_at    DateTime?       @default(now()) @updatedAt @db.DateTime(0)
   review_images review_images[]
-  tours         tours           @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   accounts      accounts        @relation(fields: [account_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tours         tours           @relation(fields: [tour_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([tour_id])
   @@index([account_id])
@@ -241,8 +241,8 @@ model transactions {
   vnp_bank_code      String?     @db.VarChar(50)
   vnp_response_code  String?     @db.VarChar(10)
   created_at         DateTime?   @default(now()) @db.DateTime(0)
-  bookings           bookings    @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   accounts           accounts    @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bookings           bookings    @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   promotions         promotions? @relation(fields: [promotion_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
 
   @@index([booking_id])
@@ -287,8 +287,8 @@ model districts {
   provinces     provinces   @relation(fields: [province_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   wards         wards[]
 
-  @@index([province_id])
   @@index([province_id], map: "idx_districts_province")
+  @@index([province_id], map: "fk_1")
 }
 
 model wards {
@@ -302,8 +302,8 @@ model wards {
   customers   customers[]
   districts   districts   @relation(fields: [district_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  @@index([district_id])
   @@index([district_id], map: "idx_wards_district")
+  @@index([district_id], map: "fk_1")
 }
 
 model posts {
@@ -366,8 +366,8 @@ model booking_logs {
   actor_type      String?          @db.VarChar(50)
   notes           String?          @db.Text
   created_at      DateTime?        @default(now()) @db.DateTime(0)
-  bookings        bookings         @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   actor_type_enum actor_type_enum? @relation(fields: [actor_type], references: [type], onDelete: NoAction, onUpdate: NoAction)
+  bookings        bookings         @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([booking_id])
   @@index([actor_type], map: "idx_logs_enum_actor")

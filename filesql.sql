@@ -1,15 +1,44 @@
--- =====================================================
--- 0. DỌN DẸP VÀ KHỞI TẠO DATABASE
--- =====================================================
+//Query 1
+
 SET FOREIGN_KEY_CHECKS = 0;
+
 CREATE DATABASE IF NOT EXISTS travel_booking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE travel_booking_db;
+
+-- Dọn sạch tất cả các bảng hiện có (đã bổ sung thêm bảng review_images và các bảng enum)
+DROP TABLE IF EXISTS booking_passengers, booking_payments, booking_logs, tour_itinerary, 
+tour_inclusions, tour_exclusions, departure_schedules, cancellation_policies, audit_logs, 
+booking_status_enum, payment_status_enum, payment_type_enum, actor_type_enum, 
+wishlist, review_images, reviews, transactions, promotions, tour_images, bookings, 
+tours, accounts, customers, roles, tour_categories, wards, districts, provinces, images, posts;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
--- =====================================================
--- 1. TẠO CÁC BẢNG (THỨ TỰ CHUẨN)
--- =====================================================
 
+//Query 2
+
+SET GLOBAL tidb_enable_check_constraint = ON;
+USE travel_booking_db;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 1. BẢNG ENUM (Tra cứu trạng thái) - Đã ép cứng Collation để TiDB không bắt lỗi lệch chuỗi
+CREATE TABLE booking_status_enum (
+    status VARCHAR(50) NOT NULL PRIMARY KEY
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE payment_status_enum (
+    status VARCHAR(50) NOT NULL PRIMARY KEY
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE payment_type_enum (
+    type VARCHAR(50) NOT NULL PRIMARY KEY
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE actor_type_enum (
+    type VARCHAR(50) NOT NULL PRIMARY KEY
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. HỆ THỐNG DANH MỤC & HÀNH CHÍNH
 CREATE TABLE images (
     id INT AUTO_INCREMENT PRIMARY KEY,
     image_url VARCHAR(500) NOT NULL,
@@ -17,7 +46,7 @@ CREATE TABLE images (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE provinces (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,7 +58,7 @@ CREATE TABLE provinces (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE districts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -40,7 +69,8 @@ CREATE TABLE districts (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (province_id) REFERENCES provinces(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX idx_districts_province ON districts(province_id);
 
 CREATE TABLE wards (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,10 +81,7 @@ CREATE TABLE wards (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (district_id) REFERENCES districts(id) ON DELETE CASCADE
-);
-
--- Index Đã fix lỗi IF NOT EXISTS
-CREATE INDEX idx_districts_province ON districts(province_id);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE INDEX idx_wards_district ON wards(district_id);
 
 CREATE TABLE tour_categories (
@@ -64,18 +91,7 @@ CREATE TABLE tour_categories (
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Dữ liệu mẫu cho danh mục tour
-INSERT INTO tour_categories (id, category_name, note) VALUES
-(1, 'Du lịch biển', 'Các tour du lịch biển, đảo'),
-(2, 'Du lịch văn hóa', 'Các tour khám phá văn hóa, lịch sử'),
-(3, 'Du lịch sinh thái', 'Các tour khám phá thiên nhiên, sinh thái'),
-(4, 'Du lịch nghỉ dưỡng', 'Các tour nghỉ dưỡng, thư giãn'),
-(5, 'Du lịch mạo hiểm', 'Các tour thể thao mạo hiểm'),
-(6, 'Du lịch ẩm thực', 'Các tour khám phá ẩm thực địa phương'),
-(7, 'Du lịch tâm linh', 'Các tour tham quan chùa chiền, di tích tâm linh'),
-(8, 'Du lịch hội nghị', 'Các tour kết hợp hội nghị, sự kiện');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -84,8 +100,9 @@ CREATE TABLE roles (
     permissions TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- 3. HỆ THỐNG NGƯỜI DÙNG
 CREATE TABLE customers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(100) NOT NULL,
@@ -104,7 +121,7 @@ CREATE TABLE customers (
     FOREIGN KEY (province_id) REFERENCES provinces(id) ON DELETE SET NULL,
     FOREIGN KEY (district_id) REFERENCES districts(id) ON DELETE SET NULL,
     FOREIGN KEY (ward_id) REFERENCES wards(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE accounts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -115,15 +132,25 @@ CREATE TABLE accounts (
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     role_id INT DEFAULT 2,
+    google_id VARCHAR(255),
+    facebook_id VARCHAR(255),
+    avatar_url TEXT,
+    otp_secret VARCHAR(255),
+    otp_enabled BOOLEAN DEFAULT FALSE,
+    backup_codes TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX idx_accounts_deleted ON accounts(is_deleted);
+CREATE INDEX idx_accounts_verified ON accounts(is_verified);
 
+-- 4. HỆ THỐNG TOUR & VỆ TINH TOUR
 CREATE TABLE tours (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(255) UNIQUE NOT NULL COMMENT 'Slug dùng cho SEO',
     title VARCHAR(255) NOT NULL,
     province_id INT,
     location_name VARCHAR(100),
@@ -132,16 +159,23 @@ CREATE TABLE tours (
     description TEXT,
     sub_title VARCHAR(255),
     max_slots INT DEFAULT 20,
-    start_date DATETIME COMMENT 'Ngày đi theo lịch trình công ty',
-    end_date DATETIME COMMENT 'Ngày về theo lịch trình công ty',
-    duration_days INT DEFAULT 1 COMMENT 'Số ngày tour',
+    start_date DATETIME,
+    end_date DATETIME,
+    duration_days INT DEFAULT 1,
+    pickup_location VARCHAR(255),
+    dropoff_location VARCHAR(255),
+    difficulty_level VARCHAR(50),
+    min_age INT DEFAULT 0,
+    max_age INT,
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES tour_categories(id) ON DELETE SET NULL,
     FOREIGN KEY (province_id) REFERENCES provinces(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX idx_tours_category_active ON tours(category_id, is_active);
+CREATE INDEX idx_tours_province_active ON tours(province_id, is_active);
 
 CREATE TABLE tour_images (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -151,30 +185,147 @@ CREATE TABLE tour_images (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE tour_itinerary (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tour_id INT NOT NULL,
+    day_number INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    activities TEXT,
+    meals VARCHAR(100),
+    accommodation VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE tour_inclusions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tour_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    icon VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE tour_exclusions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tour_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    icon VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE departure_schedules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tour_id INT NOT NULL,
+    departure_date DATETIME NOT NULL,
+    available_slots INT DEFAULT 20,
+    total_slots INT DEFAULT 20,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE cancellation_policies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tour_id INT,
+    days_before INT NOT NULL,
+    refund_percent INT NOT NULL,
+    description TEXT,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. ĐẶT CHỖ & THANH TOÁN
 CREATE TABLE bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT,
     tour_id INT NOT NULL,
     account_id INT NOT NULL,
+    cancellation_policy_id INT,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     total_amount BIGINT NOT NULL,
     paid_amount BIGINT DEFAULT 0,
-    status VARCHAR(50) DEFAULT 'pending',
+    status VARCHAR(50) DEFAULT 'PENDING',
+    idempotency_key VARCHAR(255) UNIQUE,
+    version INT DEFAULT 0,
+    total_passengers INT DEFAULT 1,
+    adults_count INT DEFAULT 1,
+    children_count INT DEFAULT 0,
+    special_requests TEXT,
+    pickup_location VARCHAR(255),
+    dropoff_location VARCHAR(255),
     is_confirmed BOOLEAN DEFAULT FALSE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_bookings_enum_status (status), -- Chỉ mục cho Foreign Key
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
     FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE RESTRICT,
-    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT
-);
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    FOREIGN KEY (cancellation_policy_id) REFERENCES cancellation_policies(id) ON DELETE SET NULL,
+    CONSTRAINT fk_bookings_status FOREIGN KEY (status) REFERENCES booking_status_enum(status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX idx_bookings_account_status ON bookings(account_id, status);
+CREATE INDEX idx_bookings_tour_status ON bookings(tour_id, status);
+
+CREATE TABLE booking_passengers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    birth_date DATE NOT NULL,
+    gender VARCHAR(10) NOT NULL,
+    phone_number VARCHAR(50) NOT NULL,
+    is_child BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE booking_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    amount BIGINT NOT NULL,
+    payment_method VARCHAR(50) NOT NULL,
+    payment_status VARCHAR(50) DEFAULT 'PENDING',
+    payment_type VARCHAR(50) DEFAULT 'FULL',
+    transaction_id VARCHAR(255),
+    paid_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_payment_enum_status (payment_status), -- Chỉ mục cho Foreign Key
+    KEY idx_payment_enum_type (payment_type), -- Chỉ mục cho Foreign Key
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_payments_status FOREIGN KEY (payment_status) REFERENCES payment_status_enum(status),
+    CONSTRAINT fk_payments_type FOREIGN KEY (payment_type) REFERENCES payment_type_enum(type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE booking_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    status_from VARCHAR(50),
+    status_to VARCHAR(50) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    actor_id INT,
+    actor_type VARCHAR(50),
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_logs_enum_actor (actor_type), -- Chỉ mục cho Foreign Key
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_logs_actor FOREIGN KEY (actor_type) REFERENCES actor_type_enum(type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE promotions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
+    category_name VARCHAR(100),
     discount_type VARCHAR(50),
     discount_value BIGINT NOT NULL,
     min_amount BIGINT DEFAULT 0,
@@ -185,7 +336,7 @@ CREATE TABLE promotions (
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -194,26 +345,39 @@ CREATE TABLE transactions (
     promotion_id INT,
     amount BIGINT DEFAULT 0,
     transaction_type VARCHAR(50) DEFAULT 'payment',
+    vnp_txn_ref VARCHAR(255),
+    vnp_transaction_no VARCHAR(255),
+    vnp_bank_code VARCHAR(50),
+    vnp_response_code VARCHAR(10),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (booking_id) REFERENCES bookings(id),
     FOREIGN KEY (account_id) REFERENCES accounts(id),
     FOREIGN KEY (promotion_id) REFERENCES promotions(id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE INDEX idx_transactions_type ON transactions(transaction_type);
 
+-- 6. TƯƠNG TÁC (REVIEWS, WISHLIST, AUDIT)
 CREATE TABLE reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tour_id INT NOT NULL,
     account_id INT NOT NULL,
-    rating INT,
+    rating TINYINT CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
-    images TEXT COMMENT 'Danh sách URL ảnh review, phân cách bằng dấu phẩy',
     admin_reply TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE,
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE review_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    review_id INT NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE wishlist (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -222,51 +386,72 @@ CREATE TABLE wishlist (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
     FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- =====================================================
--- 2. NẠP DỮ LIỆU ĐỊA LÝ (PROVINCES)
--- =====================================================
+CREATE TABLE audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id INT,
+    old_values TEXT,
+    new_values TEXT,
+    ip_address VARCHAR(50),
+    user_agent VARCHAR(500),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO provinces (id, image_id, province_code, province_name, note) VALUES
-(1, NULL, '10', 'Tỉnh Thái Nguyên', NULL),
-(2, NULL, '11', 'Tỉnh Lạng Sơn', NULL),
-(3, NULL, '12', 'Tỉnh Phú Thọ', NULL),
-(4, NULL, '13', 'Tỉnh Điện Biên', NULL),
-(5, NULL, '14', 'Tỉnh Lai Châu', NULL),
-(6, NULL, '15', 'Tỉnh Sơn La', NULL),
-(7, NULL, '16', 'Tỉnh Thanh Hóa', NULL),
-(8, NULL, '17', 'Tỉnh Nghệ An', NULL),
-(9, NULL, '18', 'Tỉnh Hà Tĩnh', NULL),
-(10, NULL, '19', 'Tỉnh Quảng Trị', NULL),
-(11, NULL, '20', 'Thành phố Huế', NULL),
-(12, NULL, '21', 'Tp Đà Nẵng', NULL),
-(13, NULL, '22', 'Tỉnh Quảng Ngãi', NULL),
-(14, NULL, '23', 'Tỉnh Khánh Hòa', NULL),
-(15, NULL, '24', 'Tỉnh Gia Lai', NULL),
-(16, NULL, '25', 'Tỉnh Đắk Lắk', NULL),
-(17, NULL, '26', 'Tỉnh Lâm Đồng', NULL),
-(18, NULL, '27', 'Tỉnh Tây Ninh', NULL),
-(19, NULL, '28', 'Tỉnh Đồng Nai', NULL),
-(20, NULL, '29', 'Tp Hồ Chí Minh', NULL),
-(21, NULL, '30', 'Tỉnh Vĩnh Long', NULL),
-(22, NULL, '31', 'Tỉnh Đồng Tháp', NULL),
-(23, NULL, '32', 'Tỉnh An Giang', NULL),
-(24, NULL, '33', 'Tp Cần Thơ', NULL),
-(25, NULL, '34', 'Tỉnh Cà Mau', NULL),
-(26, NULL, '01', 'Thành phố Hà Nội', NULL),
-(27, NULL, '02', 'Tỉnh Bắc Ninh', NULL),
-(28, NULL, '03', 'Tỉnh Quảng Ninh', NULL),
-(29, NULL, '04', 'Tp Hải Phòng', NULL),
-(30, NULL, '05', 'Tỉnh Hưng Yên', NULL),
-(31, NULL, '06', 'Tỉnh Ninh Bình', NULL),
-(32, NULL, '07', 'Tỉnh Cao Bằng', NULL),
-(33, NULL, '08', 'Tỉnh Tuyên Quang', NULL),
-(34, NULL, '09', 'Tỉnh Lào Cai', NULL);
--- =====================================================
--- 2.3. NẠP DỮ LIỆU QUẬN/HUYỆN (DISTRICTS)
--- =====================================================
+SET FOREIGN_KEY_CHECKS = 1;
 
+
+//Query 3
+
+USE travel_booking_db;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Nạp Enum Trạng thái
+INSERT IGNORE INTO booking_status_enum (status) VALUES ('PENDING'), ('AWAITING_PAYMENT'), ('DEPOSIT_PAID'), ('CONFIRMED'), ('COMPLETED'), ('CANCELLED'), ('REFUNDED');
+INSERT IGNORE INTO payment_status_enum (status) VALUES ('PENDING'), ('COMPLETED'), ('FAILED'), ('REFUNDED');
+INSERT IGNORE INTO payment_type_enum (type) VALUES ('FULL'), ('DEPOSIT'), ('REMAINING');
+INSERT IGNORE INTO actor_type_enum (type) VALUES ('ADMIN'), ('CUSTOMER'), ('SYSTEM');
+
+-- Nạp 17 Danh mục Tour
+INSERT INTO tour_categories (id, category_name, note) VALUES
+(1, 'Tour Nghỉ dưỡng Biển', 'Resort 5 sao, vịnh biển riêng tư'),
+(2, 'Tour Văn hóa - Lịch sử', 'Di sản, cố đô và truyền thống'),
+(3, 'Tour Khám phá Thiên nhiên', 'Hang động, rừng quốc gia, núi non'),
+(4, 'Tour Ẩm thực (Food Tour)', 'Tinh hoa ẩm thực vùng miền'),
+(5, 'Tour Mạo hiểm & Thể thao', 'Trekking, leo núi, chèo Kayak'),
+(6, 'Tour Teambuilding & Sự kiện', 'Gắn kết tập thể, Gala Dinner'),
+(7, 'Tour Wellness & Nghỉ dưỡng', 'Spa, Yoga, chữa lành tâm hồn'),
+(8, 'Tour Nhiếp ảnh & Sáng tác', 'Săn ảnh mùa vàng, bình minh'),
+(9, 'Tour Xuyên Việt (Long Trip)', 'Hành trình di sản từ Bắc vào Nam'),
+(10, 'Tour Tâm linh & Hành hương', 'Chùa chiền, thánh địa linh thiêng'),
+(11, 'Tour Du lịch Sinh thái', 'Miền tây sông nước, vườn chim'),
+(12, 'Tour MICE', 'Hội nghị, hội thảo cao cấp'),
+(13, 'Tour Giáo dục & Trải nghiệm', 'Làng nghề, thực tế văn hóa'),
+(14, 'Tour Du thuyền & Đường thủy', 'Ngủ đêm trên vịnh, cano cao tốc'),
+(15, 'Tour Nông nghiệp', 'Trang trại organic, thu hoạch nông sản'),
+(16, 'Tour Cưới & Trăng mật', 'Không gian lãng mạn cho cặp đôi'),
+(17, 'Tour Caravan', 'Tự lái xe chinh phục mọi cung đường');
+
+-- Nạp Hình ảnh Banner cho 34 tỉnh
+INSERT IGNORE INTO images (id, image_url, sort_order) VALUES
+(501, 'https://statics.vinpearl.com/Thai-Nguyen-tea-3_1703016476.jpg', 1), (502, 'https://media.vneconomy.vn/images/upload/2023/12/17/mau-son.jpg', 1), (503, 'https://Vcdn1-dulich.vnecdn.net/2021/04/16/den-hung-1618565551.jpg', 1), (504, 'https://dienbien.gov.vn/images/db-hao-hung.jpg', 1), (505, 'https://laichau.gov.vn/images/sin-ho-may.jpg', 1), (506, 'https://mocchau.com.vn/images/dong-sang-moc-chau.jpg', 1), (507, 'https://vcdn1-dulich.vnecdn.net/2022/06/01/Sam-Son-Thanh-Hoa.jpg', 1), (508, 'https://nghean.gov.vn/images/que-bac-sen.jpg', 1), (509, 'https://vcdn1-dulich.vnecdn.net/2021/07/26/Thien-Cam.jpg', 1), (510, 'https://quangtri.gov.vn/images/cau-hien-luong.jpg', 1), (511, 'https://visithue.vn/images/dai-noi-hue-dem.jpg', 1), (512, 'https://danangfantasticity.com/images/ba-na-hills.jpg', 1), (513, 'https://vcdn1-dulich.vnecdn.net/2021/05/20/Ly-Son.jpg', 1), (514, 'https://nhatrang.gov.vn/images/vinh-nha-trang.jpg', 1), (515, 'https://gialai.gov.vn/images/bien-ho-pleiku.jpg', 1), (516, 'https://daklak.gov.vn/images/buon-don-elephant.jpg', 1), (517, 'https://dalat.gov.vn/images/ho-xuan-huong.jpg', 1), (518, 'https://tayninh.gov.vn/images/nui-ba-den.jpg', 1), (519, 'https://dongnai.gov.vn/images/cat-tien-park.jpg', 1), (520, 'https://vcdn1-dulich.vnecdn.net/2022/01/19/HCM-City.jpg', 1), (521, 'https://vinhlong.gov.vn/images/mien-tay-song-nuoc.jpg', 1), (522, 'https://dongthap.gov.vn/images/dong-sen-thap-muoi.jpg', 1), (523, 'https://angiang.gov.vn/images/rung-tram-tra-su.jpg', 1), (524, 'https://cantho.gov.vn/images/cho-noi-cai-rang.jpg', 1), (525, 'https://camau.gov.vn/images/dat-mui-ca-mau.jpg', 1), (526, 'https://vcdn1-dulich.vnecdn.net/2022/08/31/Ho-Guom-Ha-Noi.jpg', 1), (527, 'https://bacninh.gov.vn/images/den-do-quan-ho.jpg', 1), (528, 'https://vcdn1-dulich.vnecdn.net/2022/04/12/Ha-Long-Bay.jpg', 1), (529, 'https://haiphong.gov.vn/images/dao-cat-ba.jpg', 1), (530, 'https://hungyen.gov.vn/images/pho-hien.jpg', 1), (531, 'https://vcdn1-dulich.vnecdn.net/2022/03/24/Trang-An-Ninh-Binh.jpg', 1), (532, 'https://caobang.gov.vn/images/thac-ban-gioc.jpg', 1), (533, 'https://tuyenquang.gov.vn/images/na-hang-lam-binh.jpg', 1), (534, 'https://vcdn1-dulich.vnecdn.net/2022/05/16/Sapa-Lao-Cai.jpg', 1);
+
+-- Nạp 34 Tỉnh thành (Đã gắn sẵn image_id)
+INSERT IGNORE INTO provinces (id, image_id, province_code, province_name) VALUES (1, 501, '10', 'Tỉnh Thái Nguyên'), (2, 502, '11', 'Tỉnh Lạng Sơn'), (3, 503, '12', 'Tỉnh Phú Thọ'), (4, 504, '13', 'Tỉnh Điện Biên'), (5, 505, '14', 'Tỉnh Lai Châu'), (6, 506, '15', 'Tỉnh Sơn La'), (7, 507, '16', 'Tỉnh Thanh Hóa'), (8, 508, '17', 'Tỉnh Nghệ An'), (9, 509, '18', 'Tỉnh Hà Tĩnh'), (10, 510, '19', 'Tỉnh Quảng Trị'), (11, 511, '20', 'Thành phố Huế'), (12, 512, '21', 'Tp Đà Nẵng'), (13, 513, '22', 'Tỉnh Quảng Ngãi'), (14, 514, '23', 'Tỉnh Khánh Hòa'), (15, 515, '24', 'Tỉnh Gia Lai'), (16, 516, '25', 'Tỉnh Đắk Lắk'), (17, 517, '26', 'Tỉnh Lâm Đồng'), (18, 518, '27', 'Tỉnh Tây Ninh'), (19, 519, '28', 'Tỉnh Đồng Nai'), (20, 520, '29', 'Tp Hồ Chí Minh'), (21, 521, '30', 'Tỉnh Vĩnh Long'), (22, 522, '31', 'Tỉnh Đồng Tháp'), (23, 523, '32', 'Tỉnh An Giang'), (24, 524, '33', 'Tp Cần Thơ'), (25, 525, '34', 'Tỉnh Cà Mau'), (26, 526, '01', 'Thành phố Hà Nội'), (27, 527, '02', 'Tỉnh Bắc Ninh'), (28, 528, '03', 'Tỉnh Quảng Ninh'), (29, 529, '04', 'Tp Hải Phòng'), (30, 530, '05', 'Tỉnh Hưng Yên'), (31, 531, '06', 'Tỉnh Ninh Bình'), (32, 532, '07', 'Tỉnh Cao Bằng'), (33, 533, '08', 'Tỉnh Tuyên Quang'), (34, 534, '09', 'Tỉnh Lào Cai');
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+//Query 4
+
+USE travel_booking_db;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- [CHẠY LẠI CÂU LỆNH INSERT VÀO BẢNG districts Ở QUERY 4 GỐC CỦA BẠN]
+-- Bắt đầu từ: INSERT INTO districts (id, province_id, district_code, district_name) VALUES ... (1, 26, '10105', 'Quận Hoàn Kiếm') ...
 INSERT INTO districts (id, province_id, district_code, district_name) VALUES
 (1, 26, '10105', 'Quận Hoàn Kiếm'),
 (2, 26, '10101', 'Quận Ba Đình'),
@@ -964,12 +1149,27 @@ INSERT INTO districts (id, province_id, district_code, district_name) VALUES
 (694, 1, '82106', 'Huyện Hoà Bình'),
 (695, 1, '82109', 'Huyện Phước Long'),
 (696, 1, '82105', 'Huyện Vĩnh Lợi');
+-- Chạy ngay khối UPDATE này để sửa lỗi Mapping Tỉnh Thành bị lệch
+UPDATE districts SET province_id = 2 WHERE id BETWEEN 192 AND 202; -- Lạng Sơn
+UPDATE districts SET province_id = 3 WHERE id BETWEEN 203 AND 215; -- Phú Thọ
+UPDATE districts SET province_id = 4 WHERE id BETWEEN 235 AND 244; -- Điện Biên
+UPDATE districts SET province_id = 11 WHERE id BETWEEN 341 AND 349; -- Huế
+UPDATE districts SET province_id = 12 WHERE id BETWEEN 350 AND 357; -- Đà Nẵng
+UPDATE districts SET province_id = 14 WHERE id BETWEEN 398 AND 406; -- Khánh Hòa
+UPDATE districts SET province_id = 17 WHERE id BETWEEN 466 AND 475; -- Lâm Đồng
+UPDATE districts SET province_id = 20 WHERE id BETWEEN 556 AND 577; -- TP. HCM
+UPDATE districts SET province_id = 24 WHERE id BETWEEN 653 AND 661; -- Cần Thơ
+UPDATE districts SET province_id = 25 WHERE id BETWEEN 681 AND 689; -- Cà Mau
+UPDATE districts SET province_id = 34 WHERE id BETWEEN 167 AND 174; -- Lào Cai
 
--- =====================================================
--- 2.4. NẠP DỮ LIỆU PHƯỜNG/XÃ (WARDS) - PHẦN ĐẦU (1-1000)
--- =====================================================
+SET FOREIGN_KEY_CHECKS = 1;
 
-INSERT INTO wards (id, district_id, ward_code, ward_name) VALUES
+
+//Query 5
+
+USE travel_booking_db;
+
+INSERT IGNORE INTO wards (id, district_id, ward_code, ward_name) VALUES
 (1, 1, '10105001', 'Phường Hoàn Kiếm'),
 (2, 1, '10105002', 'Phường Cửa Nam'),
 (3, 2, '10101003', 'Phường Ba Đình'),
@@ -4292,28 +4492,132 @@ INSERT INTO wards (id, district_id, ward_code, ward_name) VALUES
 (3320, 696, '82105063', 'Xã Hưng Hội'),
 (3321, 696, '82105064', 'Xã Châu Thới');
 
--- =====================================================
--- 3. LOGIC KỸ THUẬT (TRIGGER, VIEW, PROCEDURE)
--- =====================================================
 
--- Trigger cập nhật số lần dùng khuyến mãi (TiDB không hỗ trợ trigger, cần xóa)
--- CREATE TRIGGER update_promotion_usage AFTER INSERT ON transactions FOR EACH ROW
--- BEGIN
---     IF NEW.promotion_id IS NOT NULL THEN
---         UPDATE promotions SET used_count = used_count + 1 WHERE id = NEW.promotion_id;
---     END IF;
--- END;
+//Query 6
 
--- View xem danh sách Tour đang hoạt động
-CREATE VIEW active_tours_view AS
-SELECT t.id, t.title, t.price, tc.category_name, p.province_name
+USE travel_booking_db;
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE tours;
+
+INSERT INTO tours (id, slug, title, province_id, location_name, price, category_id, sub_title, description, max_slots, is_active) VALUES
+(1, 'ha-noi-city-tour-5-sao', 'Hà Nội City Tour 5 Sao', 26, 'Hà Nội', 1800000, 2, 'Dấu ấn nghìn năm', 'Thăm Văn Miếu, Hoàng Thành bằng xe điện hạng sang.', 20, 1),
+(2, 'ha-long-heritage-luxury', 'Hạ Long Heritage Luxury', 28, 'Hạ Long', 5500000, 14, 'Kỳ quan thế giới', 'Ngủ đêm du thuyền Elite, chèo Kayak hang Luồn.', 30, 1),
+(3, 'sapa-mountain-retreat', 'Sapa Mountain Retreat', 34, 'Sapa', 3800000, 7, 'Thanh lọc giữa mây', 'Nghỉ dưỡng resort Topas Ecolodge view thung lũng.', 15, 1),
+(4, 'ninh-binh-trang-an-de-nhat', 'Ninh Bình - Tràng An Đệ Nhất', 31, 'Tràng An', 2600000, 3, 'Hạ Long trên cạn', 'Thuyền tay xuyên hang sáng tối, thăm phim trường Kong.', 40, 1),
+(5, 'ha-giang-loop-adventure', 'Hà Giang - Loop Adventure', 34, 'Đồng Văn', 6200000, 17, 'Chinh phục cực Bắc', 'Vượt đèo Mã Pì Lèng bằng xe Jeep chuyên dụng.', 12, 1),
+(6, 'mu-cang-chai-mua-vang', 'Mù Cang Chải - Mùa Vàng', 34, 'Yên Bái', 3500000, 8, 'Tuyệt tác ruộng bậc thang', 'Săn ảnh đồi mâm xôi, dù lượn trên đèo Khau Phạ.', 10, 1),
+(7, 'food-tour-ha-noi-fine-dining', 'Food Tour Hà Nội Fine Dining', 26, 'Hà Nội', 2500000, 4, 'Tinh hoa ẩm thực thủ đô', 'Trải nghiệm 10 món ngon đạt chuẩn Michelin.', 12, 1),
+(8, 'yen-tu-hanh-trinh-tam-linh', 'Yên Tử - Hành Trình Tâm Linh', 28, 'Uông Bí', 1900000, 10, 'Đất tổ Phật giáo', 'Hành hương đỉnh chùa Đồng bằng cáp treo 2 chặng.', 45, 1),
+(9, 'mice-tam-dao-cloud-workshop', 'MICE Tam Đảo Cloud Workshop', 26, 'Vĩnh Phúc', 4200000, 12, 'Hội thảo giữa mây', 'Phòng họp resort 5 sao view đỉnh núi.', 60, 1),
+(10, 'thai-nguyen-tra-chieu-organic', 'Thái Nguyên - Trà Chiều Organic', 1, 'Tân Cương', 1400000, 15, 'Hương vị trà xanh', 'Trải nghiệm thu hoạch chè và thưởng trà nghệ thuật.', 25, 1),
+(11, 'moc-chau-mua-hoa-man', 'Mộc Châu - Mùa Hoa Mận', 6, 'Sơn La', 2200000, 3, 'Thảo nguyên xanh mướt', 'Thăm thác Dải Yếm và đồi chè trái tim.', 30, 1),
+(12, 'ba-vi-rung-xanh-goi-ten', 'Ba Vì - Rừng Xanh Gọi Tên', 26, 'Ba Vì', 1100000, 11, 'Lá phổi thủ đô', 'Camping cao cấp giữa rừng thông xanh.', 20, 1),
+(13, 'hai-phong-cat-ba-adventure', 'Hải Phòng - Cát Bà Adventure', 29, 'Cát Bà', 3200000, 5, 'Biển xanh đảo ngọc', 'Trekking rừng quốc gia và chèo Kayak vịnh Lan Hạ.', 25, 1),
+(14, 'tam-chuc-de-nhat-co-tu', 'Tam Chúc - Đệ Nhất Cổ Tự', 3, 'Hà Nam', 1700000, 10, 'Vùng đất linh thiêng', 'Đi du thuyền trên hồ Lục Nhạc viếng điện Pháp Chủ.', 50, 1),
+(15, 'tu-le-nghi-duong-khoang-nong', 'Tú Lệ - Nghỉ dưỡng khoáng nóng', 34, 'Yên Bái', 4500000, 7, 'Sức sống từ lòng đất', 'Tắm khoáng nóng Onsen phong cách Nhật Bản.', 15, 1),
+(16, 'ha-noi-lang-nghe-truyen-thong', 'Hà Nội - Làng nghề truyền thống', 26, 'Bát Tràng', 1300000, 13, 'Bàn tay tài hoa', 'Tự tay làm gốm và thăm bảo tàng Gốm.', 35, 1),
+(17, 'dien-bien-lich-su-hao-hung', 'Điện Biên - Lịch sử hào hùng', 4, 'Điện Biên', 5800000, 2, 'Ký ức chiến trường', 'Thăm hầm Đờ Cát, đồi A1 và bảo tàng chiến thắng.', 12, 1),
+(18, 'mai-chau-dem-nhac-dan-toc', 'Mai Châu - Đêm nhạc dân tộc', 6, 'Hòa Bình', 2800000, 13, 'Bản sắc Thái trắng', 'Múa xòe, uống rượu cần bên nhà sàn.', 20, 1),
+(19, 'ha-giang-song-nho-que', 'Hà Giang - Sông Nho Quế', 34, 'Hà Giang', 1800000, 14, 'Tuyệt tác thiên nhiên', 'Đi thuyền hẻm Tu Sản xanh ngọc bích.', 25, 1),
+(20, 'lang-son-dinh-mau-son', 'Lạng Sơn - Đỉnh Mẫu Sơn', 2, 'Lạng Sơn', 2500000, 3, 'Xứ Lạng sương mù', 'Thưởng thức lợn quay và ngắm tuyết rơi mùa đông.', 15, 1),
+(21, 'ba-na-hills-cau-vang-luxury', 'Bà Nà Hills - Cầu Vàng Luxury', 12, 'Đà Nẵng', 1950000, 1, 'Làng Pháp trên mây', 'Vé cáp treo buffet và check-in Cầu Vàng.', 100, 1),
+(22, 'hue-da-yen-cung-dinh', 'Huế - Dạ Yến Cung Đình', 11, 'Huế', 3800000, 4, 'Vị ngon vua chúa', 'Ăn tối cung đình và thưởng thức nhã nhạc.', 15, 1),
+(23, 'hoi-an-den-long-dem-ram', 'Hội An - Đèn Lồng Đêm Rằm', 12, 'Quảng Nam', 1500000, 2, 'Phố cổ hoài niệm', 'Thả đèn hoa đăng trên sông Hoài lãng mạn.', 40, 1),
+(24, 'son-doong-chinh-phuc-hang-dong', 'Sơn Đoòng - Chinh phục Hang Động', 10, 'Quảng Bình', 72000000, 5, 'Thử thách để đời', 'Khám phá hang động lớn nhất hành tinh.', 6, 1),
+(25, 'nha-trang-bien-xanh-vay-goi', 'Nha Trang - Biển Xanh Vẫy Gọi', 14, 'Nha Trang', 4500000, 1, 'Thiên đường nghỉ dưỡng', 'Nghỉ dưỡng Vinpearl, lặn ngắm san hô hòn Mun.', 30, 1),
+(26, 'quy-nhon-ky-co-eo-gio', 'Quy Nhơn - Kỳ Co Eo Gió', 14, 'Quy Nhơn', 2800000, 1, 'Vẻ đẹp hoang sơ', 'Cano siêu tốc thăm đảo, hải sản tươi sống.', 25, 1),
+(27, 'phu-yen-hoa-vang-co-xanh', 'Phú Yên - Hoa Vàng Cỏ Xanh', 14, 'Phú Yên', 3200000, 3, 'Vẻ đẹp tinh khôi', 'Thăm Gành Đá Đĩa, hải đăng Đại Lãnh.', 20, 1),
+(28, 'da-lat-thung-lung-tinh-yeu', 'Đà Lạt - Thung lũng Tình Yêu', 17, 'Đà Lạt', 2500000, 16, 'Kỳ nghỉ lãng mạn', 'Thăm hồ Tuyền Lâm, hái dâu tây tại vườn.', 25, 1),
+(29, 'quang-nam-thanh-dia-my-son', 'Quảng Nam - Thánh địa Mỹ Sơn', 12, 'Duy Xuyên', 1200000, 2, 'Di sản văn hóa Chăm', 'Xem múa Apsara cổ điển bên đền tháp.', 30, 1),
+(30, 'lang-co-vinh-dep-the-gioi', 'Lăng Cô - Vịnh Đẹp Thế Giới', 11, 'Lăng Cô', 4200000, 1, 'Nghỉ dưỡng ven biển', 'Tắm biển bãi cát trắng mịn, ăn ghẹ tươi.', 20, 1),
+(31, 'binh-dinh-bao-tang-quang-trung', 'Bình Định - Bảo Tàng Quang Trung', 14, 'Bình Định', 1500000, 2, 'Đất võ trời văn', 'Xem võ cổ truyền Bình Định đặc sắc.', 25, 1),
+(32, 'phan-thiet-doi-cat-bay', 'Phan Thiết - Đồi Cát Bay', 14, 'Mũi Né', 2900000, 5, 'Sa mạc thu nhỏ', 'Trượt cát và đua xe địa hình trên đồi Hồng.', 35, 1),
+(33, 'da-nang-ngu-hanh-son', 'Đà Nẵng - Ngũ Hành Sơn', 12, 'Đà Nẵng', 1100000, 10, 'Non nước hữu tình', 'Khám phá hang động và làng đá mỹ nghệ.', 50, 1),
+(34, 'hue-tour-lang-tam-trieu-nguyen', 'Huế - Tour Lăng Tẩm Triều Nguyễn', 11, 'Huế', 1800000, 2, 'Kiến trúc đỉnh cao', 'Thăm lăng Khải Định, Tự Đức, Minh Mạng.', 30, 1),
+(35, 'da-lat-trekking-bidoup', 'Đà Lạt - Trekking Bidoup', 17, 'Lâm Đồng', 3500000, 5, 'Chinh phục nóc nhà', 'Vượt rừng lá phong già tuổi đời ngàn năm.', 12, 1),
+(36, 'phu-yen-dam-o-loan-food-tour', 'Phú Yên - Đầm Ô Loan Food Tour', 14, 'Phú Yên', 1600000, 4, 'Hải sản tươi sống', 'Thưởng thức sò huyết Ô Loan danh bất hư truyền.', 20, 1),
+(37, 'quang-binh-hang-en-adventure', 'Quảng Bình - Hang Én Adventure', 10, 'Quảng Bình', 7500000, 5, 'Ngủ trong lòng hang', 'Trải nghiệm camping kỳ bí trong hang lớn.', 12, 1),
+(38, 'quang-nam-lang-gom-thanh-ha', 'Quảng Nam - Làng gốm Thanh Hà', 12, 'Hội An', 850000, 13, 'Hơi thở làng nghề', 'Trải nghiệm chuốt gốm thủ công.', 40, 1),
+(39, 'da-nang-cau-rong-phun-lua', 'Đà Nẵng - Cầu Rồng phun lửa', 12, 'Đà Nẵng', 900000, 4, 'Sôi động về đêm', 'Ăn vặt phố đêm và xem Cầu Rồng phun lửa.', 60, 1),
+(40, 'ninh-thuan-vuon-nho-retreat', 'Ninh Thuận - Vườn Nho Retreat', 14, 'Ninh Thuận', 2200000, 15, 'Xứ sở nho xanh', 'Hái nho tại vườn và thăm tháp Chàm Po Klong Garai.', 20, 1),
+(41, 'ninh-thuan-vinh-vinh-hy-luxury', 'Ninh Thuận - Vịnh Vĩnh Hy Luxury', 14, 'Vĩnh Hy', 5500000, 1, 'Vịnh biển hoang sơ', 'Nghỉ dưỡng resort đắt đỏ nhất Việt Nam.', 10, 1),
+(42, 'ly-son-dao-nui-lua', 'Lý Sơn - Đảo Núi Lửa', 13, 'Quảng Ngãi', 3200000, 3, 'Maldives của miền Trung', 'Thăm chùa Hang và đỉnh Thới Lới.', 20, 1),
+(43, 'pu-luong-thien-duong-xanh', 'Pù Luông - Thiên đường xanh', 7, 'Thanh Hóa', 2800000, 7, 'Sống chậm giữa rừng già', 'Nghỉ dưỡng bungalow view ruộng bậc thang.', 15, 1),
+(44, 'nghe-an-que-bac-than-thuong', 'Nghệ An - Quê Bác thân thương', 8, 'Nam Đàn', 1500000, 2, 'Về thăm làng Sen', 'Tìm hiểu cuộc đời và sự nghiệp của Bác Hồ.', 40, 1),
+(45, 'ha-tinh-bien-thien-cam', 'Hà Tĩnh - Biển Thiên Cầm', 9, 'Hà Tĩnh', 1800000, 1, 'Tiếng đàn trời', 'Tắm biển và thưởng thức hải sản đặc sản.', 30, 1),
+(46, 'quang-nam-rung-dua-bay-mau', 'Quảng Nam - Rừng dừa Bảy Mẫu', 12, 'Hội An', 950000, 11, 'Miền Tây giữa lòng miền Trung', 'Trải nghiệm múa thúng chai điệu nghệ.', 35, 1),
+(47, 'hue-pha-tam-giang-chieu-ta', 'Huế - Phá Tam Giang chiều tà', 11, 'Huế', 1200000, 4, 'Ẩm thực đầm phá', 'Ngắm hoàng hôn và ăn đặc sản đầm phá.', 20, 1),
+(48, 'son-tra-ngam-linh-vat-bien', 'Sơn Trà - Ngắm linh vật biển', 12, 'Đà Nẵng', 1300000, 3, 'Bán đảo xanh', 'Săn ảnh Voọc chà vá chân nâu quý hiếm.', 15, 1),
+(49, 'binh-dinh-ham-ho-sinh-thai', 'Bình Định - Hầm Hô sinh thái', 14, 'Tây Sơn', 1400000, 3, 'Non xanh nước biếc', 'Đi thuyền trên sông Kut và thăm bảo tàng Tây Sơn.', 25, 1),
+(50, 'phu-yen-nhat-tu-son', 'Phú Yên - Nhất Tự Sơn', 14, 'Sông Cầu', 1800000, 3, 'Con đường dưới biển', 'Đi bộ qua biển khi thủy triều rút.', 20, 1),
+(51, 'sai-gon-city-tour-xe-limousine', 'Sài Gòn - City Tour Xe Limousine', 20, 'TP. HCM', 2500000, 2, 'Thành phố mang tên Bác', 'Dạo quanh các công trình Pháp cổ sang trọng.', 10, 1),
+(52, 'phu-quoc-dao-ngoc-4-dao', 'Phú Quốc - Đảo Ngọc 4 Đảo', 25, 'Kiên Giang', 3500000, 1, 'Lặn ngắm san hô', 'Cano thăm hòn Móng Tay, hòn Gầm Ghì.', 30, 1),
+(53, 'can-tho-cho-noi-cai-rang', 'Cần Thơ - Chợ Nổi Cái Răng', 24, 'Cần Thơ', 1200000, 11, 'Nét đẹp sông nước', 'Đi ghe sớm ăn bún riêu, mua trái cây tại vườn.', 40, 1),
+(54, 'ca-mau-check-in-diem-cuc-nam', 'Cà Mau - Check-in Điểm Cực Nam', 25, 'Cà Mau', 4500000, 3, 'Mũi tàu tổ quốc', 'Thăm mốc tọa độ và xuyên rừng đước.', 15, 1),
+(55, 'tay-ninh-nui-ba-den-cap-treo', 'Tây Ninh - Núi Bà Đen Cáp Treo', 18, 'Tây Ninh', 1500000, 10, 'Hành trình đất thánh', 'Chiêm bái tượng Phật Bà cao nhất Châu Á.', 50, 1),
+(56, 'ben-tre-xu-dua-miet-vuon', 'Bến Tre - Xứ Dừa Miệt Vườn', 22, 'Bến Tre', 950000, 11, 'Thanh bình quê hương', 'Đi xe lôi và uống nước dừa xiêm ngọt lịm.', 45, 1),
+(57, 'dong-thap-tram-chim-mua-nuoc-noi', 'Đồng Tháp - Tràm Chim Mùa Nước Nổi', 22, 'Đồng Tháp', 1800000, 3, 'Vũ điệu sếu đầu đỏ', 'Ngắm sếu quý hiếm mùa nước về.', 20, 1),
+(58, 'an-giang-rung-tram-tra-su', 'An Giang - Rừng Tràm Trà Sư', 23, 'Châu Đốc', 1100000, 11, 'Thảm bèo xanh mướt', 'Chèo xuồng ba lá xuyên rừng tràm xanh ngắt.', 30, 1),
+(59, 'vung-tau-ngon-hai-dang-dem', 'Vũng Tàu - Ngọn Hải Đăng Đêm', 19, 'Vũng Tàu', 1400000, 4, 'Gió biển rì rào', 'Ăn bánh khọt và ngắm biển đêm từ cao.', 40, 1),
+(60, 'con-dao-tam-linh-nghi-duong', 'Côn Đảo - Tâm Linh & Nghỉ Dưỡng', 25, 'Kiên Giang', 6800000, 10, 'Miền đất linh thiêng', 'Viếng mộ chị Sáu và thăm nhà tù Côn Đảo.', 20, 1),
+(61, 'sai-gon-street-food-tour', 'Sài Gòn - Street Food Tour', 20, 'TP. HCM', 1200000, 4, 'Thiên đường ẩm thực', 'Thử 10 món ngon cùng hướng dẫn viên bản địa.', 20, 1),
+(62, 'long-an-canh-dong-bat-tan', 'Long An - Cánh Đồng Bất Tận', 20, 'Long An', 1900000, 3, 'Ký ức phim trường', 'Trải nghiệm dược liệu rừng tràm.', 25, 1),
+(63, 'tien-giang-cu-lao-thoi-son', 'Tiền Giang - Cù Lao Thới Sơn', 22, 'Mỹ Tho', 850000, 11, 'Ngọt ngào hương nhãn', 'Nghe đờn ca tài tử giữa vườn cây.', 50, 1),
+(64, 'kien-giang-quan-dao-nam-du', 'Kiên Giang - Quần Đảo Nam Du', 25, 'Rạch Giá', 3500000, 1, 'Hòn ngọc thô', 'Khám phá bãi Cây Mến nước trong vắt.', 20, 1),
+(65, 'ba-ria-suoi-nuoc-nong-binh-chau', 'Bà Rịa - Suối Nước Nóng Bình Châu', 19, 'Bình Châu', 2200000, 7, 'Sức khỏe dồi dào', 'Tắm bùn khoáng và luộc trứng lòng đào.', 30, 1),
+(66, 'sai-gon-du-thuyen-song-sai-gon', 'Sài Gòn - Du Thuyền Sông Sài Gòn', 20, 'TP. HCM', 1800000, 14, 'Thành phố lung linh', 'Ăn tối sang trọng ngắm Landmark 81.', 50, 1),
+(67, 'an-giang-mieu-ba-chua-xu', 'An Giang - Miếu Bà Chúa Xứ', 23, 'Châu Đốc', 1300000, 10, 'Hành hương núi Sam', 'Viếng Bà Chúa Xứ linh thiêng nhất miền Tây.', 40, 1),
+(68, 'dong-thap-lang-hoa-sa-dec', 'Đồng Tháp - Làng Hoa Sa Đéc', 22, 'Sa Đéc', 900000, 8, 'Xứ sở ngàn hoa', 'Check-in cánh đồng hoa lớn nhất miền Nam.', 45, 1),
+(69, 'phu-quoc-safari-vinwonders', 'Phú Quốc - Safari & VinWonders', 25, 'Phú Quốc', 2500000, 13, 'Khám phá thế giới thú', 'Trải nghiệm vườn thú mở lớn nhất VN.', 100, 1),
+(70, 'bac-lieu-nha-cong-tu-bac-lieu', 'Bạc Liêu - Nhà Công Tử Bạc Liêu', 25, 'Bạc Liêu', 1100000, 2, 'Huyền thoại ăn chơi', 'Thăm dinh thự gắn liền với giai thoại.', 35, 1),
+(71, 'buon-ma-thuot-thac-dray-nur', 'Buôn Ma Thuột - Thác Dray Nur', 16, 'Đắk Lắk', 2800000, 3, 'Hùng vĩ đại ngàn', 'Khám phá thác nước đẹp nhất Tây Nguyên.', 25, 1),
+(72, 'gia-lai-bien-ho-pleiku', 'Gia Lai - Biển Hồ Pleiku', 15, 'Pleiku', 2200000, 3, 'Đôi mắt Pleiku', 'Thăm hồ nước tự nhiên trên miệng núi lửa.', 20, 1),
+(73, 'kon-tum-nha-tho-go', 'Kon Tum - Nhà Thờ Gỗ', 15, 'Kon Tum', 1800000, 2, 'Kiến trúc độc bản', 'Tìm hiểu văn hóa dân tộc Ba Na.', 15, 1),
+(74, 'da-lat-farmstay-organic', 'Đà Lạt - Farmstay Organic', 17, 'Đà Lạt', 1900000, 15, 'Trải nghiệm nông nghiệp', 'Làm nông dân hái rau, chăm sóc gia súc.', 20, 1),
+(75, 'buon-don-cuoi-voi-trai-nghiem', 'Buôn Đôn - Cưỡi Voi Trải Nghiệm', 16, 'Đắk Lắk', 1500000, 13, 'Văn hóa săn voi', 'Tìm hiểu đời sống người MNông bản địa.', 30, 1),
+(76, 'da-lat-san-may-cau-go', 'Đà Lạt - Săn Mây Cầu Gỗ', 17, 'Đà Lạt', 1200000, 8, 'Bình minh cao nguyên', 'Check-in biển mây bồng bềnh lúc 5 giờ sáng.', 15, 1),
+(77, 'xuyen-viet-hanh-trinh-di-san-15-ngay', 'Xuyên Việt - Hành Trình Di Sản 15 Ngày', 26, 'Việt Nam', 45000000, 9, 'Hành trình cuộc đời', 'Đi dọc 15 tỉnh thành di sản thế giới.', 10, 1),
+(78, 'caravan-chinh-phuc-dong-bac', 'Caravan Chinh Phục Đông Bắc', 34, 'Bắc Kạn', 12000000, 17, 'Cung đường mạo hiểm', 'Tự lái xe vượt đèo dốc núi rừng phía Bắc.', 15, 1),
+(79, 'mice-da-nang-business-retreat', 'MICE Đà Nẵng - Business Retreat', 12, 'Đà Nẵng', 8500000, 12, 'Hội thảo chuyên sâu', 'Tổ chức sự kiện tại resort 5 sao biển.', 150, 1),
+(80, 'phu-quoc-teambuilding-dao-hoang', 'Phú Quốc - Teambuilding Đảo Hoang', 25, 'Kiên Giang', 4200000, 6, 'Gắn kết sức mạnh', 'Hoạt động sinh tồn trên đảo không người.', 40, 1),
+(81, 'sapa-trekking-ban-y-linh-ho', 'Sapa - Trekking Bản Ý Linh Hồ', 34, 'Lào Cai', 1800000, 5, 'Vẻ đẹp bản làng', 'Băng qua ruộng bậc thang và suối Mường Hoa.', 20, 1),
+(82, 'ha-noi-dem-hoang-thanh-thang-long', 'Hà Nội - Đêm Hoàng Thành Thăng Long', 26, 'Hà Nội', 1500000, 2, 'Giải mã di sản', 'Tour đêm tìm hiểu lịch sử kinh đô cổ.', 30, 1),
+(83, 'hue-tra-chieu-cung-dinh', 'Huế - Trà Chiều Cung Đình', 11, 'Huế', 1200000, 4, 'Phong thái quý tộc', 'Thưởng trà và bánh ngọt kiểu Huế xưa.', 15, 1),
+(84, 'ninh-binh-tham-hiem-hang-mua', 'Ninh Bình - Thám hiểm Hang Múa', 31, 'Ninh Bình', 1100000, 5, 'Vạn lý trường thành VN', 'Leo 500 bậc đá ngắm toàn cảnh Tràng An.', 40, 1),
+(85, 'da-lat-cam-trai-ho-tuyen-lam', 'Đà Lạt - Cắm Trại Hồ Tuyền Lâm', 17, 'Đà Lạt', 2100000, 3, 'Glamping sang trọng', 'Tiệc BBQ bãi cỏ và ngủ lều cao cấp.', 15, 1),
+(86, 'nha-trang-bay-du-luon-tren-bien', 'Nha Trang - Bay Dù Lượn Trên Biển', 14, 'Khánh Hòa', 2500000, 5, 'Cảm giác mạnh', 'Ngắm vịnh Nha Trang từ độ cao 50m.', 10, 1),
+(87, 'sai-gon-an-toi-tau-indochina', 'Sài Gòn - Ăn Tối Tàu Indochina', 20, 'TP. HCM', 1900000, 14, 'Lãng mạn đêm hoa lệ', 'Du thuyền phong cách cổ điển Pháp.', 50, 1),
+(88, 'can-tho-lam-banh-dan-gian', 'Cần Thơ - Làm bánh dân gian', 24, 'Cần Thơ', 850000, 13, 'Khéo tay hay làm', 'Học làm 10 loại bánh miền Tây đặc sắc.', 30, 1),
+(89, 'phu-quoc-sunset-sanato-check-in', 'Phú Quốc - Sunset Sanato check-in', 25, 'Kiên Giang', 900000, 8, 'Hoàng hôn bãi Trường', 'Săn ảnh cùng những chú voi chân dài.', 60, 1),
+(90, 'ha-long-bay-thuy-phi-co', 'Hạ Long - Bay Thủy Phi Cơ', 28, 'Quảng Ninh', 7500000, 14, 'Tầm nhìn thượng lưu', '15 phút bay ngắm vịnh từ trên không.', 4, 1),
+(91, 'dong-thap-lang-chieu-ma', 'Đồng Tháp - Làng Chiếu Ma', 22, 'Lấp Vò', 1100000, 2, 'Văn hóa lâu đời', 'Tìm hiểu nghề dệt chiếu truyền thống.', 20, 1),
+(92, 'lao-cai-cho-phien-bac-ha', 'Lào Cai - Chợ Phiên Bắc Hà', 34, 'Bắc Hà', 1800000, 4, 'Sắc màu vùng cao', 'Thử rượu ngô và thắng cố ngựa.', 30, 1),
+(93, 'quang-binh-hang-va-tham-hiem', 'Quảng Bình - Hang Va Thám Hiểm', 10, 'Quảng Bình', 8500000, 5, 'Thạch nhũ độc bản', 'Khám phá hồ thạch nhũ hiếm có nhất TG.', 8, 1),
+(94, 'da-nang-golf-tour-luxury', 'Đà Nẵng - Golf Tour Luxury', 12, 'Đà Nẵng', 12000000, 1, 'Kỳ nghỉ của golfer', 'Chơi golf tại sân BRG đẳng cấp.', 4, 1),
+(95, 'sai-gon-tour-gom-song-be', 'Sài Gòn - Tour Gốm Sông Bé', 20, 'Bình Dương', 1500000, 13, 'Hồn đất Nam Bộ', 'Thăm lò gốm củi truyền thống lâu đời.', 20, 1),
+(96, 'an-giang-nui-cam-huyen-bi', 'An Giang - Núi Cấm huyền bí', 23, 'Tịnh Biên', 1400000, 10, 'Đà Lạt của miền Tây', 'Viếng tượng Phật Di Lặc lớn nhất VN.', 35, 1),
+(97, 'phu-quoc-safari-dem', 'Phú Quốc - Safari Đêm', 25, 'Kiên Giang', 2200000, 3, 'Thế giới hoang dã', 'Xem tập tính thú đêm từ xe chuyên dụng.', 40, 1),
+(98, 'hue-lang-nghe-lam-nhang', 'Huế - Làng Nghề Làm Nhang', 11, 'Thủy Xuân', 800000, 8, 'Rực rỡ sắc màu', 'Săn ảnh làng hương nổi tiếng mạng xã hội.', 40, 1),
+(99, 'ha-noi-xich-lo-pho-co', 'Hà Nội - Xích lô phố cổ', 26, 'Hà Nội', 900000, 2, 'Nhịp sống chậm', 'Ngắm nhìn 36 phố phường kiểu truyền thống.', 20, 1),
+(100, 'hanh-trinh-di-san-viet-nam-21-ngay', 'Hành trình di sản Việt Nam 21 Ngày', 26, 'Việt Nam', 99000000, 9, 'Đỉnh cao Luxury', 'Chuyến đi xuyên Việt trọn vẹn hạng thương gia.', 10, 1);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+//Query 7
+
+USE travel_booking_db;
+
+-- VIEW XEM TOUR ĐANG HOẠT ĐỘNG (Dùng cho trang chủ)
+CREATE OR REPLACE VIEW active_tours_view AS
+SELECT t.id, t.title, t.slug, t.price, tc.category_name, p.province_name
 FROM tours t
 LEFT JOIN tour_categories tc ON t.category_id = tc.id
 LEFT JOIN provinces p ON t.province_id = p.id
 WHERE t.is_active = TRUE AND t.is_deleted = FALSE;
 
--- View chi tiết Booking
-CREATE VIEW booking_details_view AS
+-- VIEW CHI TIẾT BOOKING (Dùng cho Admin quản lý đơn hàng)
+CREATE OR REPLACE VIEW booking_details_view AS
 SELECT b.id, b.total_amount, b.status, c.full_name as customer_name, t.title as tour_title, a.username as booked_by
 FROM bookings b
 JOIN customers c ON b.customer_id = c.id
@@ -4321,35 +4625,138 @@ JOIN tours t ON b.tour_id = t.id
 JOIN accounts a ON b.account_id = a.id
 WHERE b.is_deleted = FALSE;
 
--- Procedure lấy top Tour doanh thu cao nhất (TiDB không hỗ trợ stored procedure, cần xóa)
--- CREATE PROCEDURE GetTopTours(IN limit_count INT)
--- BEGIN
---     SELECT t.title, SUM(b.total_amount) as revenue
---     FROM tours t
---     JOIN bookings b ON t.id = b.tour_id
---     GROUP BY t.id ORDER BY revenue DESC LIMIT limit_count;
--- END;
-
--- Thiết lập tiếng Việt chuẩn
-ALTER DATABASE travel_booking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- Thêm bảng posts cho tính năng blog
+-- BẢNG POSTS (Tính năng Blog/Tin tức)
 CREATE TABLE IF NOT EXISTS posts (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  excerpt TEXT,
-  content TEXT NOT NULL,
-  category VARCHAR(100),
-  image_url VARCHAR(500),
-  views INT DEFAULT 0,
-  is_active BOOLEAN DEFAULT TRUE,
-  account_id INT COMMENT 'Admin hoặc nhân viên viết bài',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    excerpt TEXT,
+    content TEXT NOT NULL,
+    category VARCHAR(100),
+    image_url VARCHAR(500),
+    views INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    account_id INT COMMENT 'Admin hoặc nhân viên viết bài',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Thêm dữ liệu mẫu cho posts
+-- NẠP DỮ LIỆU MẪU CHO BLOG
 INSERT INTO posts (title, excerpt, content, category, image_url, views) VALUES
-('Top 5 điểm đến mùa hè 2024 không thể bỏ qua', 'Khám phá những điểm đến tuyệt vời nhất cho kỳ nghỉ hè của bạn cùng gia đình và bạn bè...', 'Nội dung chi tiết về top 5 điểm đến mùa hè 2024 sẽ được cập nhật sau...', 'Du lịch', 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', 1234),
-('Kinh nghiệm đi Đà Nẵng tự túc tiết kiệm nhất', 'Hướng dẫn chi tiết cách đi Đà Nẵng tự túc với chi phí thấp nhưng trải nghiệm tuyệt vời...', 'Nội dung chi tiết về kinh nghiệm đi Đà Nẵng sẽ được cập nhật sau...', 'Hướng dẫn', 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=800', 856),
-('Những món ăn đặc sản Hà Nội phải thử', 'Tổng hợp những món ăn ngon nhất, đặc sản nhất của thủ đô Hà Nội mà du khách không thể bỏ qua...', 'Nội dung chi tiết về món ăn Hà Nội sẽ được cập nhật sau...', 'Ẩm thực', 'https://images.unsplash.com/photo-1569550270262-13c28e2e56c6?w=800', 2341);
+('Top 5 điểm đến mùa hè 2024 không thể bỏ qua', 'Khám phá những điểm đến tuyệt vời nhất cho kỳ nghỉ hè của bạn...', 'Nội dung chi tiết về top 5 điểm đến mùa hè 2024...', 'Du lịch', 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', 1234),
+('Kinh nghiệm đi Đà Nẵng tự túc tiết kiệm nhất', 'Hướng dẫn chi tiết cách đi Đà Nẵng tự túc với chi phí thấp...', 'Nội dung chi tiết về kinh nghiệm đi Đà Nẵng...', 'Hướng dẫn', 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?w=800', 856),
+('Những món ăn đặc sản Hà Nội phải thử', 'Tổng hợp những món ăn ngon nhất của thủ đô Hà Nội...', 'Nội dung chi tiết về món ăn Hà Nội...', 'Ẩm thực', 'https://images.unsplash.com/photo-1569550270262-13c28e2e56c6?w=800', 2341);
+
+
+//Query 8
+
+USE travel_booking_db;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Xóa sạch dữ liệu ảnh cũ để không bị trùng lặp
+TRUNCATE TABLE tour_images;
+
+-- Nạp 100 ảnh minh họa thực tế cho các tour
+INSERT INTO tour_images (tour_id, image_url, is_primary) VALUES
+(1, 'https://caosukhanhdat.vn/wp-content/uploads/Hoan-Kiem-Lake-Ha-Noi-City-Tour-Full-day-Culture-Pham-Travel.png', 1),
+(2, 'https://res.klook.com/image/upload/c_crop,h_723,w_1157,x_0,y_0,z_0.5/w_750,h_469,c_fill,q_85/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/nlhwy8qxed8psdue4zhw.jpg', 1),
+(3, 'https://statics.vinwonders.com/Fansipan-Mountain-02_1682416158.jpg', 1),
+(4, 'https://media.istockphoto.com/id/2213702813/vi/anh/du-kh%C3%A1ch-ch%C3%A8o-thuy%E1%BB%81n-tham-quan-%C4%91%E1%BB%81n-th%E1%BB%9D-tr%C3%AAn-khu-danh-lam-th%E1%BA%AFng-c%E1%BA%A3nh-tr%C3%A0ng-an-t%E1%BB%89nh-ninh-b%C3%ACnh.jpg?s=612x612&w=0&k=20&c=X-piGC_UQh785iHeEd3sY94bGgAfHbBA4i7OqGrZCw0=', 1),
+(5, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRagxCLorNVmTmoIOsdlLiKj9xRltgkDzv3dfa6wRogV8iTtws5VlT92NYq&s=10', 1),
+(6, 'https://cdnphoto.dantri.com.vn/DmeDEox3Rmp4AACvqv6egqB1ksI=/2024/10/21/hung-1729476545725.jpg', 1),
+(7, 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/24/e6/a3/we-create-menu-that-highlights.jpg', 1),
+(8, 'https://static.vinwonders.com/production/2025/03/chua-dong-yen-tu.jpg', 1),
+(9, 'https://cdn2.fptshop.com.vn/unsafe/1920x0/filters:format(webp):quality(75)/kham_pha_cau_may_tam_dao_thumb_ad200d7e8c.png', 1),
+(10, 'https://cdn-media.sforum.vn/storage/app/media/ctvseo_MH/%E1%BA%A3nh%20%C4%91%E1%BA%B9p%20Th%C3%A1i%20Nguy%C3%AAn/anh-dep-thai-nguyen-2.jpeg', 1),
+(11, 'https://media.vietravel.com/images/Content/hoa-man-moc-chau-1.jpg', 1),
+(12, 'https://statics.vinwonders.com/vuon-quoc-gia-ba-vi-2_1685782502.jpg', 1),
+(13, 'https://images2.thanhnien.vn/528068263637045248/2023/9/22/base64-16953530262741416610957.png', 1),
+(14, 'https://catbaexpress.com/upload/images/chua-ba-sao-ha-nam.jpg', 1),
+(15, 'https://onlinebooking.vn/wp-content/uploads/khoang-nong-le-champ-tu-le-yen-bai-3.jpg', 1),
+(16, 'https://static.vinwonders.com/2023/02/lang-nghe-o-ha-noi-12.jpg', 1),
+(17, 'https://vcdn1-dulich.vnecdn.net/2023/12/18/pha1-1765-1702890438.jpg?w=0&h=0&q=100&dpr=2&fit=crop&s=9XyuLkxTDOahuy-1TGOCrg', 1),
+(18, 'https://maichauhideaway.com/Data/Sites/1/media/blog/ban-lac-mai-chau-hoa-binh-co-gi/ban-lac-mai-chau-hoa-binh-co-gi-12.jpg', 1),
+(19, 'https://media.vietravel.com/images/Content/du-lich-ha-giang-01.jpg', 1),
+(20, 'https://scontent.iocvnpt.com/resources/portal/Images/LSN/phucvt.lsn/dia%20diem/mau_son_tuyet.jpg_636683676909370651.jpg', 1),
+(21, 'https://d2e5ushqwiltxm.cloudfront.net/wp-content/uploads/sites/86/2023/08/30020055/Thumbnail-image-from-Prawat-Thananithaporn-under-the-Shutterstock-Terms-of-Use.jpg', 1),
+(22, 'https://queenbus.com.vn/wp-content/uploads/2025/08/Kinh-Thanh-Hue-la-trai-tim-cua-co-do-Anh_-Suu-tam.png', 1),
+(23, 'https://cdn3.ivivu.com/2023/10/du-lich-hoi-an-ivivu-img1.jpg', 1),
+(24, 'https://thanhnien.mediacdn.vn/Uploaded/phucndh/2022_04_14/a4-5211.jpg', 1),
+(25, 'https://www.agoda.com/wp-content/uploads/2024/08/Nha-Trang.jpg', 1),
+(26, 'https://owa.bestprice.vn/images/destinations/uploads/dao-ky-co-5fe29b3de2d1f.jpg', 1),
+(27, 'https://cdn2.tuoitre.vn/zoom/700_525/471584752817336320/2024/9/26/phu-yen-canh-phim-hoa-vang26-09-2024-1727339567961380456424-274-0-1321-2000-crop-17273396692921921189481.jpg', 1),
+(28, 'https://upload.wikimedia.org/wikipedia/commons/c/c7/TLTY2.jpg', 1),
+(29, 'https://upload.wikimedia.org/wikipedia/commons/0/07/2024_-_M%E1%BB%B9_S%C6%A1n_Group_B%2C_C_and_D_-_img_23.jpg', 1),
+(30, 'https://vcdn1-dulich.vnecdn.net/2023/07/21/Langco1-8400-1689668265-9277-1689904738.jpg?w=0&h=0&q=100&dpr=2&fit=crop&s=WRqzE6jV2i4HGfvhNOMZQw', 1),
+(31, 'https://ik.imagekit.io/tvlk/blog/2023/08/bao-tang-quang-trung-4.jpg?tr=q-70,c-at_max,w-1000,h-600', 1),
+(32, 'https://vietrektravel.com/Upload/News/Huong-Dan-Chi-Tiet-Duong-Di-Doi-Cat-Bay-Mui-Ne-Phan-Thiet.jpg', 1),
+(33, 'https://static.vinwonders.com/2022/03/ngu-hanh-son-09.jpg', 1),
+(34, 'https://queenbus.com.vn/wp-content/uploads/2025/08/Lang-Khai-Dinh-%E2%80%93-Ve-dep-kien-truc-giao-thoa-A-%E2%80%93-Au-tai-Hue-Anh-Suu-tam.webp', 1),
+(35, 'https://toongadventure.vn/wp-content/uploads/2020/03/Bidoup-nui-ba-khu-rung-bi-an-cach-Da-Lat-50-km.jpg', 1),
+(36, 'https://quynhontourist.com/wp-content/uploads/2024/05/Buffet-Hai-San-Dam-O-Loan-mat-ca-ngu-dai-duong.jpg', 1),
+(37, 'https://image.vietgoing.com/editor/image_pkr1639446571.jpg', 1),
+(38, 'https://cdn.xanhsm.com/2025/02/a30be2a1-lang-gom-thanh-ha-1.jpg', 1),
+(39, 'https://danangfantasticity.com/wp-content/uploads/2018/03/da-nang-thanh-pho-cua-nhung-cay-cau-07.jpg', 1),
+(40, 'https://cdn1z.reatimes.vn/mediav2/media/uploaded/2/2019/04/13/6-nhotrongchinh6-reatimes-1555090403.jpg', 1),
+(41, 'https://phetravel.com/uploads/tour-vinh-hy.jpg.webp', 1),
+(42, 'https://vcdn1-dulich.vnecdn.net/2025/05/16/8e64ee43e23a57640e2b-174736902-2180-3575-1747370044.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=j8VjpJ1BTJCZpil_MYUJxA', 1),
+(43, 'https://cdn3.ivivu.com/2023/09/pu-luong-retreat-thanh-hoa-ivivu-1.jpg', 1),
+(44, 'https://static.vinwonders.com/production/du-lich-nghe-an-topbanner.jpg', 1),
+(45, 'https://static.tuoitre.vn/tto/i/s626/2014/10/07/HtD4l3L7.jpg', 1),
+(46, 'https://media-cdn-v2.laodong.vn/Storage/newsportal/2019/4/17/728352/Anh-1.jpg', 1),
+(47, 'https://nld.mediacdn.vn/291774122806476800/2024/4/9/tam-giang-7-1712628256222239035599.jpg', 1),
+(48, 'https://danangfantasticity.com/wp-content/uploads/2025/08/ban-dao-son-tra-thanh-pho-da-nang.jpg', 1),
+(49, 'https://zoomtravel.vn/upload/news/ham-ho13111.jpeg', 1),
+(50, 'https://cdn.xanhsm.com/2025/03/c5eb6c2a-dao-nhat-tu-son-2.jpg', 1),
+(51, 'https://d2e5ushqwiltxm.cloudfront.net/wp-content/uploads/sites/92/2024/12/06094259/Banner-festive-set-menus-2-1500x845.png', 1),
+(52, 'https://datviettour.com.vn/uploads/images/mien-nam/phu-quoc/hinh-danh-thang/du-lich-hon-thom-phu-quoc-4.jpg', 1),
+(53, 'https://dulichviet.com.vn/images/bandidau/du-lich-cho-noi-cai-rang-can-tho-thuong-thuc-am-thuc-ngon-quen-loi-ve.jpg', 1),
+(54, 'https://www.peacetour.com.vn/Upload/Article/8f89c83b-c860-4339-b0cc-0989c4adb593/1.jpg', 1),
+(55, 'https://eholiday.vn/wp-content/uploads/2023/12/nui-ba-den-3.jpg', 1),
+(56, 'https://mekongasean.vn/stores/news_dataimages/mekongaseanvn/032023/19/12/hai-dua-ben-tre-6602.jpg', 1),
+(57, 'https://images.pexels.com/photos/5526262/pexels-photo-5526262.png', 1),
+(58, 'https://images.pexels.com/photos/34035089/pexels-photo-34035089.jpeg', 1),
+(59, 'https://images.pexels.com/photos/27973964/pexels-photo-27973964.jpeg', 1),
+(60, 'https://images.vietnamtourism.gov.vn/vn/images/2021/con_dao.jpg', 1),
+(61, 'https://image.vietnam.travel/sites/default/files/2023-04/shutterstock_1637520748_0.jpg?v=1776853069', 1),
+(62, 'https://bocapvang.net/wp-content/uploads/2025/03/khu-du-lich-canh-dong-bat-tan-7-jpg.webp', 1),
+(63, 'https://bazantravel.com/cdn/medias/uploads/62/62247-cu-lao-thoi-son2-670x446.jpg', 1),
+(64, 'https://zoomtravel.vn/upload/images/dao-nam-du-zoomtravel-1(1).jpg', 1),
+(65, 'https://motogo.vn/wp-content/uploads/2020/04/suoi-nuoc-nong-Binh-Chau-17.jpg', 1),
+(66, 'https://lh4.googleusercontent.com/qjjBuB7lrHFwtTXFMxWH_LNPdU6g3MIXCIepDS0-oHyRyW8Xdvjsq9o3mn_7aluRi27GbETAhKR5PZMpNB9wx1a89VoZaXq---SCETBwoUVmGTilAdXsJKM3jaGRLe30OakTQIxz', 1),
+(67, 'https://lh6.googleusercontent.com/bRI2oh6rYH7oeoZFsF5Hg6F0vHZ9j6Cg0NwEHMh_wI7plH-dmodxNcTPdzP0wWlDc8pb-tNnXRBB9rRp5xSqWKvUR3_n36S8RDFHGtyy_BvLMhE-Y8uZpV64U9E2pHWkUbBKODRd8wIzjlPfgrrbygY?tr=q-70,c-at_max,w-1000,h-600', 1),
+(68, 'https://images.pexels.com/photos/36838200/pexels-photo-36838200.jpeg', 1),
+(69, 'https://static-image.adavigo.com/uploads/images/2025/12/8/38a78637-197f-4ced-bc1f-0d1b794265e4.jpeg', 1),
+(70, 'https://www.congtubaclieu.com.vn/wp-content/uploads/sites/86/2024/12/Nha-Cong-Tu-1.jpg', 1),
+(71, 'https://tour.dulichvietnam.com.vn/uploads/du%20lich%20tay%20nguyen%20gia%20re.jpeg', 1),
+(72, 'https://ik.imagekit.io/tvlk/blog/2023/10/bien-ho-gia-lai-4.png', 1),
+(73, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwtZZuNGL4IpP6aW-dgW1Lui-h2I_HvZge5QtkOeZ4Fw&s=10', 1),
+(74, 'https://digiticket.vn/blog/wp-content/uploads/2022/08/farmstay-da-lat-7.jpg', 1),
+(75, 'https://tinstravel.com/wp-content/uploads/2020/06/buon-don-2.jpg', 1),
+(76, 'https://statics.vinwonders.com/san-may-da-lat-1_1688459324.jpeg', 1),
+(77, 'https://www.dulichvtv.com/wp-content/uploads/2022/02/Tour-du-lich-xuyen-viet.jpg', 1),
+(78, 'https://vcdn1-dulich.vnecdn.net/2025/10/30/hoa1-1761791768-1761819118.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=GpjJ8zpqnHN9Zm16t9QBQQ', 1),
+(79, 'https://timvieclamdanang.com/wp-content/uploads/2026/01/nganh-thieu-nhan-luc-da-nang.jpg', 1),
+(80, 'https://images2.thanhnien.vn/528068263637045248/2023/4/20/base64-16819801590321470650782.png', 1),
+(81, 'https://storage.googleapis.com/blogvxr-uploads/2025/04/d37d4eb3-ban-y-linh-ho-sapa-7388137.webp', 1),
+(82, 'https://hoangthanhthanglong.vn/wp-content/uploads/2023/05/demhoangthanh.jpg', 1),
+(83, 'https://bizweb.dktcdn.net/100/025/663/files/1-jpeg-7feb176d-e5d6-47c4-a967-ce9352749f08.jpg?v=1680230871182', 1),
+(84, 'https://image.vietgoing.com/editor/image_qnf1634365776.jpg', 1),
+(85, 'https://statics.vinwonders.com/ho-tuyen-lam-1_1689671200.jpg', 1),
+(86, 'https://spirit.vietnamairlines.com/wp-content/uploads/2024/08/du-bay-nha-trang-top.jpg', 1),
+(87, 'https://tausaigon.com.vn/upload/elfinder/INDOCHINA%20QUEEN/du-ngoan-tren-song-sai-gon-va-an-toi-tren-tau-indochina-queen-dip-30-4-1-5-2.png', 1),
+(88, 'https://cdn3.ivivu.com/2025/03/Le-hoi-banh-dan-gian-ivivu.jpg-8.jpg', 1),
+(89, 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/18/96/91/42/sunset-sanato-beach.jpg?w=1200&h=-1&s=1', 1),
+(90, 'https://cdn3.ivivu.com/2023/05/Th%E1%BB%A7y-phi-c%C6%A1-H%E1%BA%A3i-%C3%82u-ivivu-3.jpg', 1),
+(91, 'https://luhanhvietnam.com.vn/du-lich/vnt_upload/news/12_2019/lang-chieu-dinh-yen-dong-thap-8.jpg', 1),
+(92, 'https://image.vietgoing.com/destination/large/vietgoing_nby2202257242.webp', 1),
+(93, 'https://vcdn1-dulich.vnecdn.net/2023/03/31/3Y2A0652-2-1680242560.jpg?w=460&h=0&q=100&dpr=2&fit=crop&s=cj08_xrBsu2x2lytINfrYw', 1),
+(94, 'https://vmtravel.com/wp-content/uploads/2024/07/Hoi-An-South-Golf.jpg', 1),
+(95, 'https://vcdn1-dulich.vnecdn.net/2025/05/08/z6576882642244-4593b6bfdefaf05-1122-3819-1746692886.jpg?w=680&h=0&q=100&dpr=2&fit=crop&s=yr24cCkHASy4X-v9_cj2Ew', 1),
+(96, 'https://image.vietgoing.com/article/large/cam-nang-du-lich-nui-cam-an-giang-tu-a-den-z-moi-nhat-2021.jpg', 1),
+(97, 'https://vstatic.vietnam.vn/vietnam/resource/IMAGE/2025/6/28/6aa828abfdbb4807b5d48e164dda600e', 1),
+(98, 'https://ik.imagekit.io/tvlk/blog/2022/12/lang-huong-thuy-xuan-3.jpg?tr=q-70,c-at_max,w-1000,h-600', 1),
+(99, 'https://kenh14cdn.com/203336854389633024/2023/4/4/photo-16-1680602913511732789113.jpg', 1),
+(100, 'https://cdn.eva.vn/upload/2-2024/images/2024-06-10/picture-329529284-1718032483-948-width1336height891.jpg', 1);
+
+SET FOREIGN_KEY_CHECKS = 1;
