@@ -76,18 +76,38 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        localStorage.setItem('auth_token', data.clientToken);
-        localStorage.setItem('user_data', JSON.stringify(data.user));
+        // Lột lớp vỏ bọc "data" của Backend ra để lấy cái ruột bên trong
+        const payload = data.data || data; 
         
-        toast.success(`Chào mừng ${data.user.name} đã trở lại!`);
+        const userInfo = payload.user || payload.account;
+        const token = payload.clientToken || payload.token;
+
+        // Chặn lỗi chết trang nếu Backend trả về rỗng
+        if (!userInfo) {
+          console.error("Lỗi cấu trúc API:", data);
+          toast.error("Lỗi hệ thống: Không lấy được thông tin tài khoản!");
+          setLoading(false);
+          return;
+        }
+
+        // Lưu thông tin an toàn vào LocalStorage
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_data', JSON.stringify(userInfo));
         
-        if (data.user.role_id === 1) {
-          router.push('/admin');
+        // Lưu vào Cookie để Middleware có thể đọc và phân quyền bảo mật cấp Server
+        document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `user_role=${userInfo.role_id}; path=/; max-age=86400; SameSite=Lax`;
+        
+        // Hiển thị tên (Bây giờ Backend trả về 'name' thì mình xài 'name')
+        toast.success(`Chào mừng ${userInfo.name || userInfo.full_name || userInfo.username || 'bạn'} đã trở lại!`);
+        
+        // Phân quyền chuyển hướng
+        if (userInfo.role_id === 1) {
+          window.location.href = '/admin';
         } else {
           // Customer (role_id = 2) - redirect về trang chủ
-          router.push('/');
+          window.location.href = '/';
         }
-        router.refresh();
       } else {
         // Bắt lỗi chi tiết cho login
         if (res.status === 403) {
@@ -185,12 +205,14 @@ export default function LoginPage() {
                 <button
                   onClick={() => router.push('/forgot-password')}
                   className="text-blue-400 hover:text-blue-300 transition"
+                  type="button"
                 >
                   Quên mật khẩu?
                 </button>
                 <button
                   onClick={() => router.push('/register')}
                   className="text-blue-400 hover:text-blue-300 transition"
+                  type="button"
                 >
                   Đăng ký tài khoản
                 </button>

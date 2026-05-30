@@ -1,351 +1,127 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { User, Phone, Mail, Calendar, MapPin, Home, History, Heart, Edit, Loader2 } from 'lucide-react';
+import useSWR from 'swr';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 import Link from 'next/link';
-import { User, Mail, Phone, Calendar, LogOut, ShieldCheck, MapPin, Clock, CreditCard, Heart } from 'lucide-react';
-import Wishlist from '../../components/Wishlist';
 
-export default function CustomerProfile() {
-  const [user, setUser] = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const router = useRouter();
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
-  const fetchBookings = async (userId) => {
-    try {
-      const response = await fetch(`/api/bookings?user_id=${userId}`);
-      const data = await response.json();
-      setBookings(data.bookings || []);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function ProfileDashboardPage() {
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user_data');
     if (userData) {
-      const parsedUser = JSON.parse(userData);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUser(parsedUser);
-
-      // Kiểm tra role - chỉ cho customer (role_id = 2 hoặc role = 2)
-      if (parsedUser.role_id === 1 || parsedUser.role === 1) {
-        router.push('/admin');
+      const user = JSON.parse(userData);
+      if (user.role_id === 1) {
+        window.location.href = '/admin';
         return;
       }
-
-      // Lấy lịch sử bookings
-      fetchBookings(parsedUser.id);
+      setUserId(user.id);
     } else {
-      router.push('/login');
+      window.location.href = '/login';
     }
-  }, [router]);
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    setUser(null);
-    router.push('/login');
-  };
+  const { data, isLoading } = useSWR(
+    userId ? `/api/customers/${userId}` : null,
+    fetcher
+  );
 
-  if (loading) {
+  const customer = data?.data || data?.customer || data || {};
+
+  if (isLoading || !userId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <main className="container mx-auto px-4 py-24">
+          <div className="max-w-4xl mx-auto space-y-8 animate-pulse">
+            {/* Tiêu đề giả */}
+            <div className="h-10 bg-slate-200 rounded w-1/3 mb-8"></div>
+            {/* Menu giả */}
+            <div className="flex flex-wrap gap-3 mb-8">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-12 bg-slate-200 rounded-xl w-32"></div>
+              ))}
+            </div>
+            {/* Khung thông tin giả */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg h-96 border border-slate-100"></div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const stats = {
-    totalBookings: bookings.length,
-    confirmedBookings: bookings.filter(b => b.is_confirmed).length,
-    totalSpent: bookings.reduce((sum, b) => sum + (b.amount || 0), 0),
-    upcomingBookings: bookings.filter(b => new Date(b.start_date) > new Date()).length
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
-              <span className="text-lg font-bold text-gray-800">Viet<span className="text-blue-600">Travel</span></span>
+    <div className="min-h-screen bg-slate-50">
+      <Header />
+      <main className="container mx-auto px-4 py-24">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-black text-slate-800 mb-8">Hồ sơ cá nhân</h1>
+
+          {/* Thanh Menu Điều Hướng (Dashboard) */}
+          <div className="flex flex-wrap gap-3 mb-8">
+            <Link href="/" className="px-6 py-3 rounded-xl font-bold bg-white text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2 border border-slate-200">
+              <Home size={18} /> Trang chủ
             </Link>
+            <button className="px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+              <User size={18} /> Hồ sơ cá nhân
+            </button>
+            <Link href="/customer/bookings" className="px-6 py-3 rounded-xl font-bold bg-white text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2 border border-slate-200">
+              <History size={18} /> Lịch sử đặt tour
+            </Link>
+            <Link href="/customer/favorites" className="px-6 py-3 rounded-xl font-bold bg-white text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2 border border-slate-200">
+              <Heart size={18} /> Tour yêu thích
+            </Link>
+          </div>
+
+          {/* Thẻ Hiển Thị Thông Tin (Read-only) */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg relative overflow-hidden border border-slate-100">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-10"></div>
             
-            <div className="flex items-center gap-4">
-              <Link href="/customer/profile" className="flex items-center gap-2 text-blue-600 font-semibold">
-                <User size={16} />
-                Profile
+            <h2 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+              <User className="text-blue-600" size={24} /> Thông tin của bạn
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Họ và tên</p>
+                <p className="text-lg font-bold text-slate-800">{customer.name || customer.full_name || 'Chưa cập nhật'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Số điện thoại</p>
+                <p className="text-lg font-bold text-slate-800">{customer.phone_number || customer.phone || 'Chưa cập nhật'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Email</p>
+                <p className="text-lg font-bold text-slate-800">{customer.email || 'Chưa cập nhật'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Ngày sinh</p>
+                <p className="text-lg font-bold text-slate-800">
+                  {customer.birth_date ? new Date(customer.birth_date).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Địa chỉ</p>
+                <p className="text-lg font-bold text-slate-800">{customer.address || 'Chưa cập nhật'}</p>
+              </div>
+            </div>
+
+            {/* NÚT CHUYỂN SANG TRANG CẬP NHẬT (/customer/me) */}
+            <div className="border-t border-slate-100 pt-6 flex justify-end">
+              <Link href="/customer/me" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-black transition-all shadow-lg shadow-blue-500/30">
+                <Edit size={20} /> Cập nhật thông tin cá nhân
               </Link>
-              <button onClick={handleLogout} className="flex items-center gap-2 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg transition">
-                <LogOut size={16} />
-                Logout
-              </button>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="container mx-auto px-6 py-8">
-        {/* Profile Header */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <User size={48} className="text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-white mb-2">{user.name || user.full_name || 'Customer'}</h1>
-                <p className="text-blue-100 mb-4">Customer Account</p>
-                <div className="flex items-center gap-4 text-white">
-                  <div className="flex items-center gap-2">
-                    <Mail size={16} />
-                    <span>{user.email || 'Chưa cập nhật'}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone size={16} />
-                    <span>{user.phone_number || 'Chưa cập nhật'}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="flex items-center gap-2 text-green-300 mb-2">
-                  <ShieldCheck size={20} />
-                  <span className="font-semibold">Verified</span>
-                </div>
-                <p className="text-blue-100 text-sm">Member since {new Date().getFullYear()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
-                activeTab === 'overview'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <User size={16} />
-                Tổng quan
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('bookings')}
-              className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
-                activeTab === 'bookings'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Calendar size={16} />
-                Lịch sử
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('wishlist')}
-              className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
-                activeTab === 'wishlist'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Heart size={16} className="text-pink-500" />
-                Yêu thích
-              </div>
-            </button>
-            <Link href="/" className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition">
-              <div className="flex items-center gap-2">
-                <span className="text-green-500">H</span>
-                Trang chủ
-              </div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Content based on active tab */}
-        {activeTab === 'overview' && (
-          <div className="space-y-8">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Calendar size={24} className="text-blue-600" />
-                  </div>
-                  <span className="text-3xl font-bold text-gray-800">{stats.totalBookings}</span>
-                </div>
-                <h3 className="text-gray-500 text-sm">Tổng bookings</h3>
-              </div>
-              
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <ShieldCheck size={24} className="text-green-600" />
-                  </div>
-                  <span className="text-3xl font-bold text-green-600">{stats.confirmedBookings}</span>
-                </div>
-                <h3 className="text-gray-500 text-sm">Đã xác nhận</h3>
-              </div>
-              
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <CreditCard size={24} className="text-yellow-600" />
-                  </div>
-                  <span className="text-3xl font-bold text-blue-600">{stats.totalSpent.toLocaleString()}đ</span>
-                </div>
-                <h3 className="text-gray-500 text-sm">Tổng chi tiêu</h3>
-              </div>
-              
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Clock size={24} className="text-purple-600" />
-                  </div>
-                  <span className="text-3xl font-bold text-purple-600">{stats.upcomingBookings}</span>
-                </div>
-                <h3 className="text-gray-500 text-sm">Sắp đi</h3>
-              </div>
-            </div>
-
-            {/* Recent Bookings */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-800">Booking gần đây</h3>
-                <button 
-                  onClick={() => setActiveTab('bookings')}
-                  className="text-blue-600 hover:text-blue-700 font-semibold"
-                >
-                  Xem tất cả
-                </button>
-              </div>
-              
-              {bookings.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Calendar size={32} className="text-gray-400" />
-                  </div>
-                  <p className="text-gray-500 mb-4">Chưa có booking nào</p>
-                  <Link href="/search" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                    Tìm tour ngay
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {bookings.slice(0, 3).map((booking) => (
-                    <div key={booking.id} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800 mb-2">{booking.tourTitle}</h4>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <MapPin size={14} />
-                              <span>{booking.location}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar size={14} />
-                              <span>{new Date(booking.start_date).toLocaleDateString('vi-VN')}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-blue-600">{booking.amount.toLocaleString()}đ</p>
-                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                            booking.is_confirmed 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {booking.is_confirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'bookings' && (
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-6">Lịch sử đặt tour</h3>
-            
-            {bookings.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar size={32} className="text-gray-400" />
-                </div>
-                <p className="text-gray-500 mb-4">Chưa có booking nào</p>
-                <Link href="/search" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                  Tìm tour ngay
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {bookings.map((booking) => (
-                  <div key={booking.id} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-800 mb-2">{booking.tourTitle}</h4>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <MapPin size={14} />
-                            <span>{booking.location}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar size={14} />
-                            <span>{new Date(booking.start_date).toLocaleDateString('vi-VN')}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-blue-600">{booking.amount.toLocaleString()}đ</p>
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          booking.is_confirmed 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {booking.is_confirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'wishlist' && (
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <Wishlist />
-          </div>
-        )}
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }

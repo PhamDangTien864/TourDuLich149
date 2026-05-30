@@ -70,8 +70,8 @@ export default function WishlistPage() {
   };
 
   const filteredWishlist = wishlist.filter(item => 
-    item.tour.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.tour.location_name.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.tour?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.tour?.location_name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {

@@ -224,7 +224,10 @@ export default async function TourDetailPage({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(generateTourSchema(tour))
+          __html: JSON.stringify(
+            generateTourSchema(tour),
+            (key, value) => (typeof value === 'bigint' ? value.toString() : value)
+          )
         }}
       />
       <script

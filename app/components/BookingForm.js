@@ -6,18 +6,9 @@ import { CheckCircle, Loader2, Phone, User, CreditCard, Mail } from "lucide-reac
 import PaymentQR from "./PaymentQR";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/hooks/useAuth";
-import { useUser } from "@/lib/hooks/useUser";
-import { useTours } from "@/lib/hooks/useTours";
-import { useBookings } from "@/lib/hooks/useBookings";
-import { useForm } from "@/lib/hooks/useForm";
 
 const BookingForm = memo(function BookingForm({ price, tourId, bestDiscount }) {
   const router = useRouter();
-  const { user } = useAuth();
-  const { getUser } = useUser();
-  const { getTourById } = useTours();
-  const { createBooking } = useBookings();
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -40,7 +31,7 @@ const BookingForm = memo(function BookingForm({ price, tourId, bestDiscount }) {
         setEmail(data.email || '');
         setBirthDate(data.birth_date ? data.birth_date.split('T')[0] : '');
       }
-    } catch {
+    } catch (error) {
       console.error('Failed to fetch customer details:', error);
     }
   };
@@ -51,7 +42,7 @@ const BookingForm = memo(function BookingForm({ price, tourId, bestDiscount }) {
     if (userData) {
       try {
         const user = JSON.parse(userData);
-        setCustomerName(user.name || '');
+        setCustomerName(user.name || user.full_name || '');
         // Lấy thông tin chi tiết hơn từ API nếu cần
         fetchCustomerDetails(user.id);
         setIsLoggedIn(true);

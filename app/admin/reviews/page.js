@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { Star, Trash2, Search, Filter, Eye, MessageSquare } from "lucide-react";
+import { Star, Search, Filter } from "lucide-react";
 import Link from "next/link";
+import ReviewActions from "./ReviewActions";
 
 export default async function ManageReviews({ searchParams }) {
   const params = await searchParams;
@@ -64,7 +65,7 @@ export default async function ManageReviews({ searchParams }) {
 
         {/* Search and Filter */}
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+          <form method="GET" action="/admin/reviews" className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
@@ -90,12 +91,12 @@ export default async function ManageReviews({ searchParams }) {
                 <option value="2">2 sao</option>
                 <option value="1">1 sao</option>
               </select>
-              <button className="bg-slate-100 hover:bg-slate-200 px-6 py-3 rounded-xl font-bold text-slate-700 transition-colors flex items-center gap-2">
+              <button type="submit" className="bg-slate-100 hover:bg-slate-200 px-6 py-3 rounded-xl font-bold text-slate-700 transition-colors flex items-center gap-2">
                 <Filter size={18} />
                 Bộ lọc
               </button>
             </div>
-          </div>
+          </form>
         </div>
 
         {/* Reviews Table */}
@@ -158,49 +159,11 @@ export default async function ManageReviews({ searchParams }) {
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/tour/${review.tour_id}`}
-                          className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-colors"
-                          title="Xem tour"
-                        >
-                          <Eye size={16} />
-                        </Link>
-                        <button
-                          onClick={() => {
-                            const reply = prompt('Nhập phản hồi admin:', review.admin_reply || '');
-                            if (reply !== null) {
-                              fetch(`/api/reviews/${review.id}/reply`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ admin_reply: reply })
-                              }).then(() => window.location.reload());
-                            }
-                          }}
-                          className="bg-purple-100 hover:bg-purple-200 text-purple-600 p-2 rounded-lg transition-colors"
-                          title="Phản hồi"
-                        >
-                          <MessageSquare size={16} />
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (confirm('Xóa đánh giá này?')) {
-                              try {
-                                await fetch(`/api/reviews/${review.id}`, {
-                                  method: 'DELETE'
-                                });
-                                window.location.reload();
-                              } catch {
-                                alert('Lỗi xóa đánh giá');
-                              }
-                            }
-                          }}
-                          className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-lg transition-colors"
-                          title="Xóa"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      <ReviewActions 
+                        reviewId={review.id} 
+                        tourId={review.tour_id} 
+                        adminReply={review.admin_reply} 
+                      />
                     </td>
                   </tr>
                 ))}

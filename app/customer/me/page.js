@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { User, Phone, Mail, Calendar, CreditCard, MapPin, Lock, Save, Key } from 'lucide-react';
+import { User, Phone, Mail, Calendar, CreditCard, MapPin, Lock, Save, Key, Home, History, Heart } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { PROVINCES, DISTRICTS, WARDS } from './locationData';
+import useSWR from 'swr';
+
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function CustomerMePage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -39,50 +41,45 @@ export default function CustomerMePage() {
     confirmPassword: ''
   });
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      const userData = localStorage.getItem('user_data');
-      if (!userData) {
-        router.push('/login');
-        return;
-      }
-      
-      const user = JSON.parse(userData);
-      const res = await fetch(`/api/customers/${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProfile({
-          full_name: data.full_name || '',
-          phone_number: data.phone_number || '',
-          email: data.email || '',
-          birth_date: data.birth_date ? data.birth_date.split('T')[0] : '',
-          identity_card: data.identity_card || '',
-          address: data.address || '',
-          province_id: data.province_id || '',
-          district_id: data.district_id || '',
-          ward_id: data.ward_id || ''
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
   useEffect(() => {
     const userData = localStorage.getItem('user_data');
     if (userData) {
       const user = JSON.parse(userData);
       // Block admin from accessing customer pages
       if (user.role_id === 1) {
-        router.push('/admin');
+        window.location.href = '/admin';
         return;
       }
+      setUserId(user.id);
+    } else {
+      window.location.href = '/login';
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchProfile();
-  }, [fetchProfile, router]);
+  }, []);
+
+  // Sử dụng SWR để quản lý fetch data, tự động cache và quản lý loading state
+  const { data, mutate, isLoading } = useSWR(
+    userId ? `/api/customers/${userId}` : null,
+    fetcher,
+    { revalidateOnFocus: false } // Không tự động ghi đè form khi user chỉ lướt tab khác rồi quay lại
+  );
+
+  // Đồng bộ data từ API (thông qua SWR) vào state form của ní
+  useEffect(() => {
+    if (data) {
+      const customerData = data.data || data; // Hỗ trợ cả 2 chuẩn API trả về
+      setProfile({
+        full_name: customerData.full_name || customerData.name || '',
+        phone_number: customerData.phone_number || customerData.phone || '',
+        email: customerData.email || '',
+        birth_date: customerData.birth_date ? customerData.birth_date.split('T')[0] : '',
+        identity_card: customerData.identity_card || '',
+        address: customerData.address || '',
+        province_id: customerData.province_id || '',
+        district_id: customerData.district_id || '',
+        ward_id: customerData.ward_id || ''
+      });
+    }
+  }, [data]);
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
@@ -115,8 +112,14 @@ export default function CustomerMePage() {
       if (res.ok) {
         setShowSuccessModal(true);
         setConfirmAction('profile');
-        // Refresh profile data to show updated values
-        await fetchProfile();
+        
+        // Đồng bộ lại tên trong localStorage để góc trên cùng Header tự đổi tên luôn
+        userData.name = profile.full_name;
+        userData.full_name = profile.full_name;
+        localStorage.setItem('user_data', JSON.stringify(userData));
+
+        // Yêu cầu SWR re-fetch để làm mới dữ liệu
+        mutate();
       } else {
         toast.error('Cập nhật thất bại!');
       }
@@ -190,10 +193,31 @@ export default function CustomerMePage() {
     }
   };
 
-  if (loading) {
+  if (isLoading || !userId) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-400 font-bold">Đang tải...</div>
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <main className="container mx-auto px-4 py-24">
+          <div className="max-w-4xl mx-auto space-y-8 animate-pulse">
+            <div className="h-10 bg-slate-200 rounded w-1/3 mb-8"></div>
+            <div className="flex gap-4 mb-8">
+              <div className="h-12 bg-slate-200 rounded-xl w-40"></div>
+              <div className="h-12 bg-slate-200 rounded-xl w-40"></div>
+            </div>
+            <div className="bg-white rounded-2xl p-8 shadow-lg">
+              <div className="h-8 bg-slate-200 rounded w-1/4 mb-6"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i}>
+                    <div className="h-4 bg-slate-200 rounded w-1/3 mb-2"></div>
+                    <div className="h-12 bg-slate-200 rounded-xl w-full"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -203,28 +227,41 @@ export default function CustomerMePage() {
       <Header />
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-black text-slate-800 mb-8">Tôi</h1>
+          <h1 className="text-4xl font-black text-slate-800 mb-8">Thiết lập tài khoản</h1>
           
-          {/* Tab Navigation */}
+          {/* Nút Quay lại Bảng Điều Khiển */}
+          <div className="mb-6">
+            <Link
+              href="/customer/profile"
+              className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              Quay lại Bảng điều khiển
+            </Link>
+          </div>
+            
           <div className="flex gap-4 mb-8">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
+              className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'profile'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-slate-600 hover:bg-slate-100'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              Thông tin cá nhân
+              <User size={18} />
+              Cập nhật thông tin
             </button>
+
             <button
               onClick={() => setActiveTab('password')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
+              className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'password'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-slate-600 hover:bg-slate-100'
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
+              <Lock size={18} />
               Đổi mật khẩu
             </button>
           </div>
@@ -401,7 +438,7 @@ export default function CustomerMePage() {
                   disabled={saving}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black transition-all flex items-center justify-center gap-2"
                 >
-                  {saving ? 'Đang lưu...' : <><Save size={20} /> Lưu thông tin</>}
+                  {saving ? 'Đang xử lý...' : <><Save size={20} /> Cập nhật thông tin cá nhân</>}
                 </button>
               </form>
             </div>
