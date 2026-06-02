@@ -2,27 +2,39 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { Calendar, MapPin, CreditCard, CheckCircle, Clock, XCircle, User } from 'lucide-react';
+import { Calendar, MapPin, CreditCard, CheckCircle, Clock, XCircle, User, Home, Heart, History } from 'lucide-react';
 import useSWR from 'swr';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import Link from 'next/link';
 
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function BookingHistory() {
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(() => {
+    // Lazy initialization - read from localStorage on mount
+    if (typeof window === 'undefined') return null;
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        // Block admin from accessing customer pages
+        if (user.role_id === 1) {
+          window.location.href = '/admin';
+          return null;
+        }
+        return user.id;
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        return null;
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     const userData = localStorage.getItem('user_data');
-    if (userData) {
-      const user = JSON.parse(userData);
-      // Block admin from accessing customer pages
-      if (user.role_id === 1) {
-        window.location.href = '/admin';
-        return;
-      }
-      setUserId(user.id);
-    } else {
+    if (!userData) {
       window.location.href = '/login';
     }
   }, []);
@@ -92,26 +104,26 @@ export default function BookingHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-slate-50">
       <Header />
       <main className="container mx-auto px-4 py-24">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
-            <div>
-              <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 mb-4">
-                Lịch sử đặt tour
-              </h1>
-              <p className="text-slate-600 font-bold text-lg">
-                Xem và quản lý các tour bạn đã đặt
-              </p>
-            </div>
-            <a
-              href="/customer/me"
-              className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-4 rounded-2xl font-black transition-all shadow-sm"
-            >
-              <User size={20} />
-              Cập nhật thông tin cá nhân
-            </a>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-black text-slate-800 mb-8">Lịch sử đặt tour</h1>
+
+          {/* Thanh Menu Điều Hướng (Dashboard) */}
+          <div className="flex flex-wrap gap-3 mb-8">
+            <Link href="/" className="px-6 py-3 rounded-xl font-bold bg-white text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2 border border-slate-200">
+              <Home size={18} /> Trang chủ
+            </Link>
+            <Link href="/customer/profile" className="px-6 py-3 rounded-xl font-bold bg-white text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2 border border-slate-200">
+              <User size={18} /> Hồ sơ cá nhân
+            </Link>
+            <button className="px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 bg-blue-600 text-white shadow-lg shadow-blue-500/30">
+              <History size={18} /> Lịch sử đặt tour
+            </button>
+            <Link href="/customer/favorites" className="px-6 py-3 rounded-xl font-bold bg-white text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-2 border border-slate-200">
+              <Heart size={18} /> Tour yêu thích
+            </Link>
           </div>
 
           {/* CHỐN SẬP: Bắt buộc phải là Array mới đếm length được */}

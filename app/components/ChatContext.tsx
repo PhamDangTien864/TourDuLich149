@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -23,27 +24,26 @@ interface ChatProviderProps {
 
 export function ChatProvider({ children }: ChatProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // Lazy initialization - read from localStorage on mount
+    if (typeof window === 'undefined') return [];
+    const savedMessages = localStorage.getItem('viet_chat_history');
+    if (savedMessages) {
+      try {
+        return JSON.parse(savedMessages);
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    }
+    // Default welcome message
+    return [{ sender: "bot", text: "Chào bạn! VietTravel có thể giúp gì cho bạn không? ✈️" }];
+  });
   const [isMounted, setIsMounted] = useState(false);
 
   // 1. Chỉ chạy dưới Client sau khi trang đã mount thành công
   useEffect(() => {
     setIsMounted(true);
-
-    // Đọc lịch sử chat thực tế dưới máy người dùng
-    const savedMessages = localStorage.getItem('viet_chat_history');
-    if (savedMessages) {
-      try { 
-        setMessages(JSON.parse(savedMessages)); 
-      } catch (e) { 
-        console.error(e); 
-      }
-    } else {
-      // Nếu là lần đầu tiên vào web (chưa có lịch sử), gán câu chào mặc định
-      setMessages([
-        { sender: "bot", text: "Chào bạn! VietTravel có thể giúp gì cho bạn không? ✈️" }
-      ]);
-    }
 
     // Đọc trạng thái đóng/mở
     const savedOpenState = localStorage.getItem('viet_chat_open');

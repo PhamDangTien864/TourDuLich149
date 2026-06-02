@@ -13,6 +13,10 @@ export async function GET(req: NextRequest) {
     
     // 1. Lấy tất cả tham số từ URL
     const q = searchParams.get('q') || undefined;
+    const departure = searchParams.get('departure') || undefined; // Chỉ dùng cho hiển thị, không filter
+    const date = searchParams.get('date') || undefined;
+    const passengersParam = searchParams.get('passengers');
+    const passengers = passengersParam ? parseInt(passengersParam) : undefined;
     const location = searchParams.get('location') || undefined;
     const categoryParam = searchParams.get('category');
     const categoryId = categoryParam ? parseInt(categoryParam) : undefined;
@@ -41,6 +45,7 @@ export async function GET(req: NextRequest) {
     // 2. Xây dựng điều kiện lọc (Where Clause)
     const where: any = {
       is_deleted: false,
+      is_active: true,
     };
 
     // Tìm kiếm text (MySQL mặc định không phân biệt hoa thường, không cần mode: insensitive)
@@ -50,6 +55,11 @@ export async function GET(req: NextRequest) {
         { location_name: { contains: q } }
       ];
     }
+
+    // departure chỉ dùng cho hiển thị, không filter
+    // if (departure) {
+    //   where.location_name = { contains: departure };
+    // }
 
     if (location) {
       where.location_name = { contains: location };
@@ -73,13 +83,15 @@ export async function GET(req: NextRequest) {
 
     // Lọc qua bảng lịch trình (departure_schedules) bằng toán tử some
     // Chỉ áp dụng khi thực sự có giá trị lọc và không bắt buộc tour phải có departure_schedules
-    const hasScheduleFilter = departureDate || (minSlots !== undefined && minSlots > 0) || availability;
+    const hasScheduleFilter = departureDate || date || (minSlots !== undefined && minSlots > 0) || availability || (passengers !== undefined && passengers > 0);
     if (hasScheduleFilter) {
       where.departure_schedules = {
         some: {
           is_active: true,
           ...(departureDate && { departure_date: { gte: new Date(departureDate) } }),
+          ...(date && { departure_date: { gte: new Date(date) } }),
           ...(minSlots !== undefined && minSlots > 0 && { available_slots: { gte: minSlots } }),
+          ...(passengers !== undefined && passengers > 0 && { available_slots: { gte: passengers } }),
           ...(availability === 'available' && { available_slots: { gt: 0 } }),
           ...(availability === 'limited' && { available_slots: { gt: 0, lte: 5 } }),
         }

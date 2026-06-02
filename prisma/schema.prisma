@@ -211,6 +211,9 @@ model tours {
   created_at            DateTime?               @default(now()) @db.DateTime(0)
   updated_at            DateTime?               @default(now()) @updatedAt @db.DateTime(0)
   map_url               String?                 @db.Text
+  highlights            String?                 @db.Text
+  video_url             String?                 @db.VarChar(500)
+  tips                  String?                 @db.Text
   bookings              bookings[]
   cancellation_policies cancellation_policies[]
   departure_schedules   departure_schedules[]

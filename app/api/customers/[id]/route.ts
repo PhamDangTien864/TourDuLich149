@@ -58,7 +58,10 @@ export async function PATCH(
       email: body.email,
       address: body.address,
       birth_date: body.birth_date ? new Date(body.birth_date) : undefined,
-      identity_card: body.identity_card
+      identity_card: body.identity_card,
+      province_id: body.province_id ? Number(body.province_id) : undefined,
+      district_id: body.district_id ? Number(body.district_id) : undefined,
+      ward_id: body.ward_id ? Number(body.ward_id) : undefined
     });
 
     return successResponse({}, 'Cập nhật thông tin thành công');

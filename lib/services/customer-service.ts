@@ -9,6 +9,9 @@ export interface CustomerData {
   birth_date?: Date;
   is_male?: boolean;
   identity_card?: string;
+  province_id?: number;
+  district_id?: number;
+  ward_id?: number;
 }
 
 export interface BookingWithCustomer {
@@ -83,6 +86,9 @@ export class CustomerService {
           birth_date: data.birth_date || null,
           is_male: data.is_male ?? true,
           identity_card: data.identity_card || null,
+          province_id: data.province_id || null,
+          district_id: data.district_id || null,
+          ward_id: data.ward_id || null,
           is_deleted: false
         }
       });
@@ -94,7 +100,10 @@ export class CustomerService {
           ...(data.email && { email: data.email }),
           ...(data.address && { address: data.address }),
           ...(data.birth_date && { birth_date: data.birth_date }),
-          ...(data.identity_card && { identity_card: data.identity_card })
+          ...(data.identity_card && { identity_card: data.identity_card }),
+          ...(data.province_id !== undefined && { province_id: data.province_id }),
+          ...(data.district_id !== undefined && { district_id: data.district_id }),
+          ...(data.ward_id !== undefined && { ward_id: data.ward_id })
         }
       });
     }
@@ -123,7 +132,10 @@ export class CustomerService {
         ...(data.address !== undefined && { address: data.address }),
         ...(data.birth_date !== undefined && { birth_date: data.birth_date }),
         ...(data.is_male !== undefined && { is_male: data.is_male }),
-        ...(data.identity_card !== undefined && { identity_card: data.identity_card })
+        ...(data.identity_card !== undefined && { identity_card: data.identity_card }),
+        ...(data.province_id !== undefined && { province_id: data.province_id }),
+        ...(data.district_id !== undefined && { district_id: data.district_id }),
+        ...(data.ward_id !== undefined && { ward_id: data.ward_id })
       }
     });
 

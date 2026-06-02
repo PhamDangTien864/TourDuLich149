@@ -42,9 +42,35 @@ export async function DELETE(
   try {
     const resolvedParams = await params;
     const userId = parseInt(resolvedParams.id);
-    
+
     if (isNaN(userId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
+
+    // Get current user from session/cookie
+    const token = req.cookies.get('auth_token')?.value;
+    const currentUserId = req.cookies.get('user_id')?.value;
+
+    // Prevent self-deletion
+    if (currentUserId && parseInt(currentUserId) === userId) {
+      return NextResponse.json({ 
+        error: "Bạn không thể xóa chính mình" 
+      }, { status: 403 });
+    }
+
+    // Prevent deletion of admin users (role_id = 1)
+    const userToDelete = await prisma.accounts.findUnique({
+      where: { id: userId }
+    });
+
+    if (!userToDelete) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (userToDelete.role_id === 1) {
+      return NextResponse.json({ 
+        error: "Không thể xóa tài khoản Admin" 
+      }, { status: 403 });
     }
 
     // Soft delete: set is_deleted = true
@@ -73,7 +99,7 @@ export async function PATCH(
   try {
     const resolvedParams = await params;
     const userId = parseInt(resolvedParams.id);
-    
+
     if (isNaN(userId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
@@ -88,6 +114,23 @@ export async function PATCH(
 
     if (!currentUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check for duplicate email if email is being changed
+    if (email && email !== currentUser.email) {
+      const existingUser = await prisma.accounts.findFirst({
+        where: {
+          email: email,
+          is_deleted: false,
+          NOT: { id: userId }
+        }
+      });
+
+      if (existingUser) {
+        return NextResponse.json({ 
+          error: "Email này đã được sử dụng bởi user khác" 
+        }, { status: 400 });
+      }
     }
 
     // Update user with new data

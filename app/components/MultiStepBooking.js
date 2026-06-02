@@ -1,17 +1,18 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, Users, Calendar, MapPin, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
 import { bookingRequestSchema, passengerSchema } from '@/lib/validations';
 
-export default function MultiStepBooking({ tourId, price, originalPrice, bestDiscount }) {
+export default function MultiStepBooking({ tourId, price, originalPrice, bestDiscount, initialDate = '', initialPassengers = '1' }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState({
     tourId,
     departureScheduleId: '',
-    startDate: '',
+    startDate: initialDate,
     endDate: '',
-    adultsCount: 1,
+    adultsCount: parseInt(initialPassengers) || 1,
     childrenCount: 0,
     specialRequests: '',
     pickupLocation: '',
@@ -138,13 +139,29 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [useCustomDate, setUseCustomDate] = useState(false);
+  const [customDate, setCustomDate] = useState(() => bookingData.startDate || '');
+
+  // Sync customDate with bookingData.startDate
+  useEffect(() => {
+    if (customDate !== (bookingData.startDate || '')) {
+      setCustomDate(bookingData.startDate || '');
+    }
+  }, [bookingData.startDate, customDate]);
 
   useEffect(() => {
     fetch(`/api/tours/${tourId}/schedules`)
       .then(res => res.json())
-      .then(data => setSchedules(data.schedules || []))
+      .then(data => {
+        setSchedules(data.schedules || []);
+        // If no schedules and user has initial date, auto-enable custom date mode
+        if ((!data.schedules || data.schedules.length === 0) && bookingData.startDate) {
+          setUseCustomDate(true);
+          setCustomDate(bookingData.startDate);
+        }
+      })
       .finally(() => setLoading(false));
-  }, [tourId]);
+  }, [tourId, bookingData.startDate]);
 
   const handleScheduleSelect = (scheduleId) => {
     const schedule = schedules.find(s => s.id === scheduleId);
@@ -163,11 +180,37 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
       updateBookingData('startDate', startDate.toISOString().split('T')[0]);
       updateBookingData('endDate', endDate.toISOString().split('T')[0]);
       setSelectedSchedule(schedule);
+      setUseCustomDate(false);
     }
   };
 
+  const handleCustomDateSubmit = () => {
+    if (!customDate) {
+      alert('Vui lòng chọn ngày khởi hành');
+      return false;
+    }
+
+    const startDate = new Date(customDate);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 3); // Default 3 days
+
+    updateBookingData('departureScheduleId', ''); // No schedule ID for custom dates
+    updateBookingData('startDate', startDate.toISOString().split('T')[0]);
+    updateBookingData('endDate', endDate.toISOString().split('T')[0]);
+    setSelectedSchedule({ id: 'custom', departure_date: customDate });
+    return true;
+  };
+
   const totalPassengers = bookingData.adultsCount + bookingData.childrenCount;
-  const canProceed = selectedSchedule && selectedSchedule.available_slots >= totalPassengers;
+  const canProceed = (selectedSchedule && selectedSchedule.available_slots >= totalPassengers) || (useCustomDate && customDate);
+
+  // Clear selected schedule if passengers exceed available slots
+  useEffect(() => {
+    if (selectedSchedule && selectedSchedule.available_slots < totalPassengers) {
+      setSelectedSchedule(null);
+      updateBookingData('departureScheduleId', '');
+    }
+  }, [totalPassengers, selectedSchedule, updateBookingData]);
 
   return (
     <div className="space-y-6">
@@ -177,17 +220,40 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         </div>
-      ) : schedules.length === 0 ? (
-        <div className="text-center py-8 bg-slate-50 rounded-xl">
-          <AlertCircle className="mx-auto text-slate-400 mb-2" />
-          <p className="text-slate-600 font-bold">Chưa có lịch khởi hành</p>
+      ) : schedules.length === 0 || useCustomDate ? (
+        <div className="space-y-4">
+          <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
+            <h4 className="font-black text-slate-800 mb-4 flex items-center gap-2">
+              <Calendar size={18} className="text-blue-600" />
+              Chọn ngày khởi hành tùy chỉnh
+            </h4>
+            <div>
+              <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Ngày khởi hành *</label>
+              <input
+                type="date"
+                value={customDate}
+                onChange={(e) => setCustomDate(e.target.value)}
+                className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500"
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            {schedules.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setUseCustomDate(false)}
+                className="mt-4 text-blue-600 font-bold text-sm hover:underline"
+              >
+                ← Quay lại chọn lịch có sẵn
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
           {schedules.map((schedule) => {
             const isAvailable = schedule.available_slots >= totalPassengers;
             const isSelected = bookingData.departureScheduleId === schedule.id;
-            
+
             return (
               <button
                 key={schedule.id}
@@ -229,6 +295,13 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setUseCustomDate(true)}
+            className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 font-bold hover:border-blue-500 hover:text-blue-600 transition-all"
+          >
+            + Chọn ngày khởi hành tùy chỉnh
+          </button>
         </div>
       )}
 
@@ -238,15 +311,17 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
           <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Người lớn</label>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => updateBookingData('adultsCount', Math.max(1, bookingData.adultsCount - 1))}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300"
+              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
             >
               -
             </button>
             <span className="w-10 text-center font-black text-xl">{bookingData.adultsCount}</span>
             <button
+              type="button"
               onClick={() => updateBookingData('adultsCount', bookingData.adultsCount + 1)}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300"
+              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
             >
               +
             </button>
@@ -256,15 +331,17 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
           <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Trẻ em</label>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => updateBookingData('childrenCount', Math.max(0, bookingData.childrenCount - 1))}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300"
+              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
             >
               -
             </button>
             <span className="w-10 text-center font-black text-xl">{bookingData.childrenCount}</span>
             <button
+              type="button"
               onClick={() => updateBookingData('childrenCount', bookingData.childrenCount + 1)}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300"
+              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
             >
               +
             </button>
@@ -283,7 +360,13 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
       )}
 
       <button
-        onClick={onNext}
+        onClick={() => {
+          if (useCustomDate) {
+            const success = handleCustomDateSubmit();
+            if (!success) return;
+          }
+          onNext();
+        }}
         disabled={!canProceed}
         className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
       >
@@ -308,7 +391,6 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
       phoneNumber: '',
       isChild: i >= adultsCount
     }));
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPassengers(newPassengers);
   }, [adultsCount, childrenCount]);
 

@@ -9,6 +9,10 @@ import Link from 'next/link';
 import { generateTourSchema, generateBreadcrumbSchema, generateFAQSchema, generateReviewSchema } from "@/lib/seo/structured-data";
 import { cache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
 import TourMap from "../../components/TourMap";
+import TourHighlights from "../../components/TourHighlights";
+import VideoGallery from "../../components/VideoGallery";
+import PreparationTips from "../../components/PreparationTips";
+import AskAITourButton from "../../components/AskAITourButton";
 
 // Lazy load heavy components
 const MultiStepBooking = dynamic(() => import("../../components/MultiStepBooking"), {
@@ -74,9 +78,10 @@ export async function generateMetadata({ params }) {
 
 export const revalidate = 3600; // Revalidate every hour
 
-export default async function TourDetailPage({ params }) {
+export default async function TourDetailPage({ params, searchParams }) {
   // BẮT BUỘC: Giải nén params bằng await để tránh lỗi P1001/Validation
-  const { id } = await params; 
+  const { id } = await params;
+  const searchParamsObj = await searchParams;
 
   // Validate id
   if (!id || isNaN(Number(id))) {
@@ -84,6 +89,8 @@ export default async function TourDetailPage({ params }) {
   }
 
   const tourId = Number(id);
+  const initialDate = searchParamsObj.date || '';
+  const initialPassengers = searchParamsObj.passengers || '1';
   
   // Check cache first
   const cacheKey = CACHE_KEYS.TOUR_DETAIL(tourId);
@@ -315,6 +322,9 @@ export default async function TourDetailPage({ params }) {
               </div>
             </div>
 
+            {/* Tour Highlights */}
+            <TourHighlights highlights={tour.highlights} />
+
             {/* Tour Info Badges */}
             <div className="flex flex-wrap gap-4">
               {tour.transport_type && (
@@ -379,6 +389,9 @@ export default async function TourDetailPage({ params }) {
                 </div>
               </div>
             )}
+
+            {/* Video Gallery */}
+            <VideoGallery videoUrl={tour.video_url} tourTitle={tour.title} />
 
             {/* Included/Excluded Services */}
             {(tour.tour_inclusions?.length > 0 || tour.tour_exclusions?.length > 0) && (
@@ -482,6 +495,9 @@ export default async function TourDetailPage({ params }) {
               locationName={tour.location_name} 
             />
 
+            {/* Preparation Tips */}
+            <PreparationTips tips={tour.tips} />
+
             {/* FAQ Section */}
             <div className="bg-slate-50 rounded-[40px] p-8 md:p-12 border border-slate-100">
               <h3 className="text-2xl font-black mb-6 flex items-center gap-3">
@@ -578,7 +594,10 @@ export default async function TourDetailPage({ params }) {
               </div>
 
               {/* Form đặt tour - Truyền dữ liệu sang component con */}
-              <MultiStepBooking tourId={tour.id} price={discountedPrice} originalPrice={tour.price} bestDiscount={bestDiscount} />
+              <MultiStepBooking tourId={tour.id} price={discountedPrice} originalPrice={tour.price} bestDiscount={bestDiscount} initialDate={initialDate} initialPassengers={initialPassengers} />
+
+              {/* Ask AI about this tour */}
+              <AskAITourButton tour={tour} />
 
               {/* Cam kết dịch vụ */}
               <div className="mt-8 space-y-3 pt-6 border-t border-white/10 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
@@ -618,7 +637,10 @@ export default async function TourDetailPage({ params }) {
       <div id="booking-form" className="lg:hidden bg-slate-900 rounded-[32px] p-6 text-white shadow-2xl mb-20">
         <div className="mb-6">
           <h3 className="text-2xl font-black mb-4">Đặt tour ngay</h3>
-          <MultiStepBooking tourId={tour.id} price={discountedPrice} originalPrice={tour.price} bestDiscount={bestDiscount} />
+          <MultiStepBooking tourId={tour.id} price={discountedPrice} originalPrice={tour.price} bestDiscount={bestDiscount} initialDate={initialDate} initialPassengers={initialPassengers} />
+        </div>
+        <div className="mt-4">
+          <AskAITourButton tour={tour} />
         </div>
       </div>
 

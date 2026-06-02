@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -63,7 +64,7 @@ async function main() {
     const queryEncoded = encodeURIComponent(finalQuery);
     
     // Cấu trúc URL nhúng Iframe chuẩn của Google, hỗ trợ zoom (z=13) tốt cho khu du lịch
-    const standardGoogleMapEmbedUrl = `https://maps.google.com/maps?q=${queryEncoded}&z=13&output=embed`;
+    const standardGoogleMapEmbedUrl = `https://www.google.com/maps?q=${queryEncoded}&hl=vi&z=14&output=embed`;
 
     // Cập nhật vào Cơ sở dữ liệu
     await prisma.tours.update({

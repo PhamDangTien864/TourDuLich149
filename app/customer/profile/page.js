@@ -10,18 +10,29 @@ import Link from 'next/link';
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function ProfileDashboardPage() {
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(() => {
+    // Lazy initialization - read from localStorage on mount
+    if (typeof window === 'undefined') return null;
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.role_id === 1) {
+          window.location.href = '/admin';
+          return null;
+        }
+        return user.id;
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        return null;
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     const userData = localStorage.getItem('user_data');
-    if (userData) {
-      const user = JSON.parse(userData);
-      if (user.role_id === 1) {
-        window.location.href = '/admin';
-        return;
-      }
-      setUserId(user.id);
-    } else {
+    if (!userData) {
       window.location.href = '/login';
     }
   }, []);

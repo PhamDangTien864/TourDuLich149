@@ -19,6 +19,9 @@ function SearchContent() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   
   const query = searchParams.get('q') || ""; 
+  const departure = searchParams.get('departure') || "";
+  const date = searchParams.get('date') || "";
+  const passengers = searchParams.get('passengers') ? Number(searchParams.get('passengers')) : 0;
   const minPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : 0;
   const maxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : 100000000;
   const category = searchParams.get('category') ? Number(searchParams.get('category')) : null;
@@ -38,6 +41,9 @@ function SearchContent() {
       try {
         const params = new URLSearchParams();
         if (query) params.append('q', query);
+        if (departure) params.append('departure', departure);
+        if (date) params.append('date', date);
+        if (passengers > 0) params.append('passengers', passengers.toString());
         if (minPrice > 0) params.append('minPrice', minPrice.toString());
         if (maxPrice < 100000000) params.append('maxPrice', maxPrice.toString());
         if (category) params.append('category', category.toString());
@@ -77,7 +83,7 @@ function SearchContent() {
 
     fetchTours();
     fetchCategories();
-  }, [query, minPrice, maxPrice, category, sortBy, page, departureDate, minSlots, minDuration, maxDuration, availability]);
+  }, [query, departure, date, passengers, minPrice, maxPrice, category, sortBy, page, departureDate, minSlots, minDuration, maxDuration, availability]);
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
@@ -85,6 +91,9 @@ function SearchContent() {
     const params = new URLSearchParams();
 
     if (formData.get('q')) params.append('q', formData.get('q'));
+    if (formData.get('departure')) params.append('departure', formData.get('departure'));
+    if (formData.get('date')) params.append('date', formData.get('date'));
+    if (formData.get('passengers')) params.append('passengers', formData.get('passengers'));
     if (formData.get('category')) params.append('category', formData.get('category'));
     if (formData.get('sortBy')) params.append('sortBy', formData.get('sortBy'));
     if (formData.get('minPrice')) params.append('minPrice', formData.get('minPrice'));
@@ -102,6 +111,9 @@ function SearchContent() {
   const handlePageChange = (newPage) => {
     const params = new URLSearchParams();
     if (query) params.append('q', query);
+    if (departure) params.append('departure', departure);
+    if (date) params.append('date', date);
+    if (passengers > 0) params.append('passengers', passengers.toString());
     if (minPrice > 0) params.append('minPrice', minPrice.toString());
     if (maxPrice < 100000000) params.append('maxPrice', maxPrice.toString());
     if (category) params.append('category', category.toString());
@@ -184,6 +196,16 @@ function SearchContent() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
+              <MapPin size={16} className="text-slate-400" />
+              <input
+                type="text"
+                name="departure"
+                placeholder="Điểm đi"
+                defaultValue={departure || ""}
+                className="w-32 px-2 py-1.5 bg-transparent font-bold text-sm text-slate-700 focus:outline-none"
+              />
+            </div>
             <input
               type="text"
               name="q"
@@ -318,43 +340,50 @@ function SearchContent() {
         {searchResults.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {searchResults.map(tour => (
-                <Link href={`/tour/${tour.id}`} key={tour.id} className="group bg-white rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all border border-slate-100">
-                  <div className="h-48 bg-slate-100 rounded-2xl mb-6 overflow-hidden relative">
-                    <Image
-                      src={tour.tour_images?.[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=400"}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      alt={tour.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      quality={75}
-                    />
-                    {/* Badges */}
-                    <div className="absolute top-4 left-4 flex gap-2">
-                      {tour.max_slots && tour.max_slots > 10 && (
-                        <div className="bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-black uppercase flex items-center gap-1">
-                          <Users size={12} />
-                          Còn chỗ
-                        </div>
+              {searchResults.map(tour => {
+                const params = new URLSearchParams();
+                if (date) params.append('date', date);
+                if (passengers) params.append('passengers', passengers);
+                const tourUrl = `/tour/${tour.id}${params.toString() ? '?' + params.toString() : ''}`;
+
+                return (
+                  <Link href={tourUrl} key={tour.id} className="group bg-white rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all border border-slate-100">
+                    <div className="h-48 bg-slate-100 rounded-2xl mb-6 overflow-hidden relative">
+                      <Image
+                        src={tour.tour_images?.[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=400"}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        alt={tour.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        quality={75}
+                      />
+                      {/* Badges */}
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        {tour.max_slots && tour.max_slots > 10 && (
+                          <div className="bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-black uppercase flex items-center gap-1">
+                            <Users size={12} />
+                            Còn chỗ
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-black mb-2 text-slate-800 line-clamp-1">{tour.title}</h3>
+                    <div className="flex items-center gap-2 text-slate-400 text-sm font-bold mb-4">
+                      <MapPin size={14} className="text-blue-500" /> {tour.location_name}
+                      {tour.duration_days && (
+                        <>
+                          <span>•</span>
+                          <Clock size={14} /> {tour.duration_days} ngày
+                        </>
                       )}
                     </div>
-                  </div>
-                  <h3 className="text-xl font-black mb-2 text-slate-800 line-clamp-1">{tour.title}</h3>
-                  <div className="flex items-center gap-2 text-slate-400 text-sm font-bold mb-4">
-                    <MapPin size={14} className="text-blue-500" /> {tour.location_name}
-                    {tour.duration_days && (
-                      <>
-                        <span>•</span>
-                        <Clock size={14} /> {tour.duration_days} ngày
-                      </>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-                     <p className="text-xl font-black text-blue-600">{Number(tour.price).toLocaleString()}đ</p>
-                     <ArrowRight className="text-blue-600" />
-                  </div>
-                </Link>
-              ))}
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-50">
+                       <p className="text-xl font-black text-blue-600">{Number(tour.price).toLocaleString()}đ</p>
+                       <ArrowRight className="text-blue-600" />
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Pagination */}

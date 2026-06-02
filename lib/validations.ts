@@ -179,7 +179,11 @@ export const bookingRequestSchema = z.object({
       .refine((date) => !isNaN(Date.parse(date)), 'Ngày sinh không hợp lệ'),
     gender: z.enum(['Nam', 'Nữ', 'Khác']),
     phoneNumber: z.string()
-      .regex(/^[0-9]{10,11}$/, 'Số điện thoại phải từ 10-11 số'),
+      .optional()
+      .refine((phone) => {
+        if (!phone) return true; // Phone is optional
+        return /^[0-9]{10,11}$/.test(phone);
+      }, 'Số điện thoại phải từ 10-11 số'),
     isChild: z.boolean()
   })).optional(),
   specialRequests: z.string()
@@ -244,23 +248,27 @@ export const passengerSchema = z.object({
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
-      
+
       return age >= 0 && age <= 120;
     }, 'Ngày sinh không hợp lệ'),
   gender: z.enum(['Nam', 'Nữ', 'Khác']),
   phoneNumber: z.string()
-    .regex(/^[0-9]{10,11}$/, 'Số điện thoại phải từ 10-11 số'),
+    .optional()
+    .refine((phone) => {
+      if (!phone) return true; // Phone is optional
+      return /^[0-9]{10,11}$/.test(phone);
+    }, 'Số điện thoại phải từ 10-11 số'),
   isChild: z.boolean()
 }).refine((data) => {
   const birthDate = new Date(data.birthDate);
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
@@ -275,6 +283,15 @@ export const passengerSchema = z.object({
 }, {
   message: 'Tuổi không khớp với loại hành khách',
   path: ['isChild']
+}).refine((data) => {
+  // Phone is required for adults, optional for children
+  if (!data.isChild && !data.phoneNumber) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Người lớn phải có số điện thoại',
+  path: ['phoneNumber']
 });
 
 // Types

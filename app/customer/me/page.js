@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,7 +13,26 @@ import useSWR from 'swr';
 const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export default function CustomerMePage() {
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(() => {
+    // Lazy initialization - read from localStorage on mount
+    if (typeof window === 'undefined') return null;
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        // Block admin from accessing customer pages
+        if (user.role_id === 1) {
+          window.location.href = '/admin';
+          return null;
+        }
+        return user.id;
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        return null;
+      }
+    }
+    return null;
+  });
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -20,7 +40,7 @@ export default function CustomerMePage() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState(null); // 'profile' or 'password'
-  
+
   // Profile data
   const [profile, setProfile] = useState({
     full_name: '',
@@ -43,15 +63,7 @@ export default function CustomerMePage() {
 
   useEffect(() => {
     const userData = localStorage.getItem('user_data');
-    if (userData) {
-      const user = JSON.parse(userData);
-      // Block admin from accessing customer pages
-      if (user.role_id === 1) {
-        window.location.href = '/admin';
-        return;
-      }
-      setUserId(user.id);
-    } else {
+    if (!userData) {
       window.location.href = '/login';
     }
   }, []);

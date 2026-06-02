@@ -102,12 +102,14 @@ export default function LoginPage() {
         toast.success(`Chào mừng ${userInfo.name || userInfo.full_name || userInfo.username || 'bạn'} đã trở lại!`);
         
         // Phân quyền chuyển hướng
-        if (userInfo.role_id === 1) {
-          window.location.href = '/admin';
-        } else {
-          // Customer (role_id = 2) - redirect về trang chủ
-          window.location.href = '/';
-        }
+        setTimeout(() => {
+          if (userInfo.role_id === 1) {
+            window.location.href = '/admin';
+          } else {
+            // Customer (role_id = 2) - redirect về trang chủ
+            window.location.href = '/';
+          }
+        }, 1200); // Đợi 1.2s để user kịp đọc thông báo
       } else {
         // Bắt lỗi chi tiết cho login
         if (res.status === 403) {

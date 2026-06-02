@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, MapPin, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, Save, MapPin, DollarSign, FileText, CheckCircle } from 'lucide-react';
 import ImageUpload from '../../components/ImageUpload';
 
 export default function CreateTourPage() {
@@ -19,9 +19,14 @@ export default function CreateTourPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setShowModal(true);
+  };
+
+  const confirmCreate = async () => {
     setLoading(true);
     setError('');
 
@@ -39,6 +44,7 @@ export default function CreateTourPage() {
       const data = await response.json();
 
       if (response.ok) {
+        setShowModal(false);
         router.push('/admin/tours');
       } else {
         setError(data.error || 'Lỗi khi tạo tour');
@@ -185,6 +191,38 @@ export default function CreateTourPage() {
           </form>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle size={32} className="text-green-600" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-800 mb-2">Xác nhận tạo Tour</h3>
+              <p className="text-slate-600 mb-6">
+                Bạn có chắc chắn muốn tạo tour <strong>{formData.title}</strong>?
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={confirmCreate}
+                  disabled={loading}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors flex items-center gap-2"
+                >
+                  {loading ? 'Đang tạo...' : 'Xác nhận'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

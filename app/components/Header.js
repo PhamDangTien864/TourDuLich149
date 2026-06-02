@@ -124,20 +124,6 @@ const Header = memo(function Header() {
               {pathname === '/search' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>}
             </Link>
           )}
-          {/* Link Lịch sử - Ẩn với admin */}
-          {(!user || (user.role !== 1 && user.role_id !== 1)) && (
-            <Link 
-              href="/customer/bookings" 
-              className={`text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
-                pathname === '/customer/bookings' 
-                  ? 'text-white bg-blue-600 shadow-md' 
-                  : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              Lịch sử
-              {pathname === '/customer/bookings' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>}
-            </Link>
-          )}
           {/* Tab 'Tôi' cho khách hàng */}
           {user && user.role === 2 && (
             <Link 
@@ -188,7 +174,7 @@ const Header = memo(function Header() {
               </button>
             </div>
           ) : (
-            <Link href="/login" className="hidden md:block bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-blue-200">ĐĂNG NHẬP</Link>
+            <Link href="/login" className="hidden md:block bg-blue-600 text-white px-6 py-2.5 rounded-xl text-xs font-black shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all cursor-pointer">ĐĂNG NHẬP</Link>
           )}
         </div>
       </div>

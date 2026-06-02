@@ -1,49 +1,95 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, X, MessageSquare, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { sampleTours } from "@/lib/constants";
 
 export default function FloatingContact() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([{ sender: "bot", text: "Chào bạn! VietTravel có thể giúp gì cho bạn không? ✈️" }]);
+  const [messages, setMessages] = useState(() => {
+    // Lazy initialization - read from localStorage on mount
+    if (typeof window === 'undefined') return [{ sender: "bot", text: "Chào bạn! VietTravel có thể giúp gì cho bạn không? ✈️" }];
+    const savedMessages = localStorage.getItem('viet_chat_history');
+    if (savedMessages) {
+      try {
+        return JSON.parse(savedMessages);
+      } catch (e) {
+        console.error('Error loading chat history:', e);
+        return [{ sender: "bot", text: "Chào bạn! VietTravel có thể giúp gì cho bạn không? ✈️" }];
+      }
+    }
+    return [{ sender: "bot", text: "Chào bạn! VietTravel có thể giúp gì cho bạn không? ✈️" }];
+  });
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef(null);
+
+  // Check for tour context and prefill
+  useEffect(() => {
+    const tourContext = localStorage.getItem('tour_context');
+    const tourPrefill = localStorage.getItem('tour_prefill');
+    
+    if (tourContext && tourPrefill) {
+      // Add tour context as a system message
+      const contextMessage = { sender: "bot", text: tourContext };
+      setMessages(prev => [...prev, contextMessage]);
+      
+      // Prefill input
+      setInput(tourPrefill);
+      
+      // Clear the stored values
+      localStorage.removeItem('tour_context');
+      localStorage.removeItem('tour_prefill');
+      
+      // Open chatbot automatically
+      setIsOpen(true);
+    }
+  }, []);
+
+  // Save chat history to localStorage
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('viet_chat_history', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   // Tự động cuộn tin nhắn
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
-    const userMsg = input.toLowerCase();
-    setMessages(prev => [...prev, { sender: "user", text: input }]);
+    
+    const userMsg = input;
+    setMessages(prev => [...prev, { sender: "user", text: userMsg }]);
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMsg,
+          history: messages.map(m => ({
+            role: m.sender === 'user' ? 'user' : 'model',
+            parts: [{ text: typeof m.text === 'string' ? m.text : '' }]
+          }))
+        })
+      });
+
+      const data = await response.json();
       setIsTyping(false);
-      const matched = sampleTours.filter(t => t.keywords.some(kw => userMsg.includes(kw)));
-      if (matched.length > 0) {
-        const reply = (
-          <div className="space-y-2">
-            <p className="font-bold text-slate-700">Đây có thể là tour bạn cần:</p>
-            {matched.map(t => (
-              <Link key={t.id} href={`/tour/${t.id}`} className="block p-2 bg-blue-50 border border-blue-100 rounded-xl text-blue-600 font-black text-[10px] uppercase hover:bg-blue-600 hover:text-white transition-all">
-                {t.name} →
-              </Link>
-            ))}
-          </div>
-        );
-        setMessages(prev => [...prev, { sender: "bot", text: reply }]);
-      } else {
-        setMessages(prev => [...prev, { sender: "bot", text: "Chưa có tour, hãy gõ thử 'Đà Nẵng'!" }]);
-      }
-    }, 800);
+      
+      setMessages(prev => [...prev, { sender: "bot", text: data.text }]);
+    } catch (error) {
+      console.error('Error calling chatbot API:', error);
+      setIsTyping(false);
+      setMessages(prev => [...prev, { sender: "bot", text: "Xin lỗi, hệ thống đang gặp sự cố. Vui lòng liên hệ hotline 0862 640 720 để được hỗ trợ!" }]);
+    }
   };
 
   const handleCloseChat = (e) => {
