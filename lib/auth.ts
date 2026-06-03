@@ -1,10 +1,13 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required');
+// Helper function to get JWT_SECRET with validation
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return secret;
 }
 
 // 1. Định nghĩa Payload rõ ràng để không bị lỗi Property 'is_verified' does not exist
@@ -26,13 +29,13 @@ export async function comparePassword(password: string, hashedPassword: string):
 
 // 2. Cập nhật hàm generate để chấp nhận is_verified
 export function generateToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET!, { expiresIn: '24h' });
+  return jwt.sign(payload, getJWTSecret(), { expiresIn: '24h' });
 }
 
 // 3. Cập nhật hàm verify để trả về đúng kiểu dữ liệu
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET!) as TokenPayload;
+    return jwt.verify(token, getJWTSecret()) as TokenPayload;
   } catch {
     return null;
   }
