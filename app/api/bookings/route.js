@@ -14,6 +14,7 @@ import {
 import { CacheInvalidator, CACHE_KEYS } from "@/lib/cache";
 import { bookingRequestSchema } from "@/lib/validations";
 import { successResponse, errorResponse, validationErrorResponse, conflictResponse } from "@/lib/api-response";
+import crypto from 'crypto';
 
 export async function POST(req) {
   return requireAuth(async (request) => {
@@ -22,8 +23,8 @@ export async function POST(req) {
       const accountId = user.id;
       const body = await req.json();
       
-      // Generate or use provided idempotency key
-      const idempotencyKey = body.idempotencyKey || `booking_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      // Generate or use provided idempotency key using cryptographically secure random
+      const idempotencyKey = body.idempotencyKey || `booking_${Date.now()}_${crypto.randomBytes(16).toString('hex')}`;
       
       // Validate with Zod using centralized validation
       const validationResult = bookingRequestSchema.safeParse(body);
@@ -285,11 +286,22 @@ export async function GET(req) {
     try {
       const user = request.user;
       const { searchParams } = new URL(req.url);
-      const userId = searchParams.get("user_id") || user.id;
+      const requestedUserId = searchParams.get("user_id");
+
+      // Users can only view their own bookings unless they are admins
+      // Admins can view any user's bookings
+      let userId;
+      if (user.role_id === 1 && requestedUserId) {
+        // Admin can view any user's bookings
+        userId = parseInt(requestedUserId);
+      } else {
+        // Regular users can only view their own bookings
+        userId = user.id;
+      }
 
       const bookings = await prisma.bookings.findMany({
         where: {
-          account_id: parseInt(userId)
+          account_id: userId
         },
         include: {
           customers: {

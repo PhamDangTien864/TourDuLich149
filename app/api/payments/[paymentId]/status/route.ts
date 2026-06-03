@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { PaymentService, PaymentStatus } from "@/lib/booking-service";
 import { authenticate } from "@/lib/middleware";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(
   req: NextRequest,
@@ -31,6 +32,28 @@ export async function POST(
       return NextResponse.json(
         { error: "Payment ID không hợp lệ" },
         { status: 400 }
+      );
+    }
+
+    // Verify payment ownership - user can only update their own payments
+    // Admins can update any payment
+    const payment = await prisma.booking_payments.findUnique({
+      where: { id: paymentId },
+      include: { bookings: true }
+    });
+
+    if (!payment) {
+      return NextResponse.json(
+        { error: "Payment không tồn tại" },
+        { status: 404 }
+      );
+    }
+
+    // Check if user owns this payment or is admin
+    if (user.role_id !== 1 && payment.bookings.account_id !== user.id) {
+      return NextResponse.json(
+        { error: "Bạn không có quyền cập nhật payment này" },
+        { status: 403 }
       );
     }
 

@@ -32,84 +32,96 @@ export default function AnalyticsPage() {
   }, [fetchAnalytics]);
 
   const handleExportExcel = () => {
-    if (!analyticsData) return;
+    if (!analyticsData) {
+      alert("Chưa có dữ liệu thống kê. Vui lòng chờ tải xong dữ liệu!");
+      return;
+    }
 
-    // Create workbook
-    const wb = XLSX.utils.book_new();
+    const {
+      totalRevenue,
+      monthlyRevenue = [],
+      topTours = [],
+      recentBookings = [],
+      customerStats = [],
+      provinceStats = [],
+      reviewStats = {},
+      promotionStats = [],
+      cancellationRate = 0
+    } = analyticsData;
 
-    // Overview sheet
-    const overviewData = [
-      ['Metric', 'Value'],
-      ['Tổng doanh thu', `${Number(totalRevenue?._sum?.total_amount || 0).toLocaleString()}đ`],
-      ['Booking gần đây', recentBookings?.length || 0],
-      ['Tổng khách hàng', customerStats?.reduce((sum, stat) => sum + stat._count.id, 0) || 0],
-      ['Tỷ lệ hủy booking', `${cancellationRate}%`],
-      ['Đánh giá trung bình', `${reviewStats?.avgRating || 0}/5`],
-      ['Tổng số đánh giá', reviewStats?.totalReviews || 0],
-    ];
-    const overviewWs = XLSX.utils.aoa_to_sheet(overviewData);
-    XLSX.utils.book_append_sheet(wb, overviewWs, 'Tổng quan');
+    try {
+      const wb = XLSX.utils.book_new();
 
-    // Monthly revenue sheet
-    const monthlyData = [
-      ['Tháng', 'Doanh thu', 'Số booking'],
-      ...(monthlyRevenue || []).map(m => [m.month, Number(m.revenue), m.bookings])
-    ];
-    const monthlyWs = XLSX.utils.aoa_to_sheet(monthlyData);
-    XLSX.utils.book_append_sheet(wb, monthlyWs, 'Doanh thu theo tháng');
+      // Sheet 1: Tổng quan
+      const overviewData = [
+        ['Chỉ số', 'Giá trị'],
+        ['Tổng doanh thu', `${Number(totalRevenue?._sum?.total_amount || 0).toLocaleString()}đ`],
+        ['Booking gần đây', recentBookings.length],
+        ['Tổng khách hàng', customerStats.reduce((sum, stat) => sum + (stat._count?.id || 0), 0)],
+        ['Tỷ lệ hủy booking', `${cancellationRate}%`],
+        ['Đánh giá trung bình', `${reviewStats?.avgRating || 0}/5`],
+        ['Tổng số đánh giá', reviewStats?.totalReviews || 0],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewData), 'Tổng quan');
 
-    // Top tours sheet
-    const toursData = [
-      ['STT', 'Tour', 'Địa điểm', 'Doanh thu', 'Số booking'],
-      ...(topTours || []).map((t, i) => [
-        i + 1,
-        t.tours?.title || 'N/A',
-        t.tours?.location_name || 'N/A',
-        Number(t._sum.total_amount),
-        t._count.id
-      ])
-    ];
-    const toursWs = XLSX.utils.aoa_to_sheet(toursData);
-    XLSX.utils.book_append_sheet(wb, toursWs, 'Top Tours');
+      // Sheet 2: Doanh thu theo tháng
+      const monthlyData = [
+        ['Tháng', 'Doanh thu (đ)', 'Số booking'],
+        ...monthlyRevenue.map(m => [m.month, Number(m.revenue || 0), m.bookings || 0])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monthlyData), 'Doanh thu theo tháng');
 
-    // Recent bookings sheet
-    const bookingsData = [
-      ['Khách hàng', 'SĐT', 'Tour', 'Địa điểm', 'Số tiền', 'Ngày đi'],
-      ...(recentBookings || []).map(b => [
-        b.customers?.full_name || 'N/A',
-        b.customers?.phone_number || 'N/A',
-        b.tours?.title || 'N/A',
-        b.tours?.location_name || 'N/A',
-        Number(b.total_amount),
-        new Date(b.start_date).toLocaleDateString('vi-VN')
-      ])
-    ];
-    const bookingsWs = XLSX.utils.aoa_to_sheet(bookingsData);
-    XLSX.utils.book_append_sheet(wb, bookingsWs, 'Booking gần đây');
+      // Sheet 3: Top Tours
+      const toursData = [
+        ['STT', 'Tên Tour', 'Địa điểm', 'Doanh thu', 'Số booking'],
+        ...topTours.map((t, i) => [
+          i + 1,
+          t.tours?.title || 'N/A',
+          t.tours?.location_name || 'N/A',
+          Number(t._sum?.total_amount || 0),
+          t._count?.id || 0
+        ])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toursData), 'Top Tours');
 
-    // Province stats sheet
-    const provinceData = [
-      ['Tỉnh thành', 'Số tour'],
-      ...(provinceStats || []).map(p => [p.province, p.count])
-    ];
-    const provinceWs = XLSX.utils.aoa_to_sheet(provinceData);
-    XLSX.utils.book_append_sheet(wb, provinceWs, 'Theo tỉnh thành');
+      // Sheet 4: Booking gần đây
+      const bookingsData = [
+        ['Khách hàng', 'SĐT', 'Tour', 'Địa điểm', 'Số tiền', 'Ngày đi'],
+        ...recentBookings.map(b => [
+          b.customers?.full_name || 'N/A',
+          b.customers?.phone_number || 'N/A',
+          b.tours?.title || 'N/A',
+          b.tours?.location_name || 'N/A',
+          Number(b.total_amount || 0),
+          new Date(b.start_date).toLocaleDateString('vi-VN')
+        ])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(bookingsData), 'Booking gần đây');
 
-    // Promotion stats sheet
-    const promoData = [
-      ['Mã khuyến mãi', 'Giảm giá (%)', 'Số lần dùng'],
-      ...(promotionStats || []).map(p => [p.code, p.discountValue, p.usedCount])
-    ];
-    const promoWs = XLSX.utils.aoa_to_sheet(promoData);
-    XLSX.utils.book_append_sheet(wb, promoWs, 'Khuyến mãi');
+      // Sheet 5: Theo tỉnh thành
+      const provinceData = [
+        ['Tỉnh thành', 'Số tour'],
+        ...provinceStats.map(p => [p.province, p.count || 0])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(provinceData), 'Theo tỉnh thành');
 
-    // Generate filename with date range
-    const startStr = startDate.toLocaleDateString('vi-VN').replace(/\//g, '-');
-    const endStr = endDate.toLocaleDateString('vi-VN').replace(/\//g, '-');
-    const filename = `Analytics_${startStr}_to_${endStr}.xlsx`;
+      // Sheet 6: Khuyến mãi
+      const promoData = [
+        ['Mã khuyến mãi', 'Giảm giá (%)', 'Số lần dùng'],
+        ...promotionStats.map(p => [p.code, p.discountValue || 0, p.usedCount || 0])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(promoData), 'Khuyến mãi');
 
-    // Download file
-    XLSX.writeFile(wb, filename);
+      const startStr = startDate.toLocaleDateString('vi-VN').replace(/\//g, '-');
+      const endStr = endDate.toLocaleDateString('vi-VN').replace(/\//g, '-');
+      const filename = `Analytics_VietTravel_${startStr}_den_${endStr}.xlsx`;
+
+      XLSX.writeFile(wb, filename);
+      
+    } catch (error) {
+      console.error('Export Excel error:', error);
+      alert('Có lỗi khi xuất file Excel. Vui lòng thử lại sau!');
+    }
   };
 
   if (loading) {

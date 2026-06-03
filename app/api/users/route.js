@@ -27,9 +27,18 @@ export async function POST(req) {
     }
 
     // Validate password strength
-    if (password.length < 6) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: "Mật khẩu phải có ít nhất 6 ký tự" },
+        { error: "Mật khẩu phải có ít nhất 8 ký tự" },
+        { status: 400 }
+      );
+    }
+
+    // Check password complexity (uppercase, lowercase, number)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
+    if (!passwordRegex.test(password)) {
+      return NextResponse.json(
+        { error: "Mật khẩu phải có chữ hoa, chữ thường và số" },
         { status: 400 }
       );
     }

@@ -341,25 +341,16 @@ export class SlotReservationService {
       });
 
       for (const booking of expiredBookings) {
-        // Use transaction to ensure atomic slot release
-        await prisma.$transaction(async (tx) => {
-          // Release slots
-          await this.releaseSlot(
-            booking.tour_id,
-            null,
-            booking.total_passengers ?? 0,
-            tx
-          );
-
-          // Update booking status
-          await BookingStateMachine.transition(
-            booking.id,
-            BookingStatus.CANCELLED,
-            undefined,
-            ActorType.SYSTEM,
-            'Booking tự động hủy do hết thời gian chờ thanh toán'
-          );
-        });
+        // Cancel expired bookings
+        // Slots are managed at tour level via max_slots, so we don't need to release specific schedule slots
+        // The tour's max_slots will naturally be available for new bookings
+        await BookingStateMachine.transition(
+          booking.id,
+          BookingStatus.CANCELLED,
+          undefined,
+          ActorType.SYSTEM,
+          'Booking tự động hủy do hết thời gian chờ thanh toán'
+        );
       }
     } catch (error) {
       ErrorHandler.log(ErrorHandler.handle(error), 'Cleanup expired reservations error');
@@ -384,7 +375,13 @@ export class PassengerValidationService {
       errors.push('Giới tính không hợp lệ (Nam/Nữ/Khác)');
     }
 
-    if (!passenger.phone_number || !/^[0-9]{10,11}$/.test(passenger.phone_number)) {
+    // Phone is required for adults, optional for children
+    if (!passenger.is_child) {
+      if (!passenger.phone_number || !/^[0-9]{10,11}$/.test(passenger.phone_number)) {
+        errors.push('Người lớn phải có số điện thoại (10-11 số)');
+      }
+    } else if (passenger.phone_number && !/^[0-9]{10,11}$/.test(passenger.phone_number)) {
+      // If provided for children, must still be valid format
       errors.push('Số điện thoại phải từ 10-11 số');
     }
 

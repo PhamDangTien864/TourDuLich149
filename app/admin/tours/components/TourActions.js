@@ -26,7 +26,14 @@ export default function TourActions({ tour }) {
         router.refresh();
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Xóa tour thất bại!');
+        if (response.status === 401) {
+          toast.error('Bạn cần đăng nhập để thực hiện thao tác này');
+          router.push('/login');
+        } else if (response.status === 403) {
+          toast.error('Bạn không có quyền xóa tour này');
+        } else {
+          toast.error(error.error || 'Xóa tour thất bại!');
+        }
       }
     } catch (error) {
       console.error('Delete tour error:', error);

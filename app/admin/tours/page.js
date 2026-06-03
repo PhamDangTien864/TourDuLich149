@@ -26,7 +26,7 @@ export default async function ManageTours({ searchParams }) {
       include: {
         tour_categories: true,
         tour_images: {
-         // where: { is_primary: true },
+          where: { is_primary: true },
           take: 1
         }
       },

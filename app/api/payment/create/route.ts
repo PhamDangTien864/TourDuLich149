@@ -77,9 +77,10 @@ export async function POST(req: NextRequest) {
     const remainingAmount = bookingTotal - paidAmount;
 
     // Allow payment for either full amount, deposit amount, or remaining amount
+    // Use exact matching to prevent exploitation (reduced tolerance from 100 VND to 1 VND)
     const validAmounts = [bookingTotal, depositAmount, remainingAmount];
     const isAmountValid = validAmounts.some(validAmount => 
-      Math.abs(amount - validAmount) < 100 // Allow small rounding differences
+      Math.abs(amount - validAmount) < 1 // Allow minimal rounding differences only
     );
 
     if (!isAmountValid) {

@@ -28,13 +28,13 @@ export default function EditUserPage({ params }) {
         const id = parseInt(resolvedParams.id);
         setUserId(id);
         
-        const res = await fetch(`/admin/users/${id}`);
+        const res = await fetch(`/api/admin/users/${id}`);
         if (!res.ok) {
           router.push('/admin/users');
           return;
         }
         const data = await res.json();
-        setUser(data);
+        setUser(data.data || data);
         setFormData({
           full_name: data.full_name,
           email: data.email,
@@ -61,7 +61,7 @@ export default function EditUserPage({ params }) {
   const confirmSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`/admin/users/${userId}`, {
+      const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -192,7 +192,7 @@ export default function BookingHistory() {
 
                   <div className="mt-6 pt-6 border-t border-slate-100 flex justify-end gap-4">
                     <a
-                      href={`/tour/${booking.id || booking.tour_id}`}
+                      href={`/tour/${booking.tour_id}`}
                       className="px-6 py-3 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
                     >
                       Xem chi tiết

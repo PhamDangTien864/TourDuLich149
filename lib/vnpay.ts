@@ -1,8 +1,13 @@
 import crypto from 'crypto';
 
+// Validate required environment variables
+if (!process.env.VNPAY_TMN_CODE || !process.env.VNPAY_HASH_SECRET) {
+  throw new Error('VNPay configuration is missing required environment variables: VNPAY_TMN_CODE and VNPAY_HASH_SECRET must be set');
+}
+
 const VNPayConfig = {
-  vnp_TmnCode: process.env.VNPAY_TMN_CODE || '',
-  vnp_HashSecret: process.env.VNPAY_HASH_SECRET || '',
+  vnp_TmnCode: process.env.VNPAY_TMN_CODE!,
+  vnp_HashSecret: process.env.VNPAY_HASH_SECRET!,
   vnp_Url: process.env.VNPAY_URL || 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
   vnp_ReturnUrl: process.env.VNPAY_RETURN_URL || `${process.env.NEXT_PUBLIC_APP_URL}/payment/callback`,
 };

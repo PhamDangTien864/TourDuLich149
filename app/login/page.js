@@ -97,6 +97,7 @@ export default function LoginPage() {
         // Lưu vào Cookie để Middleware có thể đọc và phân quyền bảo mật cấp Server
         document.cookie = `auth_token=${token}; path=/; max-age=86400; SameSite=Lax`;
         document.cookie = `user_role=${userInfo.role_id}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `user_id=${userInfo.id}; path=/; max-age=86400; SameSite=Lax`;
         
         // Hiển thị tên (Bây giờ Backend trả về 'name' thì mình xài 'name')
         toast.success(`Chào mừng ${userInfo.name || userInfo.full_name || userInfo.username || 'bạn'} đã trở lại!`);
