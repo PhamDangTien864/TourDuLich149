@@ -3,6 +3,10 @@ import { User, TrendingUp, Award, Download, X, Search, Filter, Phone, Eye, Edit,
 import Link from "next/link";
 import { cache } from "@/lib/cache";
 
+// TODO: This is a Server Component with onClick/onChange handlers.
+// Need to convert to Client Component and move data fetching to API routes or use Server Actions.
+// This requires significant refactoring to separate data fetching from UI logic.
+
 export const revalidate = 300;
 
 export default async function ManageCustomers({ searchParams }) {
@@ -44,9 +48,9 @@ export default async function ManageCustomers({ searchParams }) {
         where,
         include: {
           bookings: {
-            select: { id: true, total_amount: true, status: true },
-            orderBy: { created_at: 'desc' },
-            take: 5
+            select: { id: true, total_amount: true, status: true, created_at: true },
+            orderBy: { created_at: 'desc' }
+            // Removed take: 5 to get accurate stats (totalBookings, totalSpent)
           }
         },
         orderBy,
@@ -317,7 +321,8 @@ export default async function ManageCustomers({ searchParams }) {
                 <div className="text-sm text-slate-600">
                   Hiển thị {skip + 1}-{Math.min(skip + limit, totalCount)} của {totalCount} khách hàng
                 </div>
-                <select 
+                <select
+                  defaultValue="20"
                   className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-600"
                   onChange={(e) => {
                     const newLimit = e.target.value;
@@ -325,7 +330,7 @@ export default async function ManageCustomers({ searchParams }) {
                   }}
                 >
                   <option value="10">10/trang</option>
-                  <option value="20" selected>20/trang</option>
+                  <option value="20">20/trang</option>
                   <option value="50">50/trang</option>
                 </select>
               </div>

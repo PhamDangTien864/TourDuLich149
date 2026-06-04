@@ -1,35 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ErrorHandler } from '@/lib/errors';
-import { errorResponse } from '@/lib/api-response';
+import { errorResponse, successResponse } from '@/lib/api-response';
+import { requireRole } from '@/lib/middleware';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // SỬA: Đổi thành Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const resolvedParams = await params; // Bây giờ await mới hợp lệ
-    const tourId = parseInt(resolvedParams.id);
-    
-    if (isNaN(tourId)) {
-      return NextResponse.json({ error: "Invalid tour ID" }, { status: 400 });
+  return requireRole([1])(async (request) => {
+    try {
+      const resolvedParams = await params;
+      const tourId = parseInt(resolvedParams.id);
+
+      if (isNaN(tourId)) {
+        return errorResponse("Invalid tour ID", 400);
+      }
+
+      // Soft delete: set is_deleted = true
+      const deletedTour = await prisma.tours.update({
+        where: { id: tourId },
+        data: { is_deleted: true }
+      });
+
+      return successResponse({
+        tour: deletedTour
+      }, "Tour deleted successfully");
+
+    } catch (error) {
+      const bookingError = ErrorHandler.handle(error);
+      ErrorHandler.log(bookingError, 'DELETE_TOUR_ERROR');
+      return errorResponse(bookingError.message, bookingError.statusCode);
     }
-
-    // Soft delete: set is_deleted = true
-    const deletedTour = await prisma.tours.update({
-      where: { id: tourId },
-      data: { is_deleted: true }
-    });
-
-    return NextResponse.json({ 
-      success: true, 
-      message: "Tour deleted successfully",
-      tour: deletedTour 
-    });
-
-  } catch (error) {
-    const bookingError = ErrorHandler.handle(error);
-    ErrorHandler.log(bookingError, 'DELETE_TOUR_ERROR');
-    return errorResponse(bookingError.message, bookingError.statusCode);
-  }
+  })(req);
 }

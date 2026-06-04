@@ -8,6 +8,8 @@ export default function ReviewActions({ reviewId, tourId, adminReply }) {
   const router = useRouter();
 
   const handleReply = async () => {
+    // TODO: Replace window.prompt() with a proper modal/dialog component for better UX
+    // window.prompt() is not suitable for production systems
     const reply = prompt('Nhập phản hồi admin:', adminReply || '');
     if (reply !== null) {
       await fetch(`/api/reviews/${reviewId}/reply`, {

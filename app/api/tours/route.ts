@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { ValidationHandler } from '@/lib/api-validation';
 import { ErrorHandler } from '@/lib/errors';
 import { prisma } from "@/lib/prisma";
+import { requireRole } from '@/lib/middleware';
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
     
     // 1. Lấy tất cả tham số từ URL
     const q = searchParams.get('q') || undefined;
-    const departure = searchParams.get('departure') || undefined; // Chỉ dùng cho hiển thị, không filter
+    const departure = searchParams.get('departure') || undefined;
     const date = searchParams.get('date') || undefined;
     const passengersParam = searchParams.get('passengers');
     const passengers = passengersParam ? parseInt(passengersParam) : undefined;
@@ -56,10 +57,10 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // departure chỉ dùng cho hiển thị, không filter
-    // if (departure) {
-    //   where.location_name = { contains: departure };
-    // }
+    // Filter by departure location
+    if (departure) {
+      where.location_name = { contains: departure };
+    }
 
     if (location) {
       where.location_name = { contains: location };
@@ -99,10 +100,14 @@ export async function GET(req: NextRequest) {
     }
 
     // 3. Xây dựng điều kiện sắp xếp
-    let orderBy: any = { created_at: 'desc' }; 
+    let orderBy: any = { created_at: 'desc' };
     if (sortBy === 'price_asc') orderBy = { price: 'asc' };
     if (sortBy === 'price_desc') orderBy = { price: 'desc' };
-    if (sortBy === 'best_selling') orderBy = { id: 'asc' }; 
+    if (sortBy === 'best_selling') {
+      // Sort by booking count (requires aggregation - simplified for now)
+      // TODO: Implement proper best_selling by counting completed bookings
+      orderBy = { created_at: 'desc' };
+    } 
 
     // 4. Truy vấn Database trực tiếp
     const [tours, total] = await Promise.all([
@@ -144,22 +149,24 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    
-    const validationResult = ValidationHandler.validateOrErrorResponse(tourSchema, body);
-    if (validationResult) {
-      return validationResult;
+  return requireRole([1])(async (request) => {
+    try {
+      const body = await request.json();
+      
+      const validationResult = ValidationHandler.validateOrErrorResponse(tourSchema, body);
+      if (validationResult) {
+        return validationResult;
+      }
+
+      const validatedData = ValidationHandler.validateOrThrow(tourSchema, body);
+      
+      const tour = await TourService.createTour(validatedData);
+
+      return successResponse({ tour }, 'Tour được tạo thành công');
+    } catch (error) {
+      const bookingError = ErrorHandler.handle(error);
+      ErrorHandler.log(bookingError);
+      return errorResponse(bookingError.message, bookingError.statusCode);
     }
-
-    const validatedData = ValidationHandler.validateOrThrow(tourSchema, body);
-    
-    const tour = await TourService.createTour(validatedData);
-
-    return successResponse({ tour }, 'Tour được tạo thành công');
-  } catch (error) {
-    const bookingError = ErrorHandler.handle(error);
-    ErrorHandler.log(bookingError);
-    return errorResponse(bookingError.message, bookingError.statusCode);
-  }
+  })(req);
 }

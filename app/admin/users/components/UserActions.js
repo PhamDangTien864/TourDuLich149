@@ -14,7 +14,7 @@ export default function UserActions({ user }) {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const response = await fetch(`/admin/users/${user.id}`, {
+      const response = await fetch(`/api/admin/users/${user.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export default function UserActions({ user }) {
 
   const handleToggleRole = async () => {
     try {
-      const response = await fetch(`/admin/users/${user.id}/toggle-role`, {
+      const response = await fetch(`/api/admin/users/${user.id}/toggle-role`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

@@ -27,8 +27,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // In production, verify token against stored token
-    // For now, we'll use a simple approach
+    // CRITICAL SECURITY BUG: Token is not verified against stored value
+    // Anyone who knows the email can verify any user's account with any token
+    // TODO: Add verification_token and verification_token_expiry fields to accounts table
+    // Store token in register route and verify it here before marking as verified
     // In real implementation, you'd have verification_token and verification_token_expiry fields
 
     // Mark user as verified

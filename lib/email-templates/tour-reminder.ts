@@ -1,5 +1,6 @@
 export interface TourReminderData {
   customerName: string;
+  customerEmail: string;
   bookingId: number;
   tourTitle: string;
   departureDate: string;

@@ -28,7 +28,10 @@ export async function POST(req: NextRequest) {
     // Generate reset token (valid for 1 hour)
     const resetToken = crypto.randomBytes(32).toString('hex');
 
-    // Store reset token in user record (using existing fields or add new logic)
+    // CRITICAL SECURITY BUG: Token is generated but never stored anywhere
+    // The reset-password endpoint cannot verify this token, making it useless
+    // TODO: Add reset_token and reset_token_expiry fields to accounts table
+    // Store token here with expiry time and verify it in reset-password route
     // Since we can't modify schema, we'll use a simple approach with localStorage
     // In production, you'd add reset_token and reset_token_expiry fields to accounts table
 

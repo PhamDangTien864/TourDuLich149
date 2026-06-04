@@ -14,6 +14,7 @@ export default function CreateTourPage() {
     category_id: 1,
     description: '',
     sub_title: '',
+    image_url: '',
     max_slots: 20,
     is_active: true
   });
@@ -57,7 +58,7 @@ export default function CreateTourPage() {
   };
 
   const handleImageUpload = (imageUrl) => {
-    setFormData({ ...formData, sub_title: imageUrl });
+    setFormData({ ...formData, image_url: imageUrl });
   };
 
   return (

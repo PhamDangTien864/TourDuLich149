@@ -79,6 +79,8 @@ const BookingForm = memo(function BookingForm({ price, tourId, bestDiscount }) {
 
     setLoading(true);
     try {
+      // TODO: Add adultsCount and childrenCount to the request body
+      // Component needs UI to select number of adults and children
       console.log('Submitting booking:', { tourId, amount: Number(price), customerName, phone, email, startDate, endDate });
       const res = await fetch('/api/bookings', {
         method: 'POST',

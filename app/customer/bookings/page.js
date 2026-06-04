@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, CreditCard, CheckCircle, Clock, XCircle, User, Home, Heart, History } from 'lucide-react';
 import useSWR from 'swr';
@@ -8,7 +7,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import Link from 'next/link';
 
-const fetcher = (url) => fetch(url).then((res) => res.json());
+const fetcher = (url) => fetch(url, { credentials: 'include' }).then((res) => res.json());
 
 export default function BookingHistory() {
   const [userId, setUserId] = useState(() => {
@@ -54,17 +53,23 @@ export default function BookingHistory() {
     : []
   ) : [];
 
-  const getStatusBadge = (isConfirmed) => {
-    if (isConfirmed) {
-      return (
-        <span className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider">
-          <CheckCircle size={14} /> Đã xác nhận
-        </span>
-      );
-    }
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      PENDING: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Chờ xử lý', icon: Clock },
+      AWAITING_PAYMENT: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Chờ thanh toán', icon: Clock },
+      DEPOSIT_PAID: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Đã cọc', icon: CheckCircle },
+      CONFIRMED: { bg: 'bg-green-100', text: 'text-green-800', label: 'Đã xác nhận', icon: CheckCircle },
+      COMPLETED: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Hoàn thành', icon: CheckCircle },
+      CANCELLED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Đã hủy', icon: XCircle },
+      REFUNDED: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Đã hoàn tiền', icon: CreditCard }
+    };
+
+    const config = statusConfig[status] || statusConfig.PENDING;
+    const Icon = config.icon;
+
     return (
-      <span className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider">
-        <Clock size={14} /> Chờ thanh toán
+      <span className={`inline-flex items-center gap-2 ${config.bg} ${config.text} px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider`}>
+        <Icon size={14} /> {config.label}
       </span>
     );
   };
@@ -151,9 +156,7 @@ export default function BookingHistory() {
                     <div className="flex-1">
                       <div className="flex items-start gap-4">
                         <div className="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0">
-                          <Image
-                            width={80}
-                            height={80}
+                          <img
                             src={booking.tourImage || "https://images.unsplash.com/photo-1528127269322-539801943592?w=200"}
                             alt={booking.tourTitle || "Hình ảnh tour"}
                             className="w-full h-full object-cover"
@@ -176,7 +179,7 @@ export default function BookingHistory() {
                     </div>
 
                     <div className="flex flex-col items-end gap-4">
-                      {getStatusBadge(booking.isConfirmed || booking.status === 'CONFIRMED')}
+                      {getStatusBadge(booking.status)}
                       <div className="text-right">
                         <p className="text-2xl font-black text-blue-600">
                           {Number(booking.amount || booking.total_amount).toLocaleString('vi-VN')}đ

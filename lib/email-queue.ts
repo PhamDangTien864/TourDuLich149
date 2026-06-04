@@ -1,10 +1,9 @@
 // Email Queue System
 //
-// Current Implementation:
-// - Emails are sent synchronously using Resend API
-// - No retry logic for failed emails
-// - No email tracking (opens, clicks)
-// - Email templates are hardcoded
+// TODO: This file contains only documentation, no actual implementation
+// - Email queue system is not implemented
+// - Emails are sent synchronously without retry logic
+// - For production, implement Redis + Bull or similar queue system
 //
 // Production Recommendations:
 // 1. Implement a proper email queue system using:

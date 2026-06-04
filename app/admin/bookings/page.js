@@ -21,10 +21,10 @@ export default async function ManageBookings({ searchParams }) {
   const where = {
     ...(query && {
       OR: [
-        { customers: { full_name: { contains: query, mode: 'insensitive' } } },
-        { tours: { title: { contains: query, mode: 'insensitive' } } },
+        { customers: { full_name: { contains: query } } },
+        { tours: { title: { contains: query } } },
         { customers: { phone_number: { contains: query } } },
-        { customers: { email: { contains: query, mode: 'insensitive' } } }
+        { customers: { email: { contains: query } } }
       ]
     }),
     ...(status && { status }),

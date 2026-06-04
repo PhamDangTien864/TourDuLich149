@@ -4,7 +4,6 @@ import Footer from "../../components/Footer";
 import dynamic from "next/dynamic";
 import { MapPin, Info, CheckCircle2, Star, ShieldCheck, Calendar, Users, Clock, Bus, Plane, Car, ChevronRight, X, Image as ImageIcon, ArrowRight } from "lucide-react";
 import { notFound } from "next/navigation";
-import Image from 'next/image';
 import Link from 'next/link';
 import { generateTourSchema, generateBreadcrumbSchema, generateFAQSchema, generateReviewSchema } from "@/lib/seo/structured-data";
 import { cache, CACHE_KEYS, CACHE_TTL } from "@/lib/cache";
@@ -98,7 +97,7 @@ export default async function TourDetailPage({ params, searchParams }) {
   
   if (!tour) {
     tour = await prisma.tours.findUnique({
-      where: { id: tourId },
+      where: { id: tourId, is_deleted: false },
       include: { 
         tour_categories: true, 
         tour_images: {
@@ -293,13 +292,10 @@ export default async function TourDetailPage({ params, searchParams }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {/* Main Image */}
                 <div className="relative h-[400px] md:h-[500px] md:col-span-2 rounded-[32px] overflow-hidden">
-                  <Image 
-                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200"} 
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000" 
+                  <img
+                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200"}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-1000"
                     alt={tour.title}
-                    fill
-                    sizes="(max-width: 1200px)"
-                    priority
                   />
                   {tour.tour_images.length > 1 && (
                     <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-sm font-black">
@@ -310,12 +306,10 @@ export default async function TourDetailPage({ params, searchParams }) {
                 {/* Thumbnail Images */}
                 {tour.tour_images.slice(1, 5).map((img, idx) => (
                   <div key={idx} className="relative h-[200px] rounded-[32px] overflow-hidden">
-                    <Image 
-                      src={img.image_url} 
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" 
+                    <img
+                      src={img.image_url}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                       alt={`${tour.title} ${idx + 2}`}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                 ))}
@@ -529,12 +523,10 @@ export default async function TourDetailPage({ params, searchParams }) {
                     <Link href={`/tour/${similarTour.id}`} key={similarTour.id} className="group">
                       <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all">
                         <div className="relative h-[200px]">
-                          <Image
+                          <img
                             src={similarTour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=400"}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             alt={similarTour.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 25vw"
                           />
                         </div>
                         <div className="p-4">

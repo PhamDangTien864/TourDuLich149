@@ -111,7 +111,7 @@ const ReviewSystem = memo(function ReviewSystem({ tourId }) {
             } ${star <= rating ? "text-yellow-400" : "text-gray-300"}`}
             disabled={!interactive}
           >
-            {star <= rating ? "filled" : "outlined"}
+            {star <= rating ? "★" : "☆"}
           </button>
         ))}
       </div>
@@ -214,7 +214,7 @@ const ReviewSystem = memo(function ReviewSystem({ tourId }) {
           >
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h4 className="font-black text-gray-900">{review.account.full_name}</h4>
+                <h4 className="font-black text-gray-900">{review.accounts.full_name}</h4>
                 <div className="flex items-center gap-2 mt-1">
                   {renderStars(review.rating)}
                   <span className="text-sm text-gray-500">

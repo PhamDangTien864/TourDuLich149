@@ -62,7 +62,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
 export async function sendBookingConfirmation(data: BookingConfirmationData) {
   const html = generateBookingConfirmationEmail(data);
   return sendEmail({
-    to: data.customerName, // In production, this should be the actual email
+    to: data.customerEmail,
     subject: `Xác nhận đặt tour #${data.bookingId} - VietTravel`,
     html
   });
@@ -72,7 +72,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData) {
 export async function sendPaymentConfirmation(data: PaymentConfirmationData) {
   const html = generatePaymentConfirmationEmail(data);
   return sendEmail({
-    to: data.customerName,
+    to: data.customerEmail,
     subject: `Xác nhận thanh toán #${data.bookingId} - VietTravel`,
     html
   });
@@ -82,7 +82,7 @@ export async function sendPaymentConfirmation(data: PaymentConfirmationData) {
 export async function sendDepositReminder(data: DepositReminderData) {
   const html = generateDepositReminderEmail(data);
   return sendEmail({
-    to: data.customerName,
+    to: data.customerEmail,
     subject: `Nhắc nhở thanh toán cọc #${data.bookingId} - VietTravel`,
     html
   });
@@ -92,7 +92,7 @@ export async function sendDepositReminder(data: DepositReminderData) {
 export async function sendTourReminder(data: TourReminderData) {
   const html = generateTourReminderEmail(data);
   return sendEmail({
-    to: data.customerName,
+    to: data.customerEmail,
     subject: `Nhắc nhở khởi hành tour #${data.bookingId} - VietTravel`,
     html
   });
@@ -102,7 +102,7 @@ export async function sendTourReminder(data: TourReminderData) {
 export async function sendCancellationEmail(data: CancellationData) {
   const html = generateCancellationEmail(data);
   return sendEmail({
-    to: data.customerName,
+    to: data.customerEmail,
     subject: `Xác nhận hủy tour #${data.bookingId} - VietTravel`,
     html
   });
@@ -112,7 +112,7 @@ export async function sendCancellationEmail(data: CancellationData) {
 export async function sendRefundEmail(data: RefundData) {
   const html = generateRefundEmail(data);
   return sendEmail({
-    to: data.customerName,
+    to: data.customerEmail,
     subject: `Hoàn tiền tour #${data.bookingId} - VietTravel`,
     html
   });
@@ -122,7 +122,7 @@ export async function sendRefundEmail(data: RefundData) {
 export async function sendReviewRequest(data: ReviewRequestData) {
   const html = generateReviewRequestEmail(data);
   return sendEmail({
-    to: data.customerName,
+    to: data.customerEmail,
     subject: `Đánh giá tour của bạn #${data.bookingId} - VietTravel`,
     html
   });

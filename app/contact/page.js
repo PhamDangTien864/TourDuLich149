@@ -1,6 +1,7 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { MapPin, Phone, Mail, Send, Clock } from "lucide-react";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import ContactForm from "./ContactForm";
 
 export const metadata = {
   title: "Liên hệ VietTravel Luxury - Hỗ trợ 24/7",
@@ -34,7 +35,7 @@ export default function ContactPage() {
             <div className="space-y-8">
               <div className="bg-gradient-to-br from-blue-600 to-slate-900 rounded-3xl p-8 text-white">
                 <h2 className="text-2xl font-black mb-6">Thông tin liên hệ</h2>
-                
+
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -91,81 +92,7 @@ export default function ContactPage() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-white rounded-3xl p-8 shadow-2xl border border-slate-100">
-              <h2 className="text-2xl font-black text-slate-900 mb-6">Gửi tin nhắn</h2>
-              
-              <form className="space-y-6">
-                <div>
-                  <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wider">
-                    Họ và tên
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Nhập họ tên của bạn"
-                    className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wider">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="email@example.com"
-                    className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wider">
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="0987 654 321"
-                    className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wider">
-                    Chủ đề
-                  </label>
-                  <select
-                    className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800"
-                  >
-                    <option>Đặt tour</option>
-                    <option>Hỏi về tour</option>
-                    <option>Hỗ trợ thanh toán</option>
-                    <option>Đổi/Hủy tour</option>
-                    <option>Khác</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-black text-slate-700 mb-2 uppercase tracking-wider">
-                    Nội dung
-                  </label>
-                  <textarea
-                    rows={5}
-                    placeholder="Nhập nội dung tin nhắn..."
-                    className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-blue-600 outline-none transition-all font-bold text-slate-800 resize-none"
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-slate-900 text-white py-4 rounded-xl font-black text-lg hover:shadow-2xl transition-all flex items-center justify-center gap-2"
-                >
-                  <Send size={20} />
-                  Gửi tin nhắn
-                </button>
-              </form>
-            </div>
+            <ContactForm />
           </div>
         </div>
       </main>

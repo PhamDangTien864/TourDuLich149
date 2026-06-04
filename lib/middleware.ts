@@ -62,6 +62,8 @@ export async function authenticate(request: NextRequest) {
   if (!user) return null;
 
   // Ensure role_id is always a number (default to 2 if null)
+  // Note: This defaults to customer role (2) if role_id is null in database
+  // Consider adding validation to ensure role_id is always set in database
   return {
     ...user,
     role_id: user.role_id ?? 2

@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Link from "next/link";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { MapPin, Sparkles, Search, Calendar, Users, Star, Shield, Clock, Award, CheckCircle, TrendingUp, Flame, Crown, ArrowRight } from "lucide-react";
 import { generateOrganizationSchema, generateLocalBusinessSchema } from "@/lib/seo/structured-data";
@@ -112,14 +111,10 @@ export default async function HomePage() {
       
       {/* Hero Section - Luxury Style with Search Form */}
       <section className="relative h-[70vh] md:h-[90vh] flex items-center justify-center overflow-hidden">
-        <Image 
-          src="https://bizweb.dktcdn.net/100/516/683/products/wot1712904922-1.jpg?v=1718431571087" 
-          className="absolute inset-0 w-full h-full object-cover scale-105" 
+        <img
+          src="https://bizweb.dktcdn.net/100/516/683/products/wot1712904922-1.jpg?v=1718431571087"
+          className="absolute inset-0 w-full h-full object-cover scale-105"
           alt="Vietnam Travel Hero"
-          fill
-          priority
-          sizes="100vw"
-          quality={85}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-yellow-900/30 via-amber-900/20 to-white" />
         
@@ -167,15 +162,12 @@ export default async function HomePage() {
             tours.map(tour => (
               <Link href={`/tour/${tour.id}`} key={tour.id} className="group block">
                 <div className="relative h-[450px] rounded-[50px] overflow-hidden mb-8 shadow-2xl shadow-slate-200/50">
-                  <Image 
-                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"} 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                  <img
+                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"}
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     alt={tour.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority={false}
                   />
-                  
+
                   {/* Badge */}
                   <div className="absolute top-8 left-8 bg-blue-600 text-white px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg">
                     Luxury
@@ -231,12 +223,10 @@ export default async function HomePage() {
               { name: "Sapa", image: "https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=400", tours: 28 }
             ].map((dest, idx) => (
               <Link href={`/search?q=${dest.name}`} key={idx} className="group relative h-[300px] rounded-[32px] overflow-hidden shadow-xl hover:shadow-2xl transition-all">
-                <Image 
-                  src={dest.image} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                <img
+                  src={dest.image}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   alt={dest.name}
-                  fill
-                  sizes="(max-width: 768px) 50vw, 25vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
@@ -271,12 +261,10 @@ export default async function HomePage() {
             {tours.slice(0, 3).map((tour, idx) => (
               <Link href={`/tour/${tour.id}`} key={tour.id} className="bg-white rounded-[32px] overflow-hidden shadow-2xl hover:shadow-3xl transition-all group">
                 <div className="relative h-[250px]">
-                  <Image 
-                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  <img
+                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     alt={tour.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                   <div className="absolute top-6 left-6 bg-red-600 text-white px-4 py-2 rounded-xl font-black text-sm">
                     -{30 + idx * 5}%
@@ -308,12 +296,10 @@ export default async function HomePage() {
             {tours.slice(0, 3).map((tour, idx) => (
               <Link href={`/tour/${tour.id}`} key={tour.id} className="group">
                 <div className="relative h-[350px] rounded-[40px] overflow-hidden mb-6 shadow-2xl">
-                  <Image 
-                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  <img
+                    src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     alt={tour.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                   <div className="absolute top-6 right-6 bg-yellow-400 text-slate-900 px-4 py-2 rounded-xl font-black text-sm flex items-center gap-2">
                     <Crown size={16} />

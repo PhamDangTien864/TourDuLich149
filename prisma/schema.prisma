@@ -332,7 +332,7 @@ model booking_passengers {
   full_name    String    @db.VarChar(100)
   birth_date   DateTime  @db.Date
   gender       String    @db.VarChar(10)
-  phone_number String    @db.VarChar(50)
+  phone_number String    @db.VarChar(50) // TODO: Make optional (?) to allow children without phone numbers
   is_child     Boolean?  @default(false)
   created_at   DateTime? @default(now()) @db.DateTime(0)
   bookings     bookings  @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)

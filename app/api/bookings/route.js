@@ -99,6 +99,11 @@ export async function POST(req) {
         return errorResponse("Dữ liệu không hợp lệ", 400, validation.errors);
       }
 
+      // Validate amount
+      if (!amount || amount < 100000) {
+        return errorResponse("Tổng số tiền phải lớn hơn 100,000 VND", 400);
+      }
+
       // Check for duplicate booking
       const isDuplicate = await BookingValidationService.checkDuplicateBooking(
         tourId,
@@ -227,7 +232,9 @@ export async function POST(req) {
           BookingStatus.AWAITING_PAYMENT,
           accountId,
           'customer',
-          'Booking chờ thanh toán'
+          'Booking chờ thanh toán',
+          undefined, // currentVersion
+          tx // Pass transaction client
         );
 
         return newBooking;
@@ -335,6 +342,7 @@ export async function GET(req) {
           paidAmount: Number(booking.paid_amount),
           startDate: booking.start_date,
           endDate: booking.end_date,
+          status: booking.status,
           isConfirmed: booking.is_confirmed
         }))
       });

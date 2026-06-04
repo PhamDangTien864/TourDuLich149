@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useEffect, Suspense } from 'react';
 import { Search, MapPin, ArrowRight, SlidersHorizontal, DollarSign, Calendar, X, Loader2, Map, Clock, Users } from "lucide-react";
 import Header from "../components/Header";
@@ -73,11 +72,12 @@ function SearchContent() {
 
     const fetchCategories = async () => {
       try {
-        const res = await fetch('/api/tour-categories');
+        const res = await fetch('/api/categories');
         const data = await res.json();
-        setCategories(data || []);
+        setCategories(data?.data || data || []);
       } catch (error) {
         ErrorHandler.log(ErrorHandler.handle(error), 'Error fetching categories');
+        setCategories([]);
       }
     };
 
@@ -349,13 +349,10 @@ function SearchContent() {
                 return (
                   <Link href={tourUrl} key={tour.id} className="group bg-white rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all border border-slate-100">
                     <div className="h-48 bg-slate-100 rounded-2xl mb-6 overflow-hidden relative">
-                      <Image
+                      <img
                         src={tour.tour_images?.[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?q=80&w=400"}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         alt={tour.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        quality={75}
                       />
                       {/* Badges */}
                       <div className="absolute top-4 left-4 flex gap-2">

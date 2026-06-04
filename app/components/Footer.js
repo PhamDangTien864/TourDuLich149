@@ -21,7 +21,7 @@ export default memo(function Footer() {
             <ul className="space-y-2 text-slate-400 text-sm">
               <li><Link href="/" className="hover:text-blue-400 transition-colors">Trang chủ</Link></li>
               <li><Link href="/search" className="hover:text-blue-400 transition-colors">Tìm tour</Link></li>
-              <li><Link href="/customer/bookings" className="hover:text-blue-400 transition-colors">Lịch sử đặt tour</Link></li>
+              <li><Link href="/my-bookings" className="hover:text-blue-400 transition-colors">Lịch sử đặt tour</Link></li>
               <li><Link href="/login" className="hover:text-blue-400 transition-colors">Đăng nhập</Link></li>
             </ul>
           </div>

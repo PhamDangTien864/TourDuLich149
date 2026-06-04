@@ -1,10 +1,12 @@
 // Simple in-memory rate limiter
+// WARNING: This implementation does NOT work in serverless environments (Vercel, AWS Lambda, etc.)
+// because each function invocation has its own memory. The rateLimitStore will be reset on every invocation.
 // In production, use Redis or a dedicated rate limiting service for distributed systems
 // To upgrade to Redis:
 // 1. Install: npm install ioredis
 // 2. Replace Map with Redis client
 // 3. Use Redis INCR/EXPIRE for atomic operations
-// Current implementation is suitable for single-server development/testing
+// Current implementation is suitable for single-server development/testing only
 
 interface RateLimitStore {
   count: number;
@@ -29,6 +31,8 @@ export function rateLimit({
       // Try to get user ID from token
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       if (token) {
+        // Use token as key (note: this allows bypass by re-login, but better than nothing for now)
+        // TODO: Extract user ID from token and use that as key instead
         key = `user:${token}`;
       } else {
         key = `ip:${req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'}`;

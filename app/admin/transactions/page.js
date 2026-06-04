@@ -16,6 +16,16 @@ export default async function ManageTransactions({ searchParams }) {
       where: {
         ...(type && {
           transaction_type: type
+        }),
+        ...(query && {
+          OR: [
+            { transaction_id: { contains: query } },
+            { bookings: { customers: { full_name: { contains: query } } } },
+            { bookings: { tours: { title: { contains: query } } } },
+            { accounts: { full_name: { contains: query } } },
+            { accounts: { email: { contains: query } } },
+            { promotions: { code: { contains: query } } }
+          ]
         })
       },
       include: {
@@ -36,6 +46,16 @@ export default async function ManageTransactions({ searchParams }) {
       where: {
         ...(type && {
           transaction_type: type
+        }),
+        ...(query && {
+          OR: [
+            { transaction_id: { contains: query } },
+            { bookings: { customers: { full_name: { contains: query } } } },
+            { bookings: { tours: { title: { contains: query } } } },
+            { accounts: { full_name: { contains: query } } },
+            { accounts: { email: { contains: query } } },
+            { promotions: { code: { contains: query } } }
+          ]
         })
       }
     })

@@ -44,7 +44,9 @@ export function createVNPayPaymentUrl(params: {
   } = params;
 
   const date = new Date();
-  const createDate = date.toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+  // VNPay requires timestamp in Vietnam timezone (UTC+7)
+  const vietnamDate = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  const createDate = vietnamDate.toISOString().replace(/[-:T.]/g, '').slice(0, 14);
 
   const vnpParams: VNPayParams = {
     vnp_Version: '2.1.0',

@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   return requireAuth(async (request) => {
     try {
       const user = request.user;
-      const body = await req.json();
+      const body = await request.json();
       
       // Validate input using centralized validation handler
       const validationResult = ValidationHandler.validateOrErrorResponse(reviewSchema, body);

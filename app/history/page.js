@@ -29,18 +29,18 @@ export default async function HistoryPage() {
     <div className="bg-slate-50 min-h-screen">
       <Header />
       <main className="container mx-auto px-4 py-16">
-        <h1 className="text-4xl font-black mb-12">Hành trình của {user.name}</h1>
+        <h1 className="text-4xl font-black mb-12">Hành trình của {user.full_name}</h1>
         <div className="space-y-6">
           {bookings.map(booking => (
             <div key={booking.id} className="bg-white p-8 rounded-[35px] border border-slate-100 flex justify-between items-center">
                <div>
-                  <h3 className="text-xl font-black">{booking.tour.title}</h3>
+                  <h3 className="text-xl font-black">{booking.tours.title}</h3>
                   <p className="text-sm text-slate-400 font-bold">{booking.start_date.toLocaleDateString('vi-VN')}</p>
                </div>
                <div className="text-right">
                   <p className="text-2xl font-black text-blue-600">{Number(booking.total_amount).toLocaleString()}đ</p>
-                  <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-lg ${booking.is_confirmed ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
-                    {booking.is_confirmed ? 'Thành công' : 'Chờ xác nhận'}
+                  <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-lg ${booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
+                    {booking.status === 'COMPLETED' || booking.status === 'CONFIRMED' ? 'Thành công' : 'Chờ xác nhận'}
                   </span>
                </div>
             </div>

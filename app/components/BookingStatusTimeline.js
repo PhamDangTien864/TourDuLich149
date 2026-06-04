@@ -29,7 +29,7 @@ export default function BookingStatusTimeline({ currentStatus, logs = [] }) {
           const StatusIcon = status.icon;
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
-          const isCancelled = status.key === 'cancelled' && currentIndex >= 0;
+          const isCancelled = status.key === 'cancelled' && currentStatus?.toLowerCase() === 'cancelled';
           
           return (
             <div key={status.key} className="flex items-center flex-shrink-0">

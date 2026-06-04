@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { tourCategories, popularLocations } from "@/lib/constants";
+import { popularLocations } from "@/lib/constants";
 
 export default function SearchFilter({ onFilter }) {
   const [filters, setFilters] = useState({
@@ -12,9 +12,38 @@ export default function SearchFilter({ onFilter }) {
     location: "",
     rating: 0
   });
-  const [categories] = useState(tourCategories);
+  const [categories, setCategories] = useState([]);
   const [locations] = useState(popularLocations);
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        if (data.success) {
+          setCategories(data.data.map(cat => ({
+            id: cat.id,
+            name: cat.category_name
+          })));
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        // Fallback to hardcoded categories if API fails
+        setCategories([
+          { id: 1, name: "Biển" },
+          { id: 2, name: "Núi" },
+          { id: 3, name: "Thành phố" }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };

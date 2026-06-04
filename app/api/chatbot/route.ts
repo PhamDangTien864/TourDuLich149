@@ -1,9 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
+// TODO: Add rate limiting to prevent abuse of Gemini API
+// Current rate-limit.ts implementation doesn't work on serverless (Vercel)
+// Consider using Upstash Redis or similar for distributed rate limiting
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +16,7 @@ export async function POST(req: Request) {
     const filePath = path.join(process.cwd(), "faq.md");
     let knowledge = "";
     try {
-      knowledge = fs.readFileSync(filePath, "utf8");
+      knowledge = await fs.readFile(filePath, "utf8");
     } catch (fileError) {
       console.error("Lỗi đọc file tri thức:", fileError);
       return NextResponse.json(

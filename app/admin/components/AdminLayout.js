@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 
+// TODO: Add auth check in layout as additional security layer
+// Currently relies entirely on middleware.js for protection
+// Consider adding client-side auth verification using useAuth hook
+
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

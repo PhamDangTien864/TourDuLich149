@@ -46,15 +46,23 @@ function PaymentContent() {
   const message = searchParams.get("message");
 
   useEffect(() => {
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      const user = JSON.parse(userData);
-      // Block admin from accessing customer pages
-      if (user.role_id === 1) {
-        router.push('/admin');
-        return;
-      }
-    }
+    // Check authentication via API instead of localStorage
+    fetch('/api/user/profile')
+      .then(res => {
+        if (res.status === 401) {
+          router.push('/login');
+          return null;
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.user && data.user.role_id === 1) {
+          router.push('/admin');
+        }
+      })
+      .catch(err => {
+        console.error('Auth check error:', err);
+      });
   }, [router]);
 
   // Handle callback status

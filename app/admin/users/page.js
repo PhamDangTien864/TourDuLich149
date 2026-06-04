@@ -60,9 +60,10 @@ export default async function ManageUsers({ searchParams }) {
             Thêm User Mới
           </Link>
         </div>
+      </div>
 
-        {/* Search and Filter */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 mb-8">
+      {/* Search and Filter */}
+      <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <form method="GET" action="/admin/users" className="flex-1">
               <div className="relative">
@@ -189,7 +190,6 @@ export default async function ManageUsers({ searchParams }) {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

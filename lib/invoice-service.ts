@@ -169,8 +169,10 @@ export class InvoiceService {
         return invoice;
       }
 
-      // Placeholder URL - in production, generate actual PDF
-      const pdfUrl = `/api/invoices/${bookingId}/pdf`;
+      // TODO: PDF endpoint doesn't exist - need to implement PDF generation
+      // For now, use client-side PDF generation via exportInvoice.js
+      // In production, create /api/invoices/[id]/pdf endpoint
+      const pdfUrl = undefined; // Return undefined to indicate client should use exportInvoice.js
       
       return { success: true, pdfUrl };
     } catch (error) {

@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { FileText, Calendar, Eye } from "lucide-react";
 import Link from "next/link";
 
@@ -78,11 +77,9 @@ export default async function BlogPage() {
           {posts.map((post) => (
             <Link key={post.id} href={`/blog/${post.id}`} className="bg-white rounded-2xl shadow-lg border border-pink-100 overflow-hidden hover:shadow-xl transition-shadow group block">
               <div className="relative h-48 overflow-hidden">
-                <Image
-                  src={post.image_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800"} 
+                <img
+                  src={post.image_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800"}
                   alt={post.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 />
                 <div className="absolute top-4 left-4">

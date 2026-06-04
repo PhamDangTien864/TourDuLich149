@@ -51,9 +51,14 @@ export async function POST(request) {
 
     // Check minimum amount
     if (promotion.min_amount > 0 && Number(price) < Number(promotion.min_amount)) {
-      return NextResponse.json({ 
-        error: `Giá trị đơn hàng tối thiểu là ${Number(promotion.min_amount).toLocaleString()}đ` 
+      return NextResponse.json({
+        error: `Giá trị đơn hàng tối thiểu là ${Number(promotion.min_amount).toLocaleString()}đ`
       }, { status: 400 });
+    }
+
+    // Check max_uses limit
+    if (promotion.max_uses && promotion.used_count >= promotion.max_uses) {
+      return NextResponse.json({ error: 'Mã khuyến mãi đã hết lượt sử dụng' }, { status: 400 });
     }
 
     // Calculate discount
@@ -65,6 +70,12 @@ export async function POST(request) {
     }
 
     const finalPrice = Math.max(0, Number(price) - discountAmount);
+
+    // Increment used_count
+    await prisma.promotions.update({
+      where: { id: promotion.id },
+      data: { used_count: { increment: 1 } }
+    });
 
     return NextResponse.json({
       valid: true,

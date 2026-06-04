@@ -25,7 +25,7 @@ export default function CreatePromotion() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch('/api/tour-categories');
+        const res = await fetch('/api/categories');
         const data = await res.json();
         setCategories(data || []);
       } catch (error) {

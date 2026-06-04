@@ -216,6 +216,7 @@ export default function AnalyticsPage() {
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <DollarSign className="text-blue-600" size={20} />
               </div>
+              {/* TODO: Replace hardcoded trend % with actual calculation from historical data */}
               <span className="text-green-500 text-sm font-bold">+15%</span>
             </div>
             <h3 className="text-2xl font-black text-slate-800">

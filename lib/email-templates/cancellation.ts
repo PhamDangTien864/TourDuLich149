@@ -1,5 +1,6 @@
 export interface CancellationData {
   customerName: string;
+  customerEmail: string;
   bookingId: number;
   tourTitle: string;
   cancellationDate: string;

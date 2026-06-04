@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, MapPin, Users, CreditCard, Clock, Filter, Loader2, Download } from 'lucide-react';
@@ -9,17 +8,17 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 
 const statusColors = {
-  pending: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
-  confirmed: 'bg-green-500/20 text-green-300 border-green-500/30',
-  cancelled: 'bg-red-500/20 text-red-300 border-red-500/30',
-  completed: 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+  PENDING: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+  CONFIRMED: 'bg-green-500/20 text-green-300 border-green-500/30',
+  CANCELLED: 'bg-red-500/20 text-red-300 border-red-500/30',
+  COMPLETED: 'bg-blue-500/20 text-blue-300 border-blue-500/30'
 };
 
 const statusLabels = {
-  pending: 'Chờ xác nhận',
-  confirmed: 'Đã xác nhận',
-  cancelled: 'Đã hủy',
-  completed: 'Hoàn thành'
+  PENDING: 'Chờ xác nhận',
+  CONFIRMED: 'Đã xác nhận',
+  CANCELLED: 'Đã hủy',
+  COMPLETED: 'Hoàn thành'
 };
 
 export default function MyBookingsPage() {
@@ -32,17 +31,17 @@ export default function MyBookingsPage() {
   const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
-      const userData = localStorage.getItem('user_data');
-      if (!userData) {
+      const url = filterStatus === 'all'
+        ? '/api/my-bookings'
+        : `/api/my-bookings?status=${filterStatus}`;
+
+      const res = await fetch(url);
+
+      if (res.status === 401) {
         router.push('/login');
         return;
       }
 
-      const url = filterStatus === 'all' 
-        ? '/api/my-bookings' 
-        : `/api/my-bookings?status=${filterStatus}`;
-
-      const res = await fetch(url);
       const data = await res.json();
 
       if (data.success) {
@@ -136,7 +135,7 @@ export default function MyBookingsPage() {
           >
             <div className="flex items-center gap-4 flex-wrap">
               <span className="font-medium text-slate-700">Trạng thái:</span>
-              {['all', 'pending', 'confirmed', 'cancelled', 'completed'].map((status) => (
+              {['all', 'PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
@@ -181,7 +180,7 @@ export default function MyBookingsPage() {
                 <div className="flex flex-col md:flex-row">
                   <div className="md:w-64 h-48 md:h-auto bg-slate-200">
                     {booking.tours.tour_images?.[0] ? (
-                      <Image
+                      <img
                         src={booking.tours.tour_images[0].image_url}
                         alt={booking.tours.title}
                         className="w-full h-full object-cover"
@@ -253,7 +252,7 @@ export default function MyBookingsPage() {
                         >
                           <Download size={16} />
                         </button>
-                        {booking.status === 'pending' && (
+                        {booking.status === 'PENDING' && (
                           <button
                             onClick={() => handleCancelBooking(booking.id)}
                             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm"

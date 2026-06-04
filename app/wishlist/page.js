@@ -46,14 +46,14 @@ export default function WishlistPage() {
     }
   }, [router]);
 
-  const handleRemoveFromWishlist = async (wishlistId) => {
+  const handleRemoveFromWishlist = async (tourId) => {
     try {
       const response = await fetch(`/api/wishlist`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ wishlist_id: wishlistId }),
+        body: JSON.stringify({ tourId }),
       });
 
       if (response.ok) {
@@ -73,8 +73,8 @@ export default function WishlistPage() {
   };
 
   const filteredWishlist = wishlist.filter(item => 
-    (item.tour?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.tour?.location_name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    (item.tours?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.tours?.location_name || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -155,14 +155,14 @@ export default function WishlistPage() {
                   <div className="relative h-48 bg-gradient-to-br from-blue-400 to-indigo-500">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-white text-center">
-                        <div className="text-2xl font-bold mb-2">{item.tour.title}</div>
-                        <div className="text-sm opacity-90">{item.tour.location_name}</div>
+                        <div className="text-2xl font-bold mb-2">{item.tours.title}</div>
+                        <div className="text-sm opacity-90">{item.tours.location_name}</div>
                       </div>
                     </div>
                     
                     {/* Remove Button */}
                     <button
-                      onClick={() => handleRemoveFromWishlist(item.id)}
+                      onClick={() => handleRemoveFromWishlist(item.tours.id)}
                       className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition"
                     >
                       <Trash2 size={16} className="text-red-500" />
@@ -171,32 +171,32 @@ export default function WishlistPage() {
 
                   {/* Tour Info */}
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-slate-800 mb-2">{item.tour.title}</h3>
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">{item.tours.title}</h3>
                     
                     <div className="flex items-center gap-2 text-slate-500 text-sm mb-3">
                       <MapPin size={16} />
-                      <span>{item.tour.location_name}</span>
+                      <span>{item.tours.location_name}</span>
                     </div>
 
                     <div className="flex items-center justify-between mb-4">
                       <div className="text-2xl font-bold text-blue-600">
-                        ${Number(item.tour.price).toLocaleString()}
+                        ${Number(item.tours.price).toLocaleString()}
                       </div>
                       <div className="text-sm text-slate-500">
-                        {item.tour.max_slots} slot
+                        {item.tours.max_slots} slot
                       </div>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
                       <Link 
-                        href={`/tour/${item.tour.id}`}
+                        href={`/tour/${item.tours.id}`}
                         className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition font-semibold text-center"
                       >
                         Chi tiết
                       </Link>
                       <Link 
-                        href={`/booking?tourId=${item.tour.id}&price=${item.tour.price}&title=${encodeURIComponent(item.tour.title)}`}
+                        href={`/booking?tourId=${item.tours.id}&price=${item.tours.price}&title=${encodeURIComponent(item.tours.title)}`}
                         className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition font-semibold text-center"
                       >
                         Đặt tour

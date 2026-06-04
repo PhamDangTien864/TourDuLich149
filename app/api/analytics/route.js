@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireRole } from '@/lib/middleware';
 
 export async function GET(request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('start');
-    const endDate = searchParams.get('end');
+  return requireRole([1])(async (req) => {
+    try {
+      const { searchParams } = new URL(req.url);
+      const startDate = searchParams.get('start');
+      const endDate = searchParams.get('end');
 
-    const start = startDate ? new Date(startDate) : new Date(new Date().setMonth(new Date().getMonth() - 6));
-    const end = endDate ? new Date(endDate) : new Date();
+      const start = startDate ? new Date(startDate) : new Date(new Date().setMonth(new Date().getMonth() - 6));
+      const end = endDate ? new Date(endDate) : new Date();
 
     // 1. Total doanh thu trong khoảng thời gian
     const totalRevenue = await prisma.bookings.aggregate({
@@ -183,4 +185,5 @@ export async function GET(request) {
       { status: 500 }
     );
   }
+  })(request);
 }

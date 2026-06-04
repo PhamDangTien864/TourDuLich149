@@ -44,7 +44,8 @@ export class ReminderAutomation {
       try {
         await sendDepositReminder({
           bookingId: booking.id,
-          customerName: booking.customers.email || booking.customers.full_name,
+          customerName: booking.customers.full_name || booking.customers.email || 'Khách hàng',
+          customerEmail: booking.customers.email || '',
           tourTitle: booking.tours.title,
           tourDate: booking.start_date.toISOString(),
           depositAmount: (Number(booking.total_amount) * 0.3).toString(), // 30% deposit
@@ -102,7 +103,8 @@ export class ReminderAutomation {
       try {
         await sendTourReminder({
           bookingId: booking.id,
-          customerName: booking.customers.email || booking.customers.full_name,
+          customerName: booking.customers.full_name || booking.customers.email || 'Khách hàng',
+          customerEmail: booking.customers.email || '',
           tourTitle: booking.tours.title,
           departureDate: booking.start_date.toISOString(),
           pickupLocation: booking.tours.location_name || 'VietTravel Office',
@@ -129,10 +131,10 @@ export class ReminderAutomation {
   static async sendPaymentReminders(): Promise<ReminderResult> {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     
-    const partialPaymentBookings = await prisma.bookings.findMany({
+    // Fetch all CONFIRMED bookings updated within the last week
+    const allBookings = await prisma.bookings.findMany({
       where: {
         status: 'CONFIRMED',
-        paid_amount: { lt: prisma.bookings.fields.total_amount },
         updated_at: { lte: oneWeekAgo },
         customers: { is_deleted: false }
       },
@@ -141,6 +143,11 @@ export class ReminderAutomation {
         tours: true
       }
     });
+
+    // Filter in JavaScript to find bookings with partial payments (paid_amount < total_amount)
+    const partialPaymentBookings = allBookings.filter(
+      booking => Number(booking.paid_amount) < Number(booking.total_amount)
+    );
 
     const result: ReminderResult = {
       type: 'payment_reminder',
@@ -158,7 +165,8 @@ export class ReminderAutomation {
         // Use deposit reminder for payment reminders as well
         await sendDepositReminder({
           bookingId: booking.id,
-          customerName: booking.customers.email || booking.customers.full_name,
+          customerName: booking.customers.full_name || booking.customers.email || 'Khách hàng',
+          customerEmail: booking.customers.email || '',
           tourTitle: booking.tours.title,
           tourDate: booking.start_date.toISOString(),
           depositAmount: remainingAmount.toString(),

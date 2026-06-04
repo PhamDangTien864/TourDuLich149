@@ -48,6 +48,7 @@ export default function ManageBlog() {
         </div>
 
         {/* Search and Filter */}
+        {/* TODO: Add state and onChange handlers for search and filter functionality */}
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -125,6 +126,7 @@ export default function ManageBlog() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
+                          {/* TODO: Add onClick handlers for edit and delete buttons */}
                           <button className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-colors">
                             <Edit size={16} />
                           </button>

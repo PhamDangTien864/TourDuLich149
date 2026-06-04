@@ -31,6 +31,7 @@ export async function GET(
         const bookings = await prisma.bookings.findMany({
           where: {
             tour_id: tourId,
+            start_date: schedule.departure_date,
             status: { in: ['PENDING', 'AWAITING_PAYMENT', 'DEPOSIT_PAID', 'CONFIRMED'] }
           }
         });

@@ -7,9 +7,11 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function AdminSidebar({ isOpen, onClose, isCollapsed, setSidebarCollapsed }) {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
@@ -92,11 +94,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setSidebarC
         </Link>
 
         <button
-          onClick={() => {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user_data');
-            window.location.href = '/login';
-          }}
+          onClick={logout}
           className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} text-red-400 hover:bg-red-500/10 hover:text-red-300 px-4 py-3 rounded-xl transition-all duration-300 w-full`}
         >
           <LogOut size={20} className="transition-transform duration-300 hover:scale-110" />

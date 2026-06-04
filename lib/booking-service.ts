@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import { ErrorHandler } from './errors';
+import { PrismaClient } from '@prisma/client';
 
 // Booking status enum - Matches Prisma schema exactly
 export enum BookingStatus {
@@ -56,10 +57,12 @@ export class BookingStateMachine {
     actorId?: number,
     actorType: ActorType = ActorType.SYSTEM,
     notes?: string,
-    currentVersion?: number // For optimistic locking
+    currentVersion?: number, // For optimistic locking
+    prismaClient?: PrismaClient // Optional prisma client for transactions
   ): Promise<{ success: boolean; error?: string; newVersion?: number }> {
     try {
-      const booking = await prisma.bookings.findUnique({
+      const client = prismaClient || prisma;
+      const booking = await client.bookings.findUnique({
         where: { id: bookingId }
       });
 
@@ -69,30 +72,30 @@ export class BookingStateMachine {
 
       // Check version if provided (optimistic locking)
       if (currentVersion !== undefined && booking.version !== currentVersion) {
-        return { 
-          success: false, 
-          error: `Booking đã được sửa bởi người khác. Vui lòng tải lại trang.` 
+        return {
+          success: false,
+          error: `Booking đã được sửa bởi người khác. Vui lòng tải lại trang.`
         };
       }
 
       if (!this.canTransition(booking.status as BookingStatus, toStatus)) {
-        return { 
-          success: false, 
-          error: `Không thể chuyển từ ${booking.status} sang ${toStatus}` 
+        return {
+          success: false,
+          error: `Không thể chuyển từ ${booking.status} sang ${toStatus}`
         };
       }
 
       // Update booking status with version increment
-      const updatedBooking = await prisma.bookings.update({
+      const updatedBooking = await client.bookings.update({
         where: { id: bookingId },
-        data: { 
+        data: {
           status: toStatus,
           version: { increment: 1 }
         }
       });
 
       // Log the transition
-      await prisma.booking_logs.create({
+      await client.booking_logs.create({
         data: {
           booking_id: bookingId,
           status_from: booking.status,
@@ -252,6 +255,24 @@ export class SlotReservationService {
         return { success: false, error: 'Tour không tồn tại hoặc không hoạt động' };
       }
 
+      // Check for duplicate pending bookings BEFORE reserving slots
+      const existingBooking = await prismaClient.bookings.findFirst({
+        where: {
+          tour_id: tourId,
+          account_id: accountId,
+          status: {
+            in: [BookingStatus.PENDING, BookingStatus.AWAITING_PAYMENT, BookingStatus.DEPOSIT_PAID]
+          },
+          created_at: {
+            gte: new Date(Date.now() - this.RESERVATION_TIMEOUT)
+          }
+        }
+      });
+
+      if (existingBooking) {
+        return { success: false, error: 'Bạn đã có booking đang chờ xử lý cho tour này' };
+      }
+
       // Check schedule availability if scheduleId provided with row-level locking
       if (scheduleId) {
         // Use transaction with row-level locking to prevent race conditions
@@ -276,24 +297,6 @@ export class SlotReservationService {
             }
           }
         });
-      }
-
-      // Check for duplicate pending bookings
-      const existingBooking = await prismaClient.bookings.findFirst({
-        where: {
-          tour_id: tourId,
-          account_id: accountId,
-          status: {
-            in: [BookingStatus.PENDING, BookingStatus.AWAITING_PAYMENT, BookingStatus.DEPOSIT_PAID]
-          },
-          created_at: {
-            gte: new Date(Date.now() - this.RESERVATION_TIMEOUT)
-          }
-        }
-      });
-
-      if (existingBooking) {
-        return { success: false, error: 'Bạn đã có booking đang chờ xử lý cho tour này' };
       }
 
       return { success: true };

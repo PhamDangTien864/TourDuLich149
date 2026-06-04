@@ -1,6 +1,5 @@
   "use client";
 
-  import Image from 'next/image';
   import { useRouter } from "next/navigation";
   import { Heart, MapPin } from "lucide-react";
   import { useWishlist } from "@/lib/hooks/useWishlist";
@@ -38,13 +37,13 @@
                 className="bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
               >
                 <div className="relative">
-                  <Image
+                  <img
                     src={item.tours.tour_images?.[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800"}
                     alt={item.tours.title}
                     className="w-full h-48 object-cover"
                   />
                   <button
-                    onClick={() => removeFromWishlist(item.tour.id)}
+                    onClick={() => removeFromWishlist(item.tours.id)}
                     className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
                   >
                     <Heart size={20} className="text-red-500 fill-red-500" />
@@ -68,7 +67,7 @@
                   </div>
 
                   <button
-                    onClick={() => viewTourDetail(item.tour.id)}
+                    onClick={() => viewTourDetail(item.tours.id)}
                     className="w-full bg-blue-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors"
                   >
                     Xem chi tiết

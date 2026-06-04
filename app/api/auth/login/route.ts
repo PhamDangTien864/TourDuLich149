@@ -23,11 +23,11 @@ export async function POST(req: NextRequest) {
 
     // Save token to cookie
     const cookieStore = await cookies();
-    cookieStore.set('auth_token', result.clientToken, { 
+    cookieStore.set('auth_token', result.clientToken, {
       maxAge: 86400, // 1 day
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       path: '/'
     });
 

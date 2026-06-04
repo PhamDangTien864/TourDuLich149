@@ -95,9 +95,11 @@ export class CustomerService {
     } else {
       customer = await prisma.customers.update({
         where: { id: customer.id },
-        data: { 
+        data: {
           full_name: data.full_name,
           ...(data.email && { email: data.email }),
+          ...(data.phone_number && { phone_number: data.phone_number }),
+          ...(data.is_male !== undefined && { is_male: data.is_male }),
           ...(data.address && { address: data.address }),
           ...(data.birth_date && { birth_date: data.birth_date }),
           ...(data.identity_card && { identity_card: data.identity_card }),

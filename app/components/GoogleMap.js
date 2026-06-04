@@ -34,9 +34,9 @@ export default function GoogleMap({
         return;
       }
 
-      // Load Google Maps script
+      // Load Google Maps script with marker library
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&callback=initGoogleMaps`;
       script.async = true;
       script.defer = true;
       
@@ -75,16 +75,25 @@ export default function GoogleMap({
 
         mapInstanceRef.current = map;
 
-        // Add markers
+        // Add markers using AdvancedMarkerElement (replaces deprecated Marker)
         if (markers && markers.length > 0) {
           markers.forEach((marker, index) => {
-            new window.google.maps.Marker({
-              position: marker.position,
-              map,
-              title: marker.title || `Marker ${index + 1}`,
-              icon: marker.icon || undefined,
-              animation: window.google.maps.Animation.DROP
-            });
+            if (window.google.maps.marker && window.google.maps.marker.AdvancedMarkerElement) {
+              const advancedMarker = new window.google.maps.marker.AdvancedMarkerElement({
+                map,
+                position: marker.position,
+                title: marker.title || `Marker ${index + 1}`
+              });
+            } else {
+              // Fallback to deprecated Marker if marker library not loaded
+              console.warn('AdvancedMarkerElement not available, falling back to deprecated Marker');
+              new window.google.maps.Marker({
+                position: marker.position,
+                map,
+                title: marker.title || `Marker ${index + 1}`,
+                animation: window.google.maps.Animation.DROP
+              });
+            }
           });
         }
 

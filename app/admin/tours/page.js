@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { Plus, MapPin, Search, Filter } from "lucide-react";
-import Image from 'next/image';
 import Link from "next/link";
 import TourActions from "./components/TourActions";
 
@@ -18,8 +17,8 @@ export default async function ManageTours({ searchParams }) {
         is_deleted: false,
         ...(query && {
           OR: [
-            { title: { contains: query, mode: 'insensitive' } },
-            { location_name: { contains: query, mode: 'insensitive' } }
+            { title: { contains: query } },
+            { location_name: { contains: query } }
           ]
         })
       },
@@ -112,12 +111,10 @@ export default async function ManageTours({ searchParams }) {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden relative">
-                          <Image 
-                            src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=100"} 
+                          <img
+                            src={tour.tour_images[0]?.image_url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=100"}
                             alt={tour.title}
                             className="w-full h-full object-cover"
-                            fill
-                            sizes="(max-width: 48px)"
                           />
                         </div>
                         <div>

@@ -21,11 +21,12 @@ export default function SettingsPage() {
 
   const handleSave = async (section) => {
     setLoading(true);
-    
+
     try {
-      // Simulate API call
+      // TODO: Replace with actual API call to save settings
+      // Need to create API endpoint for settings management
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       toast.success(`Cập nhật cấu hình ${section} thành công!`);
     } catch {
       toast.error('Lỗi khi cập nhật cấu hình');
@@ -325,6 +326,7 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
                   <p className="font-bold text-green-800 mb-2">📊 Thống kê Database</p>
+                  {/* TODO: Replace hardcoded stats with actual database queries */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                     <div className="text-center">
                       <p className="text-2xl font-black text-green-600">1,234</p>

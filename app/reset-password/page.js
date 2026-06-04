@@ -30,8 +30,18 @@ function ResetPasswordContent() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error('Mật khẩu phải có ít nhất 6 ký tự!');
+    if (newPassword.length < 8) {
+      toast.error('Mật khẩu phải có ít nhất 8 ký tự!');
+      return;
+    }
+
+    // Check for uppercase, lowercase, and number (matching registerSchema)
+    const hasUpperCase = /[A-Z]/.test(newPassword);
+    const hasLowerCase = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+      toast.error('Mật khẩu phải chứa chữ hoa, chữ thường và số!');
       return;
     }
 

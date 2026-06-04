@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from './lib/auth';
 
+export const runtime = 'nodejs';
+
 export function middleware(request) {
   // Lấy thông tin từ Cookie (được set lúc đăng nhập)
   const token = request.cookies.get('auth_token')?.value;
@@ -12,12 +14,15 @@ export function middleware(request) {
     decoded = verifyToken(token);
   }
 
+  // Normalize role_id field (handle both 'role' and 'role_id' for compatibility)
+  const roleId = decoded?.role_id || decoded?.role;
+
   // 1. Bảo vệ các Route dành cho Admin (Bắt buộc phải là role_id = 1)
   if (path.startsWith('/admin')) {
     if (!token || !decoded) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    if (decoded.role_id !== 1) {
+    if (roleId !== 1) {
       // Nếu có token nhưng không phải Admin, đuổi về trang chủ
       return NextResponse.redirect(new URL('/', request.url));
     }
@@ -28,7 +33,7 @@ export function middleware(request) {
     if (!token || !decoded) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    if (decoded.role_id === 1) {
+    if (roleId === 1) {
       // Admin không nên vào trang mua hàng/lịch sử của khách
       return NextResponse.redirect(new URL('/admin', request.url));
     }
@@ -39,7 +44,7 @@ export function middleware(request) {
     if (!token || !decoded) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (decoded.role_id !== 1) {
+    if (roleId !== 1) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }
@@ -49,7 +54,7 @@ export function middleware(request) {
     if (!token || !decoded) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (decoded.role_id !== 1) {
+    if (roleId !== 1) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }
@@ -59,7 +64,7 @@ export function middleware(request) {
     if (!token || !decoded) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if (decoded.role_id !== 1) {
+    if (roleId !== 1) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }
@@ -67,7 +72,7 @@ export function middleware(request) {
   // 6. Chặn người dùng đã đăng nhập quay lại trang Login / Register
   if (path === '/login' || path === '/register') {
     if (token && decoded) {
-      if (decoded.role_id === 1) {
+      if (roleId === 1) {
         return NextResponse.redirect(new URL('/admin', request.url));
       } else {
         return NextResponse.redirect(new URL('/', request.url));
@@ -82,13 +87,12 @@ export function middleware(request) {
 // Chỉ áp dụng middleware cho các đường dẫn cần bảo vệ
 export const config = {
   matcher: [
-    '/admin/:path*', 
-    '/customer/:path*', 
-    '/booking/:path*', 
+    '/admin/:path*',
+    '/customer/:path*',
+    '/booking/:path*',
     '/api/admin/:path*',
     '/api/users/:path*',
-    '/api/tours/:path*',
-    '/login', 
+    '/login',
     '/register'
   ],
 };

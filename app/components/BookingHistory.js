@@ -19,7 +19,9 @@ export default function BookingHistory() {
       }
 
       const user = JSON.parse(userData);
-      const response = await fetch(`/api/bookings?user_id=${user.id}`);
+      const response = await fetch(`/api/bookings?user_id=${user.id}`, {
+        credentials: 'include'
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -133,7 +135,7 @@ export default function BookingHistory() {
             {/* Tour Image */}
             {booking.tourImage && (
               <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden flex-shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                
                 <img
                   src={booking.tourImage}
                   alt={booking.tourTitle}

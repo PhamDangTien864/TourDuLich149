@@ -96,7 +96,8 @@ export class AuthService {
           { username: username },
           { email: email },
           { phone_number: phone_number }
-        ]
+        ],
+        is_deleted: false // Only check active accounts, allow reuse of deleted account info
       }
     });
 
@@ -129,7 +130,7 @@ export class AuthService {
     });
 
     // Send verification email
-    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?id=${user.id}`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify-email?id=${user.id}`;
     
     try {
       const emailData = {

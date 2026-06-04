@@ -1,7 +1,6 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Award, Users, Globe, ShieldCheck, Target, Heart } from "lucide-react";
-import Image from "next/image";
 
 // Cache this static page for 1 hour (3600 seconds)
 export const revalidate = 3600;
@@ -25,13 +24,10 @@ export default function AboutPage() {
       <main>
         {/* Hero Section */}
         <section className="relative h-[60vh] flex items-center justify-center overflow-hidden">
-          <Image
+          <img
             src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1600"
             className="absolute inset-0 w-full h-full object-cover"
             alt="About VietTravel"
-            fill
-            priority
-            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 to-slate-900/90" />
           <div className="relative z-10 text-center px-4">
@@ -139,6 +135,7 @@ export default function AboutPage() {
         {/* Stats Section */}
         <section className="container mx-auto px-4 py-24">
           <div className="bg-gradient-to-r from-blue-600 to-slate-900 rounded-3xl p-12 text-white">
+            {/* TODO: Stats are hardcoded placeholders - should be fetched from database */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
                 <div className="text-5xl font-black mb-2">20+</div>
@@ -170,6 +167,7 @@ export default function AboutPage() {
               <p className="text-slate-600 font-bold">Những người làm nên thành công của VietTravel</p>
             </div>
 
+            {/* TODO: Team members are hardcoded placeholders - should be fetched from database */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               <div className="bg-white rounded-3xl p-6 text-center shadow-lg border border-slate-100">
                 <div className="w-24 h-24 bg-slate-200 rounded-full mx-auto mb-4" />

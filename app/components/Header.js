@@ -18,14 +18,15 @@ const Header = memo(function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch('/api/tour-categories', { 
+        const res = await fetch('/api/categories', {
           cache: 'force-cache',
           next: { revalidate: 3600 } // Cache for 1 hour
         });
         const data = await res.json();
-        setCategories(data || []);
+        setCategories(data?.data || data || []);
       } catch (error) {
         ErrorHandler.log(ErrorHandler.handle(error), 'Error fetching categories');
+        setCategories([]);
       }
     };
     fetchCategories();
@@ -124,29 +125,14 @@ const Header = memo(function Header() {
               {pathname === '/search' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>}
             </Link>
           )}
-          {/* Tab 'Tôi' cho khách hàng */}
-          {user && user.role === 2 && (
-            <Link 
-              href="/customer/me" 
-              className={`text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
-                pathname === '/customer/me' 
-                  ? 'text-white bg-blue-600 shadow-md' 
-                  : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              Tôi
-              {pathname === '/customer/me' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>}
-            </Link>
-          )}
-          
           {/* Nút Hồ sơ biến hóa theo Role */}
           {user && (
             <Link
               href={user.role_id === 1 || user.role === 1 ? "/admin" : "/customer/profile"}
               className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
                 pathname.startsWith(user.role_id === 1 || user.role === 1 ? '/admin' : '/customer')
-                  ? (user.role_id === 1 || user.role === 1 
-                      ? 'text-white bg-red-600 shadow-md ring-2 ring-red-400 ring-offset-2' 
+                  ? (user.role_id === 1 || user.role === 1
+                      ? 'text-white bg-red-600 shadow-md ring-2 ring-red-400 ring-offset-2'
                       : 'text-white bg-blue-600 shadow-md')
                   : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
               }`}
@@ -168,7 +154,7 @@ const Header = memo(function Header() {
 
           {user ? (
             <div className="hidden md:flex items-center gap-4 border-l pl-4 border-slate-100">
-              <span className="text-[10px] font-black text-slate-400 hidden lg:block">Hi, {user.name}</span>
+              <span className="text-[10px] font-black text-slate-400 hidden lg:block">Hi, {user.full_name}</span>
               <button onClick={logout} className="text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all">
                 <LogOut size={20} />
               </button>
@@ -255,27 +241,13 @@ const Header = memo(function Header() {
               </>
             )}
             
-            {user && user.role === 2 && (
-              <Link 
-                href="/customer/me" 
-                onClick={() => setMobileMenuOpen(false)}
-                className={`text-xs font-black uppercase tracking-widest px-3 py-2 rounded-lg transition-all ${
-                  pathname === '/customer/me' 
-                    ? 'text-blue-600 bg-blue-50' 
-                    : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50'
-                }`}
-              >
-                Tôi
-              </Link>
-            )}
-            
             {user && (
               <Link
                 href={user.role_id === 1 || user.role === 1 ? "/admin" : "/customer/profile"}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${
                   pathname.startsWith(user.role_id === 1 || user.role === 1 ? '/admin' : '/customer')
-                    ? 'text-blue-600 bg-blue-50' 
+                    ? 'text-blue-600 bg-blue-50'
                     : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
                 }`}
               >

@@ -2,6 +2,10 @@ import { prisma } from "@/lib/prisma";
 import { Plus, Edit, Trash2, CheckCircle, XCircle, Search, Filter } from "lucide-react";
 import Link from "next/link";
 
+// TODO: This is a Server Component with onClick/onChange handlers.
+// Need to convert to Client Component and move data fetching to API routes or use Server Actions.
+// This requires significant refactoring to separate data fetching from UI logic.
+
 export default async function ManagePromotions({ searchParams }) {
   const params = await searchParams;
   const query = params.q || "";

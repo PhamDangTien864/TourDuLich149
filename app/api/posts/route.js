@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireRole } from '@/lib/middleware';
 
 export async function GET() {
   try {
     const posts = await prisma.$queryRaw`
-      SELECT * FROM posts 
-      WHERE is_active = true 
+      SELECT * FROM posts
+      WHERE is_active = true
       ORDER BY created_at DESC
     `;
     return NextResponse.json(posts);
@@ -16,18 +17,20 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  try {
-    const body = await request.json();
-    const { title, excerpt, content, category, image_url, is_active } = body;
+  return requireRole([1])(async (req) => {
+    try {
+      const body = await req.json();
+      const { title, excerpt, content, category, image_url, is_active } = body;
 
-    await prisma.$queryRaw`
-      INSERT INTO posts (title, excerpt, content, category, image_url, is_active)
-      VALUES (${title}, ${excerpt}, ${content}, ${category}, ${image_url}, ${is_active !== undefined ? is_active : true})
-    `;
+      await prisma.$queryRaw`
+        INSERT INTO posts (title, excerpt, content, category, image_url, is_active)
+        VALUES (${title}, ${excerpt}, ${content}, ${category}, ${image_url}, ${is_active !== undefined ? is_active : true})
+      `;
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error creating post:', error);
-    return NextResponse.json({ error: 'Error creating post' }, { status: 500 });
-  }
+      return NextResponse.json({ success: true });
+    } catch (error) {
+      console.error('Error creating post:', error);
+      return NextResponse.json({ error: 'Error creating post' }, { status: 500 });
+    }
+  })(request);
 }

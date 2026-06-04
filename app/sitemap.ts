@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 import { ErrorHandler } from '@/lib/errors';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://viettravel.vn';
   
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [

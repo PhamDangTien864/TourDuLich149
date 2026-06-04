@@ -42,6 +42,7 @@ export async function GET(
     // Calculate available slots for each schedule
     const schedulesWithAvailability = tour.departure_schedules.map(schedule => {
       const bookedSlots = tour.bookings
+        .filter(b => b.start_date.getTime() === schedule.departure_date.getTime())
         .reduce((sum, b) => sum + (b.total_passengers || 0), 0);
 
       return {

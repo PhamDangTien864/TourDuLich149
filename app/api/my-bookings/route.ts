@@ -17,8 +17,10 @@ export async function GET(req: NextRequest) {
       is_deleted: false
     };
 
-    if (status) {
-      where.status = status;
+    // Validate status parameter against valid booking statuses
+    const validStatuses = ['PENDING', 'AWAITING_PAYMENT', 'DEPOSIT_PAID', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REFUNDED'];
+    if (status && validStatuses.includes(status.toUpperCase())) {
+      where.status = status.toUpperCase();
     }
 
     const bookings = await prisma.bookings.findMany({

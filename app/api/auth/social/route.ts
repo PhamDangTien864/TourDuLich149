@@ -23,6 +23,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // CRITICAL SECURITY BUG: accessToken is never verified with Google/Facebook
+    // Client can send any userInfo (including someone else's email) and system will grant JWT
+    // TODO: Implement proper OAuth token verification using libraries like 'next-auth' or 'passport'
+    // For Google: Use https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=...
+    // For Facebook: Use https://graph.facebook.com/debug_token?input_token=...
+
     // Check if user exists by email
     let user = await prisma.accounts.findUnique({
       where: { email: userInfo.email }
@@ -64,9 +70,9 @@ export async function POST(request: NextRequest) {
     // Generate JWT token
     const token = sign(
       {
-        userId: user.id,
+        id: user.id,
         email: user.email,
-        role: user.role_id
+        role_id: user.role_id
       },
       JWT_SECRET,
       { expiresIn: '7d' }

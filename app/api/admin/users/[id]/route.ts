@@ -19,9 +19,20 @@ export async function GET(
       }
 
       const user = await prisma.accounts.findUnique({
-        where: { 
+        where: {
           id: userId,
-          is_deleted: false 
+          is_deleted: false
+        },
+        select: {
+          id: true,
+          full_name: true,
+          username: true,
+          email: true,
+          phone_number: true,
+          role_id: true,
+          is_deleted: true,
+          created_at: true,
+          updated_at: true
         }
       });
 
@@ -76,11 +87,22 @@ export async function DELETE(
       // Soft delete: set is_deleted = true
       const deletedUser = await prisma.accounts.update({
         where: { id: userId },
-        data: { is_deleted: true }
+        data: { is_deleted: true },
+        select: {
+          id: true,
+          full_name: true,
+          username: true,
+          email: true,
+          phone_number: true,
+          role_id: true,
+          is_deleted: true,
+          created_at: true,
+          updated_at: true
+        }
       });
 
-      return successResponse({ 
-        user: deletedUser 
+      return successResponse({
+        user: deletedUser
       }, 'User deleted successfully');
 
     } catch (error) {
@@ -181,6 +203,23 @@ export async function PATCH(
         if (existingUser) {
           return NextResponse.json({ 
             error: "Email này đã được sử dụng bởi user khác" 
+          }, { status: 400 });
+        }
+      }
+
+      // Check for duplicate phone number if phone is being changed
+      if (phone_number && phone_number !== currentUser.phone_number) {
+        const existingUser = await prisma.accounts.findFirst({
+          where: {
+            phone_number: phone_number,
+            is_deleted: false,
+            NOT: { id: userId }
+          }
+        });
+
+        if (existingUser) {
+          return NextResponse.json({ 
+            error: "Số điện thoại này đã được sử dụng bởi user khác" 
           }, { status: 400 });
         }
       }

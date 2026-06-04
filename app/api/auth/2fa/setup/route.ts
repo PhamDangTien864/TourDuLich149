@@ -11,10 +11,12 @@ function generateOTP(): string {
 
 // Simple OTP verifier
 function verifyOTP(token: string, secret: string): boolean {
-  // For simplicity, we'll use a time-based approach
-  // In production, use a proper TOTP library
+  // CRITICAL BUG: This function generates a new random OTP every time instead of using the secret
+  // This means verification will ALWAYS fail
+  // TODO: Implement proper TOTP using a library like 'otplib'
+  // For now, this 2FA implementation is completely broken and non-functional
   const timeWindow = Math.floor(Date.now() / (30 * 1000)); // 30-second window
-  const expectedToken = generateOTP();
+  const expectedToken = generateOTP(); // BUG: generates new random OTP instead of using secret
   return token === expectedToken;
 }
 

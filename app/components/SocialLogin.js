@@ -59,7 +59,7 @@ export default function SocialLogin({ onSuccess, onError }) {
       const data = await res.json();
       
       if (data.success) {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user_data', JSON.stringify(data.user));
         onSuccess?.(data.user);
       } else {
@@ -146,7 +146,7 @@ export default function SocialLogin({ onSuccess, onError }) {
         const data = await res.json();
         
         if (data.success) {
-          localStorage.setItem('token', data.token);
+          localStorage.setItem('auth_token', data.token);
           localStorage.setItem('user_data', JSON.stringify(data.user));
           onSuccess?.(data.user);
         } else {

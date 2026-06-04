@@ -1,7 +1,8 @@
 import { ShieldCheck, UserCog, Lock, Key, ShieldAlert } from "lucide-react";
 
 export default function ManageRoles() {
-  // Nhớ để cứng danh sách này luôn cho mình, vừa đẹp vừa không lo lỗi Prisma bảng Roles
+  // TODO: Replace hardcoded roles with database query from roles table
+  // Need to fetch roles from database to allow dynamic role management
   const roles = [
     { id: 1, role_name: "Admin", desc: "Toàn quyền hệ thống, quản lý tour và khách hàng." },
     { id: 2, role_name: "Khách hàng", desc: "Quyền hạn cơ bản: xem tour, đặt tour và quản lý lịch sử." }

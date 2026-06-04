@@ -1,5 +1,9 @@
 // Enhanced cache utility for production use
 // In production, consider using Redis or similar for distributed caching
+// TODO: This in-memory cache doesn't work on serverless platforms (Vercel, AWS Lambda, etc.)
+// - Map is not persisted between serverless function invocations
+// - setInterval won't work reliably in serverless environments
+// For production, implement Redis or Vercel KV for distributed caching
 
 interface CacheEntry<T> {
   data: T;

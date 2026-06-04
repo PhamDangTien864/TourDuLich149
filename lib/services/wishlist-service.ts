@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { AuthenticationError } from '@/lib/errors';
+import { TourNotFoundError, DuplicateBookingError, BookingError } from '@/lib/errors';
 
 export interface WishlistItem {
   id: number;
@@ -52,7 +52,7 @@ export class WishlistService {
     });
 
     if (!tour) {
-      throw new AuthenticationError('Tour không tồn tại');
+      throw new TourNotFoundError(tourId);
     }
 
     // Check if already in wishlist
@@ -64,7 +64,7 @@ export class WishlistService {
     });
 
     if (existing) {
-      throw new AuthenticationError('Tour đã có trong wishlist');
+      throw new DuplicateBookingError({ tourId });
     }
 
     // Add to wishlist
@@ -100,7 +100,7 @@ export class WishlistService {
     });
 
     if (!item) {
-      throw new AuthenticationError('Tour không có trong wishlist');
+      throw new BookingError('WISHLIST_ITEM_NOT_FOUND', 'Tour không có trong wishlist', { tourId }, 404);
     }
 
     await prisma.wishlist.delete({

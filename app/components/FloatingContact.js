@@ -95,7 +95,6 @@ export default function FloatingContact() {
   const handleCloseChat = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Close button clicked - FORCE CLOSE'); // Debug log
     setIsOpen(false);
   };
 

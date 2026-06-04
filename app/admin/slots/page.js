@@ -3,6 +3,10 @@ import { MapPin, Calendar, Users, AlertTriangle, CheckCircle, Clock, Search, Fil
 import Link from "next/link";
 import { cache } from "@/lib/cache";
 
+// TODO: This is a Server Component with onChange handler.
+// Need to convert to Client Component and move data fetching to API routes or use Server Actions.
+// This requires significant refactoring to separate data fetching from UI logic.
+
 export const revalidate = 300; // Revalidate every 5 minutes
 
 export default async function SlotManagement({ searchParams }) {
@@ -23,11 +27,13 @@ export default async function SlotManagement({ searchParams }) {
 
   // Cache key for schedules
   const schedulesCacheKey = `admin_slots:${JSON.stringify({ tourId, status, page, limit })}`;
-  let [schedules, totalCount] = cache.get(schedulesCacheKey);
-  
+  const cachedSchedules = cache.get(schedulesCacheKey);
+  let schedules = cachedSchedules?.[0] || null;
+  let totalCount = cachedSchedules?.[1] || 0;
+
   // Cache key for tours filter (separate cache)
   const toursCacheKey = 'admin_slots_tours';
-  let tours = cache.get(toursCacheKey);
+  let tours = cache.get(toursCacheKey) || null;
   
   if (!schedules) {
     [schedules, totalCount] = await Promise.all([
@@ -263,7 +269,8 @@ export default async function SlotManagement({ searchParams }) {
             <div className="text-sm text-slate-600">
               Hiển thị {skip + 1}-{Math.min(skip + limit, totalCount)} của {totalCount} lịch
             </div>
-            <select 
+            <select
+              defaultValue="20"
               className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-600"
               onChange={(e) => {
                 const newLimit = parseInt(e.target.value);
@@ -271,7 +278,7 @@ export default async function SlotManagement({ searchParams }) {
               }}
             >
               <option value="10">10/trang</option>
-              <option value="20" selected>20/trang</option>
+              <option value="20">20/trang</option>
               <option value="50">50/trang</option>
             </select>
           </div>

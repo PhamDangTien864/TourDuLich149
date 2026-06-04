@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { ErrorHandler } from '@/lib/errors';
 import { errorResponse } from '@/lib/api-response';
-import { BookingStatus, ActorType } from '@/lib/booking-service';
-
-const prisma = new PrismaClient();
+import { BookingStatus, ActorType, BookingStateMachine } from '@/lib/booking-service';
+import { prisma } from '@/lib/prisma';
 
 // POST - Tạo booking mới (Step 1: Initial booking)
 export async function POST(request: Request) {
@@ -28,7 +26,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { id: number };
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return errorResponse('JWT_SECRET environment variable is not set', 500);
+    }
+    const decoded = jwt.verify(token, jwtSecret) as { id: number };
     const account_id = decoded.id;
 
     // Get tour details
@@ -44,8 +46,15 @@ export async function POST(request: Request) {
     }
 
     // Check availability
-    const schedule = tour.departure_schedules?.[0];
-    if (schedule && (schedule.available_slots || 0) < (adults_count + children_count)) {
+    // TODO: Race condition - Two concurrent requests can both pass this check and exceed available slots
+    // Need to implement atomic decrement using SELECT FOR UPDATE or optimistic locking
+    const schedule = tour.departure_schedules?.find(s => 
+      new Date(s.departure_date).getTime() === new Date(start_date).getTime()
+    );
+    if (!schedule) {
+      return NextResponse.json({ error: 'No schedule found for the selected date' }, { status: 400 });
+    }
+    if ((schedule.available_slots || 0) < (adults_count + children_count)) {
       return NextResponse.json({ error: 'Not enough available slots' }, { status: 400 });
     }
 
@@ -107,7 +116,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as { id: number };
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return errorResponse('JWT_SECRET environment variable is not set', 500);
+    }
+    const decoded = jwt.verify(token, jwtSecret) as { id: number };
     const account_id = decoded.id;
 
     // Verify booking ownership
@@ -126,30 +139,30 @@ export async function PUT(request: Request) {
         full_name: p.full_name,
         birth_date: new Date(p.birth_date),
         gender: p.gender,
-        phone_number: p.phone_number,
+        phone_number: p.phone_number || '',
         is_child: p.is_child || false
       }))
     });
 
-    // Update booking status
-    const updatedBooking = await prisma.bookings.update({
+    // Update booking status using State Machine
+    const transitionResult = await BookingStateMachine.transition(
+      booking_id,
+      BookingStatus.AWAITING_PAYMENT,
+      account_id,
+      ActorType.CUSTOMER,
+      `Added ${createdPassengers.count} passengers`,
+      undefined,
+      prisma
+    );
+
+    if (!transitionResult.success) {
+      return errorResponse(transitionResult.error || 'Failed to transition booking status', 400);
+    }
+
+    const updatedBooking = await prisma.bookings.findUnique({
       where: { id: booking_id },
-      data: { status: BookingStatus.AWAITING_PAYMENT },
       include: {
         booking_passengers: true
-      }
-    });
-
-    // Create booking log
-    await prisma.booking_logs.create({
-      data: {
-        booking_id,
-        status_from: BookingStatus.PENDING,
-        status_to: BookingStatus.AWAITING_PAYMENT,
-        action: 'passengers_added',
-        actor_id: account_id,
-        actor_type: ActorType.CUSTOMER,
-        notes: `Added ${createdPassengers.count} passengers`
       }
     });
 

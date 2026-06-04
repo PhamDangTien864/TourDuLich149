@@ -76,6 +76,13 @@ export const bookingSchema = z.object({
     .refine((date) => new Date(date) > new Date(), 'Ngày kết thúc không hợp lệ'),
   total_amount: z.number()
     .min(0, 'Tổng số tiên không được âm'),
+}).refine((data) => {
+  const startDate = new Date(data.start_date);
+  const endDate = new Date(data.end_date);
+  return endDate > startDate;
+}, {
+  message: 'Ngày kết thúc phải sau ngày bắt đầu',
+  path: ['end_date']
 });
 
 // Review validation schema

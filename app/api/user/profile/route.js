@@ -12,7 +12,7 @@ export async function GET() {
     if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const user = await prisma.accounts.findUnique({
-      where: { id: decoded.id },
+      where: { id: decoded.id, is_deleted: false },
       select: {
         full_name: true,
         username: true,

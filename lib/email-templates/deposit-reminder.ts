@@ -1,5 +1,6 @@
 export interface DepositReminderData {
   customerName: string;
+  customerEmail: string;
   bookingId: number;
   tourTitle: string;
   tourDate: string;

@@ -1,14 +1,34 @@
-import { prisma } from "@/lib/prisma";
-import { Ticket, Calendar, Percent, CheckCircle } from "lucide-react";
+'use client';
 
-export default async function PromotionsPage() {
-  const promotions = await prisma.promotions.findMany({
-    where: {
-      is_active: true,
-      end_date: { gte: new Date() }
-    },
-    orderBy: { created_at: 'desc' }
-  });
+import { useState, useEffect } from "react";
+import { Ticket, Calendar, Percent, CheckCircle, Copy, Check } from "lucide-react";
+
+export default function PromotionsPage() {
+  const [promotions, setPromotions] = useState([]);
+  const [copiedCode, setCopiedCode] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/promotions')
+      .then(res => res.json())
+      .then(data => setPromotions(data.promotions || []))
+      .catch(() => setPromotions([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white pt-32 pb-16 flex items-center justify-center">
+        <div className="text-slate-600 font-bold">Đang tải...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white pt-32 pb-16">
@@ -71,8 +91,21 @@ export default async function PromotionsPage() {
                   </div>
                 </div>
                 
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-black uppercase tracking-widest transition-colors">
-                  Sử dụng mã
+                <button
+                  onClick={() => handleCopyCode(promo.code)}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+                >
+                  {copiedCode === promo.code ? (
+                    <>
+                      <Check size={18} />
+                      Đã copy!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={18} />
+                      Sử dụng mã
+                    </>
+                  )}
                 </button>
               </div>
             </div>

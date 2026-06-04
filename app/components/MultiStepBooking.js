@@ -141,6 +141,7 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [useCustomDate, setUseCustomDate] = useState(false);
   const [customDate, setCustomDate] = useState(() => bookingData.startDate || '');
+  const [tourData, setTourData] = useState(null);
 
   // Sync customDate with bookingData.startDate
   useEffect(() => {
@@ -163,6 +164,15 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
       .finally(() => setLoading(false));
   }, [tourId, bookingData.startDate]);
 
+  useEffect(() => {
+    fetch(`/api/tours/${tourId}`)
+      .then(res => res.json())
+      .then(data => {
+        setTourData(data);
+      })
+      .catch(err => console.error('Error fetching tour data:', err));
+  }, [tourId]);
+
   const handleScheduleSelect = (scheduleId) => {
     const schedule = schedules.find(s => s.id === scheduleId);
     if (schedule) {
@@ -174,7 +184,8 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
 
       const startDate = new Date(schedule.departure_date);
       const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + 3); // Default 3 days
+      const durationDays = tourData?.duration_days || 3; // Use tour's duration, fallback to 3 days
+      endDate.setDate(endDate.getDate() + durationDays);
 
       updateBookingData('departureScheduleId', scheduleId);
       updateBookingData('startDate', startDate.toISOString().split('T')[0]);
@@ -545,9 +556,9 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
                   onChange={(e) => handlePassengerChange(idx, 'gender', e.target.value)}
                   className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500"
                 >
-                  <option value="male">Nam</option>
-                  <option value="female">Nữ</option>
-                  <option value="other">Khác</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                  <option value="Khác">Khác</option>
                 </select>
               </div>
               <div>

@@ -20,8 +20,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // In production, verify token against stored token in database
-    // For now, we'll use a simple approach - check if token is valid format
+    // CRITICAL SECURITY BUG: Token is not verified against stored value
+    // Anyone who knows the email can reset any user's password with any token
+    // TODO: Add reset_token and reset_token_expiry fields to accounts table
+    // Store token in forgot-password route and verify it here before updating password
     // In real implementation, you'd have reset_token and reset_token_expiry fields in accounts table
 
     // Hash new password

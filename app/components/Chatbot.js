@@ -42,6 +42,8 @@ const Chatbot = memo(function Chatbot() {
 
     setTimeout(() => {
       setIsTyping(false);
+      // TODO: Replace hardcoded sampleTours with dynamic data from database
+      // Currently using sampleTours from lib/constants.js - should fetch from /api/tours
       const matched = sampleTours.filter(t => t.keywords.some(kw => userMsg.includes(kw)));
       if (matched.length > 0) {
         const reply = (

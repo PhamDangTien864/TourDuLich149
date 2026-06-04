@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
     const orderInfo = `Thanh toan tour ${booking.tours.title} - Booking #${booking.id}`;
     
     const paymentUrl = createVNPayPaymentUrl({
-      amount: parseInt(amount),
+      amount: Math.round(amount),
       orderId,
       orderInfo,
       bankCode,

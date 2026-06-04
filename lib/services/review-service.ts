@@ -90,7 +90,7 @@ export class ReviewService {
       where: {
         tour_id: tour_id,
         account_id: userId,
-        status: 'CONFIRMED',
+        status: 'COMPLETED', // Only allow reviews for completed tours
         is_deleted: false,
         end_date: {
           lt: new Date() // Tour must have ended
