@@ -22,9 +22,9 @@ export async function POST(req: NextRequest) {
       }
 
       // Validate phone format
-      const phoneRegex = /^[0-9]{10,11}$/;
+      const phoneRegex = /^[0-9]{10}$/;
       if (!phoneRegex.test(phone_number)) {
-        return errorResponse('Số điện thoại phải từ 10-11 số', 400);
+        return errorResponse('Số điện thoại phải 10 số', 400);
       }
 
       // Validate role_id

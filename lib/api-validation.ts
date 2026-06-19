@@ -129,7 +129,7 @@ export const commonValidations = {
   id: z.coerce.number().positive('ID phải là số dương'),
 
   // Phone number
-  phone: z.string().regex(/^[0-9]{10,11}$/, 'Số điện thoại phải từ 10-11 số'),
+  phone: z.string().regex(/^[0-9]{10}$/, 'Số điện thoại phải 10 số'),
 
   // Email
   email: z.string().email('Email không đúng định dạng'),

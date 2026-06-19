@@ -11,7 +11,6 @@ import TourMap from "../../components/TourMap";
 import TourHighlights from "../../components/TourHighlights";
 import VideoGallery from "../../components/VideoGallery";
 import PreparationTips from "../../components/PreparationTips";
-import AskAITourButton from "../../components/AskAITourButton";
 
 // Lazy load heavy components
 const MultiStepBooking = dynamic(() => import("../../components/MultiStepBooking"), {
@@ -266,10 +265,10 @@ export default async function TourDetailPage({ params, searchParams }) {
       )}
       
       <main className="container mx-auto px-4 py-12 md:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
-          
+        <div className="grid grid-cols-1 gap-12 lg:gap-20">
+
           {/* Cột trái: Thông tin chi tiết */}
-          <div className="lg:col-span-2 space-y-10">
+          <div className="space-y-10">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-7xl font-black tracking-tighter leading-none text-slate-900">
                 {tour.title}
@@ -483,11 +482,52 @@ export default async function TourDetailPage({ params, searchParams }) {
             )}
 
             {/* Bản đồ */}
-            <TourMap 
-              mapUrl={tour.map_url} 
-              tourTitle={tour.title} 
-              locationName={tour.location_name} 
+            <TourMap
+              mapUrl={tour.map_url}
+              tourTitle={tour.title}
+              locationName={tour.location_name}
             />
+
+            {/* Form đặt tour - Horizontal layout below map */}
+            <div className="bg-slate-900 rounded-[48px] p-8 md:p-10 text-white shadow-2xl border border-white/5">
+              <div className="mb-8">
+                {bestDiscount ? (
+                  <>
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Giá gốc</p>
+                    <p className="text-2xl font-black text-slate-400 line-through mb-2">
+                      {Number(tour.price).toLocaleString()}đ
+                    </p>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-black">
+                        -{bestDiscount.discount_type === 'percentage' ? `${bestDiscount.discount_value}%` : `${Number(bestDiscount.discount_value).toLocaleString()}đ`}
+                      </span>
+                      <span className="text-green-400 text-[10px] font-black uppercase tracking-[0.3em]">
+                        Flash Sale
+                      </span>
+                    </div>
+                    <h2 className="text-5xl font-black text-green-400">
+                      {discountedPrice.toLocaleString()}đ
+                    </h2>
+                    <div className="mt-3 bg-green-500/20 border border-green-500/30 rounded-xl px-4 py-3">
+                      <p className="text-green-300 text-xs font-bold">
+                        Mã: {bestDiscount.code}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Giá khởi hành</p>
+                    <h2 className="text-5xl font-black text-blue-400">
+                      {Number(tour.price).toLocaleString()}đ
+                    </h2>
+                    <p className="text-slate-400 text-xs font-bold mt-2">/ khách</p>
+                  </>
+                )}
+              </div>
+
+              {/* Form đặt tour - Horizontal layout */}
+              <MultiStepBooking tourId={tour.id} price={discountedPrice} originalPrice={tour.price} bestDiscount={bestDiscount} initialDate={initialDate} initialPassengers={initialPassengers} />
+            </div>
 
             {/* Preparation Tips */}
             <PreparationTips tips={tour.tips} />
@@ -546,65 +586,6 @@ export default async function TourDetailPage({ params, searchParams }) {
             {/* Đánh giá */}
             <ReviewSystem tourId={tour.id} />
           </div>
-
-          {/* Cột phải: Form đặt chỗ */}
-          <aside className="lg:col-span-1">
-            <div className="bg-slate-900 rounded-[48px] p-8 md:p-10 text-white shadow-2xl sticky top-28 border border-white/5 hidden lg:block">
-              <div className="mb-8">
-                {bestDiscount ? (
-                  <>
-                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Giá gốc</p>
-                    <p className="text-2xl font-black text-slate-400 line-through mb-2">
-                      {Number(tour.price).toLocaleString()}đ
-                    </p>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-black">
-                        -{bestDiscount.discount_type === 'percentage' ? `${bestDiscount.discount_value}%` : `${Number(bestDiscount.discount_value).toLocaleString()}đ`}
-                      </span>
-                      <span className="text-green-400 text-[10px] font-black uppercase tracking-[0.3em]">
-                        Flash Sale
-                      </span>
-                    </div>
-                    <h2 className="text-5xl font-black text-green-400">
-                      {discountedPrice.toLocaleString()}đ
-                    </h2>
-                    <div className="mt-3 bg-green-500/20 border border-green-500/30 rounded-xl px-4 py-3">
-                      <p className="text-green-300 text-xs font-bold">
-                        Mã: {bestDiscount.code}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Giá khởi hành</p>
-                    <h2 className="text-5xl font-black text-blue-400">
-                      {Number(tour.price).toLocaleString()}đ
-                    </h2>
-                    <p className="text-slate-400 text-xs font-bold mt-2">/ khách</p>
-                  </>
-                )}
-              </div>
-
-              {/* Form đặt tour - Truyền dữ liệu sang component con */}
-              <MultiStepBooking tourId={tour.id} price={discountedPrice} originalPrice={tour.price} bestDiscount={bestDiscount} initialDate={initialDate} initialPassengers={initialPassengers} />
-
-              {/* Ask AI about this tour */}
-              <AskAITourButton tour={tour} />
-
-              {/* Cam kết dịch vụ */}
-              <div className="mt-8 space-y-3 pt-6 border-t border-white/10 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck size={16} className="text-blue-500" /> Bảo hiểm du lịch 1 tỷ đồng
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={16} className="text-blue-500" /> Hoàn hủy miễn phí 24h
-                </div>
-                <div className="flex items-center gap-3">
-                  <Clock size={16} className="text-blue-500" /> Hỗ trợ 24/7
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
       </main>
 
@@ -630,9 +611,6 @@ export default async function TourDetailPage({ params, searchParams }) {
         <div className="mb-6">
           <h3 className="text-2xl font-black mb-4">Đặt tour ngay</h3>
           <MultiStepBooking tourId={tour.id} price={discountedPrice} originalPrice={tour.price} bestDiscount={bestDiscount} initialDate={initialDate} initialPassengers={initialPassengers} />
-        </div>
-        <div className="mt-4">
-          <AskAITourButton tour={tour} />
         </div>
       </div>
 

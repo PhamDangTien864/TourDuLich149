@@ -29,7 +29,8 @@ export async function POST(req) {
       // Validate with Zod using centralized validation
       const validationResult = bookingRequestSchema.safeParse(body);
       if (!validationResult.success) {
-        const errors = validationResult.error.errors.map(e => e.message);
+        console.log('Validation error:', validationResult.error);
+        const errors = validationResult.error?.errors?.map(e => e.message) || ['Validation failed'];
         return validationErrorResponse(errors);
       }
 
@@ -164,7 +165,6 @@ export async function POST(req) {
             customer_id: customer.id,
             tour_id: tourId,
             account_id: accountId,
-            departure_schedule_id: departureScheduleId,
             start_date: new Date(startDate),
             end_date: new Date(endDate),
             total_amount: BigInt(amount),
@@ -192,9 +192,18 @@ export async function POST(req) {
 
         // Create booking passengers if provided
         if (passengers && passengers.length > 0) {
+          // Transform camelCase to snake_case for passenger data
+          const transformedPassengers = passengers.map(p => ({
+            full_name: p.fullName,
+            birth_date: p.birthDate,
+            gender: p.gender,
+            phone_number: p.phoneNumber,
+            is_child: p.isChild
+          }));
+
           const passengerResult = await PassengerValidationService.createBookingPassengers(
             newBooking.id,
-            passengers,
+            transformedPassengers,
             tx
           );
 

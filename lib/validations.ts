@@ -16,7 +16,7 @@ export const registerSchema = z.object({
     .min(2, 'Họ tên phải từ 2 ký tự')
     .max(100, 'Họ tên quá dài'),
   phone_number: z.string()
-    .regex(/^[0-9]{10,11}$/, 'Số điện thoại phải từ 10-11 số'),
+    .regex(/^[0-9]{10}$/, 'Số điện thoại phải 10 số'),
   username: z.string()
     .min(3, 'Username phải từ 3 ký tự')
     .max(50, 'Username tối đa 50 ký tự')
@@ -155,6 +155,7 @@ export const bookingRequestSchema = z.object({
     .positive('Tour ID phải hợp lệ'),
   departureScheduleId: z.number()
     .positive('Schedule ID phải hợp lệ')
+    .nullable()
     .optional(),
   amount: z.number()
     .min(100000, 'Tổng số tiền phải lớn hơn 100,000 VND'),
@@ -162,7 +163,7 @@ export const bookingRequestSchema = z.object({
     .min(2, 'Họ tên phải từ 2 ký tự')
     .max(100, 'Họ tên quá dài'),
   phone: z.string()
-    .regex(/^[0-9]{10,11}$/, 'Số điện thoại phải từ 10-11 số'),
+    .regex(/^[0-9]{10}$/, 'Số điện thoại phải 10 số'),
   email: z.string()
     .email('Email không đúng định dạng')
     .optional(),
@@ -189,8 +190,8 @@ export const bookingRequestSchema = z.object({
       .optional()
       .refine((phone) => {
         if (!phone) return true; // Phone is optional
-        return /^[0-9]{10,11}$/.test(phone);
-      }, 'Số điện thoại phải từ 10-11 số'),
+        return /^[0-9]{10}$/.test(phone);
+      }, 'Số điện thoại phải 10 số'),
     isChild: z.boolean()
   })).optional(),
   specialRequests: z.string()
@@ -267,8 +268,8 @@ export const passengerSchema = z.object({
     .optional()
     .refine((phone) => {
       if (!phone) return true; // Phone is optional
-      return /^[0-9]{10,11}$/.test(phone);
-    }, 'Số điện thoại phải từ 10-11 số'),
+      return /^[0-9]{10}$/.test(phone);
+    }, 'Số điện thoại phải 10 số'),
   isChild: z.boolean()
 }).refine((data) => {
   const birthDate = new Date(data.birthDate);

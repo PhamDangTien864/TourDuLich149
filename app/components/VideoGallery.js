@@ -3,13 +3,10 @@ import { Play, Video } from 'lucide-react'; // <-- Đã thay Youtube thành Vide
 export default function VideoGallery({ videoUrl, tourTitle }) {
   if (!videoUrl) return null;
 
-  console.log('VideoGallery - videoUrl:', videoUrl);
-
   // Parse YouTube URL
   const getYouTubeEmbedUrl = (url) => {
     const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(youtubeRegex);
-    console.log('YouTube match:', match);
     return match ? `https://www.youtube.com/embed/${match[1]}` : null;
   };
 
@@ -17,7 +14,6 @@ export default function VideoGallery({ videoUrl, tourTitle }) {
   const getTikTokEmbedUrl = (url) => {
     const tiktokRegex = /tiktok\.com\/@[\w.-]+\/video\/(\d+)/;
     const match = url.match(tiktokRegex);
-    console.log('TikTok match:', match);
     return match ? `https://www.tiktok.com/embed/v2/${match[1]}` : null;
   };
 
@@ -29,8 +25,6 @@ export default function VideoGallery({ videoUrl, tourTitle }) {
   const youtubeEmbed = getYouTubeEmbedUrl(videoUrl);
   const tiktokEmbed = getTikTokEmbedUrl(videoUrl);
   const isDirect = isDirectVideo(videoUrl);
-
-  console.log('Parsed results:', { youtubeEmbed, tiktokEmbed, isDirect });
 
   return (
     <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-[40px] p-8 md:p-12 border border-purple-100">

@@ -141,10 +141,10 @@ export async function PATCH(
 
       // Validate phone format if provided
       if (phone_number) {
-        const phoneRegex = /^[0-9]{10,11}$/;
+        const phoneRegex = /^[0-9]{10}$/;
         if (!phoneRegex.test(phone_number)) {
           return NextResponse.json({ 
-            error: "Số điện thoại phải từ 10-11 số" 
+            error: "Số điện thoại phải 10 số" 
           }, { status: 400 });
         }
       }

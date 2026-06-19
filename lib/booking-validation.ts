@@ -57,8 +57,8 @@ export class PassengerValidator {
     }
 
     // Validate phone number
-    if (!passenger.phoneNumber || !/^[0-9]{10,11}$/.test(passenger.phoneNumber)) {
-      errors.push('Số điện thoại phải từ 10-11 số');
+    if (!passenger.phoneNumber || !/^[0-9]{10}$/.test(passenger.phoneNumber)) {
+      errors.push('Số điện thoại phải 10 số');
     }
 
     // Validate age and child/adult consistency
@@ -134,8 +134,8 @@ export class CustomerValidator {
     }
 
     // Validate phone number
-    if (!phone || !/^[0-9]{10,11}$/.test(phone)) {
-      errors.push('Số điện thoại phải từ 10-11 số');
+    if (!phone || !/^[0-9]{10}$/.test(phone)) {
+      errors.push('Số điện thoại phải 10 số');
     }
 
     // Validate email (optional)

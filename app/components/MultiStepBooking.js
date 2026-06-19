@@ -59,22 +59,22 @@ export default function MultiStepBooking({ tourId, price, originalPrice, bestDis
   const totalAmount = calculateTotal();
 
   return (
-    <div className="space-y-6">
-      {/* Progress Steps */}
+    <div className="space-y-8">
+      {/* Progress Steps - Horizontal layout for PC */}
       <div className="flex items-center justify-between mb-8">
         {steps.map((step, idx) => (
           <div key={step.id} className="flex items-center flex-1">
             <div className={`flex flex-col items-center ${idx < steps.length - 1 ? 'flex-1' : ''}`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base transition-all ${
                 currentStep === step.id
                   ? 'bg-blue-600 text-white scale-110'
                   : currentStep > step.id
                   ? 'bg-green-500 text-white'
                   : 'bg-slate-200 text-slate-600'
               }`}>
-                {currentStep > step.id ? <CheckCircle size={20} /> : step.id}
+                {currentStep > step.id ? <CheckCircle size={24} /> : step.id}
               </div>
-              <span className={`text-xs font-bold mt-2 ${
+              <span className={`text-sm font-bold mt-2 ${
                 currentStep === step.id ? 'text-blue-600' : 'text-slate-400'
               }`}>
                 {step.title}
@@ -89,8 +89,8 @@ export default function MultiStepBooking({ tourId, price, originalPrice, bestDis
         ))}
       </div>
 
-      {/* Step Content */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200">
+      {/* Step Content - Horizontal layout for PC */}
+      <div className="bg-white rounded-2xl p-8 md:p-10 border border-slate-200">
         {currentStep === 1 && (
           <Step1Schedule
             bookingData={bookingData}
@@ -143,12 +143,13 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
   const [customDate, setCustomDate] = useState(() => bookingData.startDate || '');
   const [tourData, setTourData] = useState(null);
 
-  // Sync customDate with bookingData.startDate
+  // Sync customDate with bookingData.startDate only when bookingData.startDate changes from parent
   useEffect(() => {
-    if (customDate !== (bookingData.startDate || '')) {
-      setCustomDate(bookingData.startDate || '');
+    if (bookingData.startDate && customDate !== bookingData.startDate) {
+      setCustomDate(bookingData.startDate);
     }
-  }, [bookingData.startDate, customDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingData.startDate]);
 
   useEffect(() => {
     fetch(`/api/tours/${tourId}/schedules`)
@@ -224,27 +225,30 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
   }, [totalPassengers, selectedSchedule, updateBookingData]);
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-black text-slate-800">Chọn lịch khởi hành</h3>
-      
+    <div className="space-y-8">
+      <h3 className="text-2xl font-black text-slate-800">Chọn lịch khởi hành</h3>
+
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
         </div>
       ) : schedules.length === 0 || useCustomDate ? (
-        <div className="space-y-4">
-          <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
-            <h4 className="font-black text-slate-800 mb-4 flex items-center gap-2">
-              <Calendar size={18} className="text-blue-600" />
+        <div className="space-y-6">
+          <div className="bg-blue-50 p-8 rounded-2xl border-2 border-blue-200">
+            <h4 className="font-black text-slate-800 mb-6 flex items-center gap-2 text-lg">
+              <Calendar size={20} className="text-blue-600" />
               Chọn ngày khởi hành tùy chỉnh
             </h4>
             <div>
-              <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Ngày khởi hành *</label>
+              <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Ngày khởi hành *</label>
               <input
                 type="date"
                 value={customDate}
-                onChange={(e) => setCustomDate(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500"
+                onChange={(e) => {
+                  setCustomDate(e.target.value);
+                  setUseCustomDate(true); // Auto-enable custom date mode when user selects a date
+                }}
+                className="w-full px-6 py-5 bg-white border-2 border-slate-300 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500"
                 min={new Date().toISOString().split('T')[0]}
               />
             </div>
@@ -252,7 +256,7 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
               <button
                 type="button"
                 onClick={() => setUseCustomDate(false)}
-                className="mt-4 text-blue-600 font-bold text-sm hover:underline"
+                className="mt-6 text-blue-600 font-bold text-base hover:underline"
               >
                 ← Quay lại chọn lịch có sẵn
               </button>
@@ -260,7 +264,7 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {schedules.map((schedule) => {
             const isAvailable = schedule.available_slots >= totalPassengers;
             const isSelected = bookingData.departureScheduleId === schedule.id;
@@ -270,7 +274,7 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
                 key={schedule.id}
                 onClick={() => isAvailable && handleScheduleSelect(schedule.id)}
                 disabled={!isAvailable}
-                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                className={`w-full p-6 rounded-xl border-2 text-left transition-all ${
                   isSelected
                     ? 'border-blue-600 bg-blue-50'
                     : isAvailable
@@ -278,22 +282,17 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
                     : 'border-slate-200 bg-slate-100 opacity-50 cursor-not-allowed'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-black text-slate-800">
-                      {new Date(schedule.departure_date).toLocaleDateString('vi-VN')}
-                    </p>
-                    <p className="text-slate-600 text-sm">
-                      {schedule.available_slots} chỗ trống / {schedule.total_slots} tổng
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="font-black text-slate-800 text-lg">
+                    {new Date(schedule.departure_date).toLocaleDateString('vi-VN')}
+                  </p>
                   {isAvailable ? (
                     schedule.available_slots > 5 ? (
-                      <span className="bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-black">
+                      <span className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-black">
                         Còn chỗ
                       </span>
                     ) : (
-                      <span className="bg-orange-500 text-white px-3 py-1 rounded-lg text-xs font-black">
+                      <span className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-black">
                         Sắp hết
                       </span>
                     )
@@ -303,13 +302,16 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
                     </span>
                   )}
                 </div>
+                <p className="text-slate-600 text-base">
+                  {schedule.available_slots} chỗ trống / {schedule.total_slots} tổng
+                </p>
               </button>
             );
           })}
           <button
             type="button"
             onClick={() => setUseCustomDate(true)}
-            className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 font-bold hover:border-blue-500 hover:text-blue-600 transition-all"
+            className="w-full p-6 rounded-xl border-2 border-dashed border-slate-300 text-slate-600 font-bold text-base hover:border-blue-500 hover:text-blue-600 transition-all"
           >
             + Chọn ngày khởi hành tùy chỉnh
           </button>
@@ -317,42 +319,42 @@ function Step1Schedule({ bookingData, updateBookingData, onNext, tourId }) {
       )}
 
       {/* Passenger Count */}
-      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+      <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-200">
         <div>
-          <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Người lớn</label>
-          <div className="flex items-center gap-2">
+          <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Người lớn</label>
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => updateBookingData('adultsCount', Math.max(1, bookingData.adultsCount - 1))}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
+              className="w-12 h-12 bg-slate-200 rounded-xl font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all text-xl"
             >
               -
             </button>
-            <span className="w-10 text-center font-black text-xl">{bookingData.adultsCount}</span>
+            <span className="w-12 text-center font-black text-2xl text-slate-900">{bookingData.adultsCount}</span>
             <button
               type="button"
               onClick={() => updateBookingData('adultsCount', bookingData.adultsCount + 1)}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
+              className="w-12 h-12 bg-slate-200 rounded-xl font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all text-xl"
             >
               +
             </button>
           </div>
         </div>
         <div>
-          <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Trẻ em</label>
-          <div className="flex items-center gap-2">
+          <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Trẻ em</label>
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => updateBookingData('childrenCount', Math.max(0, bookingData.childrenCount - 1))}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
+              className="w-12 h-12 bg-slate-200 rounded-xl font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all text-xl"
             >
               -
             </button>
-            <span className="w-10 text-center font-black text-xl">{bookingData.childrenCount}</span>
+            <span className="w-12 text-center font-black text-2xl text-slate-900">{bookingData.childrenCount}</span>
             <button
               type="button"
               onClick={() => updateBookingData('childrenCount', bookingData.childrenCount + 1)}
-              className="w-10 h-10 bg-slate-200 rounded-lg font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all"
+              className="w-12 h-12 bg-slate-200 rounded-xl font-black text-slate-700 hover:bg-slate-300 active:scale-95 transition-all text-xl"
             >
               +
             </button>
@@ -398,7 +400,7 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
       id: i,
       fullName: '',
       birthDate: '',
-      gender: 'male',
+      gender: 'Nam',
       phoneNumber: '',
       isChild: i >= adultsCount
     }));
@@ -419,10 +421,12 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
     const result = passengerSchema.safeParse(passenger);
     if (!result.success) {
       const fieldErrors = {};
-      result.error.errors.forEach(err => {
-        const path = err.path[0];
-        fieldErrors[`${index}-${path}`] = err.message;
-      });
+      if (result.error && result.error.errors) {
+        result.error.errors.forEach(err => {
+          const path = err.path[0];
+          fieldErrors[`${index}-${path}`] = err.message;
+        });
+      }
       return fieldErrors;
     }
     return {};
@@ -433,8 +437,8 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
     if (!bookingData.customerName || bookingData.customerName.trim().length < 2) {
       errors.customerName = 'Họ tên phải từ 2 ký tự';
     }
-    if (!bookingData.customerPhone || !/^[0-9]{10,11}$/.test(bookingData.customerPhone)) {
-      errors.customerPhone = 'Số điện thoại phải từ 10-11 số';
+    if (!bookingData.customerPhone || !/^[0-9]{10}$/.test(bookingData.customerPhone)) {
+      errors.customerPhone = 'Số điện thoại phải 10 số';
     }
     if (bookingData.customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(bookingData.customerEmail)) {
       errors.customerEmail = 'Email không đúng định dạng';
@@ -457,22 +461,27 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
     }
   };
 
-  const isFormValid = passengers.every(p => p.fullName && p.birthDate && p.phoneNumber) &&
-                      bookingData.customerName && bookingData.customerPhone;
+  const isFormValid = passengers.every(p => {
+    // Adults require phone number, children don't
+    if (p.isChild) {
+      return p.fullName && p.birthDate;
+    }
+    return p.fullName && p.birthDate && p.phoneNumber;
+  }) && bookingData.customerName && bookingData.customerPhone;
 
   return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-black text-slate-800">Thông tin hành khách</h3>
-      
-      {/* Customer Information */}
-      <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
-        <h4 className="font-black text-slate-800 mb-4 flex items-center gap-2">
-          <Users size={18} className="text-blue-600" />
+    <div className="space-y-8">
+      <h3 className="text-2xl font-black text-slate-800">Thông tin hành khách</h3>
+
+      {/* Customer Information - Horizontal Layout */}
+      <div className="bg-blue-50 p-8 rounded-2xl border-2 border-blue-200">
+        <h4 className="font-black text-slate-800 mb-6 flex items-center gap-2 text-lg">
+          <Users size={20} className="text-blue-600" />
           Thông tin người đặt
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Họ tên người đặt *</label>
+            <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Họ tên người đặt *</label>
             <input
               type="text"
               value={bookingData.customerName}
@@ -480,13 +489,13 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
                 updateBookingData('customerName', e.target.value);
                 setErrors(prev => ({ ...prev, customerName: null }));
               }}
-              className={`w-full px-4 py-3 bg-white border-2 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500 ${errors.customerName ? 'border-red-500' : 'border-slate-200'}`}
+              className={`w-full px-6 py-5 bg-white border-2 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500 ${errors.customerName ? 'border-red-500' : 'border-slate-300'}`}
               placeholder="Nhập họ tên người đặt"
             />
-            {errors.customerName && <p className="text-red-600 text-xs mt-1 font-bold">{errors.customerName}</p>}
+            {errors.customerName && <p className="text-red-600 text-sm mt-2 font-bold">{errors.customerName}</p>}
           </div>
           <div>
-            <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Số điện thoại *</label>
+            <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Số điện thoại *</label>
             <input
               type="tel"
               value={bookingData.customerPhone}
@@ -494,13 +503,13 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
                 updateBookingData('customerPhone', e.target.value);
                 setErrors(prev => ({ ...prev, customerPhone: null }));
               }}
-              className={`w-full px-4 py-3 bg-white border-2 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500 ${errors.customerPhone ? 'border-red-500' : 'border-slate-200'}`}
+              className={`w-full px-6 py-5 bg-white border-2 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500 ${errors.customerPhone ? 'border-red-500' : 'border-slate-300'}`}
               placeholder="Nhập số điện thoại"
             />
-            {errors.customerPhone && <p className="text-red-600 text-xs mt-1 font-bold">{errors.customerPhone}</p>}
+            {errors.customerPhone && <p className="text-red-600 text-sm mt-2 font-bold">{errors.customerPhone}</p>}
           </div>
           <div>
-            <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Email</label>
+            <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Email</label>
             <input
               type="email"
               value={bookingData.customerEmail}
@@ -508,53 +517,53 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
                 updateBookingData('customerEmail', e.target.value);
                 setErrors(prev => ({ ...prev, customerEmail: null }));
               }}
-              className={`w-full px-4 py-3 bg-white border-2 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500 ${errors.customerEmail ? 'border-red-500' : 'border-slate-200'}`}
+              className={`w-full px-6 py-5 bg-white border-2 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500 ${errors.customerEmail ? 'border-red-500' : 'border-slate-300'}`}
               placeholder="Nhập email (tùy chọn)"
             />
-            {errors.customerEmail && <p className="text-red-600 text-xs mt-1 font-bold">{errors.customerEmail}</p>}
+            {errors.customerEmail && <p className="text-red-600 text-sm mt-2 font-bold">{errors.customerEmail}</p>}
           </div>
         </div>
       </div>
-      
-      {/* Passenger Information */}
-      <div className="space-y-4">
+
+      {/* Passenger Information - Horizontal Layout */}
+      <div className="space-y-6">
         {passengers.map((passenger, idx) => (
-          <div key={idx} className="bg-slate-50 p-4 rounded-xl">
-            <div className="flex items-center gap-2 mb-4">
-              <Users size={18} className="text-blue-600" />
-              <p className="font-black text-slate-800">
+          <div key={idx} className="bg-white p-8 rounded-2xl border-2 border-slate-200 shadow-sm">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-slate-200">
+              <Users size={24} className="text-blue-600" />
+              <p className="font-black text-slate-800 text-xl">
                 {passenger.isChild ? `Trẻ em ${idx - adultsCount + 1}` : `Người lớn ${idx + 1}`}
               </p>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Họ tên *</label>
+                <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Họ tên *</label>
                 <input
                   type="text"
                   value={passenger.fullName}
                   onChange={(e) => handlePassengerChange(idx, 'fullName', e.target.value)}
-                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500 ${errors[`${idx}-fullName`] ? 'border-red-500' : 'border-slate-200'}`}
+                  className={`w-full px-6 py-5 bg-white border-2 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500 ${errors[`${idx}-fullName`] ? 'border-red-500' : 'border-slate-300'}`}
                   placeholder="Nhập họ tên"
                 />
-                {errors[`${idx}-fullName`] && <p className="text-red-600 text-xs mt-1 font-bold">{errors[`${idx}-fullName`]}</p>}
+                {errors[`${idx}-fullName`] && <p className="text-red-600 text-sm mt-2 font-bold">{errors[`${idx}-fullName`]}</p>}
               </div>
               <div>
-                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Ngày sinh *</label>
+                <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Ngày sinh *</label>
                 <input
                   type="date"
                   value={passenger.birthDate}
                   onChange={(e) => handlePassengerChange(idx, 'birthDate', e.target.value)}
-                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500 ${errors[`${idx}-birthDate`] ? 'border-red-500' : 'border-slate-200'}`}
+                  className={`w-full px-6 py-5 bg-white border-2 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500 ${errors[`${idx}-birthDate`] ? 'border-red-500' : 'border-slate-300'}`}
                 />
-                {errors[`${idx}-birthDate`] && <p className="text-red-600 text-xs mt-1 font-bold">{errors[`${idx}-birthDate`]}</p>}
+                {errors[`${idx}-birthDate`] && <p className="text-red-600 text-sm mt-2 font-bold">{errors[`${idx}-birthDate`]}</p>}
               </div>
               <div>
-                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Giới tính *</label>
+                <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Giới tính *</label>
                 <select
                   value={passenger.gender}
                   onChange={(e) => handlePassengerChange(idx, 'gender', e.target.value)}
-                  className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500"
+                  className="w-full px-6 py-5 bg-white border-2 border-slate-300 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500"
                 >
                   <option value="Nam">Nam</option>
                   <option value="Nữ">Nữ</option>
@@ -562,15 +571,17 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
                 </select>
               </div>
               <div>
-                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Số điện thoại *</label>
+                <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Số điện thoại *</label>
                 <input
                   type="tel"
                   value={passenger.phoneNumber}
                   onChange={(e) => handlePassengerChange(idx, 'phoneNumber', e.target.value)}
-                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500 ${errors[`${idx}-phoneNumber`] ? 'border-red-500' : 'border-slate-200'}`}
+                  className={`w-full px-6 py-5 bg-white border-2 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500 ${errors[`${idx}-phoneNumber`] ? 'border-red-500' : 'border-slate-300'}`}
                   placeholder="Nhập số điện thoại"
+                  disabled={passenger.isChild}
                 />
-                {errors[`${idx}-phoneNumber`] && <p className="text-red-600 text-xs mt-1 font-bold">{errors[`${idx}-phoneNumber`]}</p>}
+                {errors[`${idx}-phoneNumber`] && <p className="text-red-600 text-sm mt-2 font-bold">{errors[`${idx}-phoneNumber`]}</p>}
+                {passenger.isChild && <p className="text-slate-500 text-sm mt-2">Trẻ em không cần số điện thoại</p>}
               </div>
             </div>
           </div>
@@ -578,13 +589,13 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
       </div>
 
       {/* Special Requests */}
-      <div>
-        <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Yêu cầu đặc biệt (tùy chọn)</label>
+      <div className="bg-white p-8 rounded-2xl border-2 border-slate-200 shadow-sm">
+        <label className="text-sm font-black text-slate-600 uppercase mb-3 block">Yêu cầu đặc biệt (tùy chọn)</label>
         <textarea
           value={bookingData.specialRequests}
           onChange={(e) => updateBookingData('specialRequests', e.target.value)}
-          className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-slate-700 focus:outline-none focus:border-blue-500 resize-none"
-          rows={3}
+          className="w-full px-6 py-5 bg-white border-2 border-slate-300 rounded-xl font-bold text-slate-800 text-lg focus:outline-none focus:border-blue-500 resize-none"
+          rows={4}
           placeholder="Nhập yêu cầu đặc biệt (nếu có)"
         />
       </div>
@@ -592,16 +603,16 @@ function Step2Passengers({ bookingData, updateBookingData, onNext, onPrevious, a
       <div className="flex gap-4">
         <button
           onClick={onPrevious}
-          className="flex-1 bg-slate-200 text-slate-700 py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-slate-300 transition-all flex items-center justify-center gap-2"
+          className="flex-1 bg-slate-200 text-slate-700 py-5 rounded-xl font-black text-base uppercase tracking-widest hover:bg-slate-300 transition-all flex items-center justify-center gap-2"
         >
-          <ChevronLeft size={18} /> Quay lại
+          <ChevronLeft size={20} /> Quay lại
         </button>
         <button
           onClick={handleNext}
           disabled={!isFormValid}
-          className="flex-1 bg-blue-600 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+          className="flex-1 bg-blue-600 text-white py-5 rounded-xl font-black text-base uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         >
-          Tiếp tục <ChevronRight size={18} />
+          Tiếp tục <ChevronRight size={20} />
         </button>
       </div>
     </div>
@@ -774,6 +785,8 @@ function Step4Confirmation({ bookingData, onPrevious, totalAmount, bestDiscount,
         dropoffLocation: bookingData.dropoffLocation || ''
       };
 
+      console.log('Booking payload:', JSON.stringify(bookingPayload, null, 2));
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
@@ -868,41 +881,41 @@ function Step4Confirmation({ bookingData, onPrevious, totalAmount, bestDiscount,
         </div>
       )}
 
-      <div className="bg-slate-50 p-6 rounded-xl">
-        <h4 className="font-black text-slate-800 mb-4">Thông tin đặt tour</h4>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-slate-600">Ngày khởi hành</span>
-            <span className="font-black">{bookingData.startDate}</span>
+      <div className="bg-slate-50 p-8 rounded-2xl">
+        <h4 className="font-black text-slate-800 mb-6 text-lg">Thông tin đặt tour</h4>
+        <div className="space-y-4 text-base">
+          <div className="flex justify-between items-center py-2 border-b border-slate-200">
+            <span className="text-slate-600 font-medium">Ngày khởi hành</span>
+            <span className="font-black text-slate-800">{bookingData.startDate}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Ngày kết thúc</span>
-            <span className="font-black">{bookingData.endDate}</span>
+          <div className="flex justify-between items-center py-2 border-b border-slate-200">
+            <span className="text-slate-600 font-medium">Ngày kết thúc</span>
+            <span className="font-black text-slate-800">{bookingData.endDate}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Số người lớn</span>
-            <span className="font-black">{bookingData.adultsCount}</span>
+          <div className="flex justify-between items-center py-2 border-b border-slate-200">
+            <span className="text-slate-600 font-medium">Số người lớn</span>
+            <span className="font-black text-slate-800">{bookingData.adultsCount} người</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Số trẻ em</span>
-            <span className="font-black">{bookingData.childrenCount}</span>
+          <div className="flex justify-between items-center py-2 border-b border-slate-200">
+            <span className="text-slate-600 font-medium">Số trẻ em</span>
+            <span className="font-black text-slate-800">{bookingData.childrenCount} trẻ em</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Tổng hành khách</span>
-            <span className="font-black">{bookingData.adultsCount + bookingData.childrenCount} người</span>
+          <div className="flex justify-between items-center py-2 border-b border-slate-200">
+            <span className="text-slate-600 font-medium">Tổng hành khách</span>
+            <span className="font-black text-slate-800">{bookingData.adultsCount + bookingData.childrenCount} người</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Phương thức thanh toán</span>
-            <span className="font-black">{bookingData.paymentMethod}</span>
+          <div className="flex justify-between items-center py-2 border-b border-slate-200">
+            <span className="text-slate-600 font-medium">Phương thức thanh toán</span>
+            <span className="font-black text-slate-800">{bookingData.paymentMethod === 'vnpay' ? 'VNPay' : bookingData.paymentMethod === 'qr' ? 'QR Code' : 'Chuyển khoản'}</span>
           </div>
           {bookingData.specialRequests && (
-            <div className="flex justify-between">
-              <span className="text-slate-600">Yêu cầu đặc biệt</span>
-              <span className="font-black">{bookingData.specialRequests}</span>
+            <div className="flex justify-between items-center py-2 border-b border-slate-200">
+              <span className="text-slate-600 font-medium">Yêu cầu đặc biệt</span>
+              <span className="font-black text-slate-800">{bookingData.specialRequests}</span>
             </div>
           )}
-          <div className="flex justify-between font-black text-lg pt-2 border-t border-slate-200">
-            <span>Tổng thanh toán</span>
+          <div className="flex justify-between items-center py-4 font-black text-xl">
+            <span className="text-slate-800">Tổng thanh toán</span>
             <span className="text-blue-600">{totalAmount.toLocaleString()}đ</span>
           </div>
         </div>

@@ -380,12 +380,12 @@ export class PassengerValidationService {
 
     // Phone is required for adults, optional for children
     if (!passenger.is_child) {
-      if (!passenger.phone_number || !/^[0-9]{10,11}$/.test(passenger.phone_number)) {
-        errors.push('Người lớn phải có số điện thoại (10-11 số)');
+      if (!passenger.phone_number || !/^[0-9]{10}$/.test(passenger.phone_number)) {
+        errors.push('Người lớn phải có số điện thoại (10 số)');
       }
-    } else if (passenger.phone_number && !/^[0-9]{10,11}$/.test(passenger.phone_number)) {
+    } else if (passenger.phone_number && !/^[0-9]{10}$/.test(passenger.phone_number)) {
       // If provided for children, must still be valid format
-      errors.push('Số điện thoại phải từ 10-11 số');
+      errors.push('Số điện thoại phải 10 số');
     }
 
     // Validate age
