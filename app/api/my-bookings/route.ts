@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
             price: true,
             tour_images: {
               take: 1,
-              where: { is_primary: true }
+              orderBy: { is_primary: 'desc' }
             }
           }
         }

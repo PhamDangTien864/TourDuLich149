@@ -524,6 +524,7 @@ export class BookingValidationService {
       where: {
         tour_id: tourId,
         account_id: accountId,
+        is_deleted: false,
         status: {
           notIn: [BookingStatus.CANCELLED, BookingStatus.REFUNDED]
         },

@@ -3,7 +3,7 @@
 import { useState, useEffect, memo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { User, LogOut, ShieldCheck, Menu, X } from "lucide-react";
+import { User, LogOut, ShieldCheck, Menu, X, Calendar } from "lucide-react";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { ErrorHandler } from "@/lib/errors";
 
@@ -127,19 +127,32 @@ const Header = memo(function Header() {
           )}
           {/* Nút Hồ sơ biến hóa theo Role */}
           {user && (
-            <Link
-              href={user.role_id === 1 || user.role === 1 ? "/admin" : "/customer/profile"}
-              className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
-                pathname.startsWith(user.role_id === 1 || user.role === 1 ? '/admin' : '/customer')
-                  ? (user.role_id === 1 || user.role === 1
-                      ? 'text-white bg-red-600 shadow-md ring-2 ring-red-400 ring-offset-2'
-                      : 'text-white bg-blue-600 shadow-md')
-                  : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              {user.role_id === 1 || user.role === 1 ? <ShieldCheck size={14}/> : <User size={14}/> }
-              {user.role_id === 1 || user.role === 1 ? 'Admin' : 'Hồ sơ'}
-            </Link>
+            <>
+              <Link
+                href="/my-bookings"
+                className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
+                  pathname === '/my-bookings'
+                    ? 'text-white bg-blue-600 shadow-md'
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <Calendar size={14}/>
+                Lịch sử
+              </Link>
+              <Link
+                href={user.role_id === 1 || user.role === 1 ? "/admin" : "/customer/profile"}
+                className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
+                  pathname.startsWith(user.role_id === 1 || user.role === 1 ? '/admin' : '/customer')
+                    ? (user.role_id === 1 || user.role === 1
+                        ? 'text-white bg-red-600 shadow-md ring-2 ring-red-400 ring-offset-2'
+                        : 'text-white bg-blue-600 shadow-md')
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                {user.role_id === 1 || user.role === 1 ? <ShieldCheck size={14}/> : <User size={14}/> }
+                {user.role_id === 1 || user.role === 1 ? 'Admin' : 'Hồ sơ'}
+              </Link>
+            </>
           )}
         </nav>
 
@@ -242,18 +255,32 @@ const Header = memo(function Header() {
             )}
             
             {user && (
-              <Link
-                href={user.role_id === 1 || user.role === 1 ? "/admin" : "/customer/profile"}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${
-                  pathname.startsWith(user.role_id === 1 || user.role === 1 ? '/admin' : '/customer')
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                }`}
-              >
-                {user.role_id === 1 || user.role === 1 ? <ShieldCheck size={14}/> : <User size={14}/> }
-                {user.role_id === 1 || user.role === 1 ? 'Admin' : 'Hồ sơ'}
-              </Link>
+              <>
+                <Link
+                  href="/my-bookings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${
+                    pathname === '/my-bookings'
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  <Calendar size={14}/>
+                  Lịch sử
+                </Link>
+                <Link
+                  href={user.role_id === 1 || user.role === 1 ? "/admin" : "/customer/profile"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${
+                    pathname.startsWith(user.role_id === 1 || user.role === 1 ? '/admin' : '/customer')
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                  }`}
+                >
+                  {user.role_id === 1 || user.role === 1 ? <ShieldCheck size={14}/> : <User size={14}/> }
+                  {user.role_id === 1 || user.role === 1 ? 'Admin' : 'Hồ sơ'}
+                </Link>
+              </>
             )}
 
             {user && (

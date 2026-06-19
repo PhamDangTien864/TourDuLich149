@@ -38,6 +38,8 @@ function PaymentContent() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [selectedBank, setSelectedBank] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [isLoadingBooking, setIsLoadingBooking] = useState(false);
   
   const bookingId = searchParams.get("bookingId");
   const amount = searchParams.get("amount");
@@ -64,6 +66,49 @@ function PaymentContent() {
         console.error('Auth check error:', err);
       });
   }, [router]);
+
+  // Load booking details if only bookingId is provided (resume payment flow)
+  useEffect(() => {
+    if (bookingId && !amount && !tourId) {
+      setIsLoadingBooking(true);
+      console.log('Loading booking details for ID:', bookingId);
+      
+      fetch(`/api/bookings/${bookingId}`)
+        .then(res => {
+          console.log('Booking API response status:', res.status);
+          if (!res.ok) {
+            return res.json().then(err => {
+              throw new Error(err.error || `Failed to load booking (status: ${res.status})`);
+            });
+          }
+          return res.json();
+        })
+        .then(data => {
+          console.log('Booking API response data:', data);
+          if (data.success && data.booking) {
+            setBookingDetails(data.booking);
+            // Redirect with full parameters
+            const params = new URLSearchParams({
+              bookingId: bookingId,
+              amount: data.booking.total_amount,
+              tourId: data.booking.tour_id
+            });
+            console.log('Redirecting to payment with params:', params.toString());
+            router.replace(`/payment?${params.toString()}`);
+          } else {
+            throw new Error(data.error || 'Invalid booking data');
+          }
+        })
+        .catch(err => {
+          console.error('Load booking error:', err);
+          toast.error(err.message || 'Không tìm thấy booking');
+          router.push('/customer/bookings');
+        })
+        .finally(() => {
+          setIsLoadingBooking(false);
+        });
+    }
+  }, [bookingId, amount, tourId, router]);
 
   // Handle callback status
   useEffect(() => {
@@ -118,16 +163,27 @@ function PaymentContent() {
     }
   };
 
+  if (isLoadingBooking) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <Loader2 className="animate-spin mx-auto mb-4" size={32} />
+          <p className="text-xl font-bold">Đang tải thông tin thanh toán...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!bookingId || !amount || !tourId) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-white text-center">
           <p className="text-xl font-bold">Không tìm thấy thông tin thanh toán</p>
           <button 
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/customer/bookings')}
             className="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl font-bold"
           >
-            Về trang chủ
+            Xem đặt tour của tôi
           </button>
         </div>
       </div>

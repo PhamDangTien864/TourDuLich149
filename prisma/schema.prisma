@@ -32,6 +32,9 @@ model accounts {
   reviews      reviews[]
   transactions transactions[]
   wishlist     wishlist[]
+  promptConfigs PromptConfig[]
+  knowledgeDocuments KnowledgeDocument[]
+  chatSessions ChatSession[]
 
   @@index([role_id])
   @@index([is_deleted], map: "idx_accounts_deleted")
@@ -485,4 +488,81 @@ model review_images {
   reviews    reviews   @relation(fields: [review_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([review_id])
+}
+
+// Chatbot System Models
+model PromptConfig {
+  id             Int      @id @default(autoincrement())
+  name           String   @db.VarChar(100)
+  system_prompt  String   @db.Text
+  tone           String?  @db.VarChar(50)
+  is_active      Boolean  @default(false)
+  is_test        Boolean  @default(false)
+  created_by     Int?
+  created_at     DateTime @default(now()) @db.DateTime(0)
+  updated_at     DateTime @updatedAt @db.DateTime(0)
+  accounts       accounts? @relation(fields: [created_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([is_active])
+  @@index([created_by])
+}
+
+model KnowledgeDocument {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  content     String   @db.Text
+  file_name   String?  @db.VarChar(255)
+  file_type   String?  @db.VarChar(50)
+  embedding   String?  @db.Text
+  chunk_count Int?     @default(0)
+  is_active   Boolean  @default(true)
+  uploaded_by Int?
+  created_at  DateTime @default(now()) @db.DateTime(0)
+  updated_at  DateTime @updatedAt @db.DateTime(0)
+  accounts    accounts? @relation(fields: [uploaded_by], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([is_active])
+  @@index([uploaded_by])
+}
+
+model ChatSession {
+  id          Int         @id @default(autoincrement())
+  session_id  String      @unique @db.VarChar(255)
+  user_id     Int?
+  ip_address  String?     @db.VarChar(50)
+  user_agent  String?     @db.VarChar(500)
+  started_at  DateTime    @default(now()) @db.DateTime(0)
+  ended_at    DateTime?   @db.DateTime(0)
+  message_count Int?     @default(0)
+  accounts    accounts?   @relation(fields: [user_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  messages    ChatMessage[]
+
+  @@index([user_id])
+  @@index([session_id])
+}
+
+model ChatMessage {
+  id          Int         @id @default(autoincrement())
+  session_id  Int
+  sender      String      @db.VarChar(20)
+  message     String      @db.Text
+  created_at  DateTime    @default(now()) @db.DateTime(0)
+  sessions    ChatSession @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([session_id])
+  @@index([sender])
+}
+
+model ChatAnalytics {
+  id              Int      @id @default(autoincrement())
+  question        String   @db.VarChar(500)
+  answer          String   @db.Text
+  question_count  Int      @default(1)
+  last_asked      DateTime @default(now()) @db.DateTime(0)
+  satisfaction_score Float?
+  created_at      DateTime @default(now()) @db.DateTime(0)
+  updated_at      DateTime @updatedAt @db.DateTime(0)
+
+  @@index([question_count])
+  @@index([last_asked])
 }

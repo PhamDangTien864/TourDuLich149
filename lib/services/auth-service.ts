@@ -130,7 +130,7 @@ export class AuthService {
     });
 
     // Send verification email
-    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify-email?id=${user.id}`;
+    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email?id=${user.id}`;
     
     try {
       const emailData = {

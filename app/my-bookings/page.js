@@ -2,23 +2,30 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, MapPin, Users, CreditCard, Clock, Filter, Loader2, Download } from 'lucide-react';
+import { Calendar, MapPin, Users, CreditCard, Clock, Filter, Loader2, Download, QrCode, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import QRCode from 'qrcode';
 import Header from '../components/Header';
 
 const statusColors = {
   PENDING: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+  AWAITING_PAYMENT: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+  DEPOSIT_PAID: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   CONFIRMED: 'bg-green-500/20 text-green-300 border-green-500/30',
   CANCELLED: 'bg-red-500/20 text-red-300 border-red-500/30',
-  COMPLETED: 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+  COMPLETED: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  REFUNDED: 'bg-gray-500/20 text-gray-300 border-gray-500/30'
 };
 
 const statusLabels = {
   PENDING: 'Chờ xác nhận',
+  AWAITING_PAYMENT: 'Đang chờ thanh toán',
+  DEPOSIT_PAID: 'Đã đặt cọc',
   CONFIRMED: 'Đã xác nhận',
   CANCELLED: 'Đã hủy',
-  COMPLETED: 'Hoàn thành'
+  COMPLETED: 'Hoàn thành',
+  REFUNDED: 'Đã hoàn tiền'
 };
 
 export default function MyBookingsPage() {
@@ -27,6 +34,9 @@ export default function MyBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [showFilter, setShowFilter] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -93,12 +103,12 @@ export default function MyBookingsPage() {
         const newWindow = window.open('', '_blank');
         newWindow.document.write(data.html);
         newWindow.document.close();
-        
+
         // Trigger print dialog
         setTimeout(() => {
           newWindow.print();
         }, 500);
-        
+
         toast.success('Đang tải hóa đơn...');
       } else {
         toast.error(data.error || 'Tải hóa đơn thất bại');
@@ -106,6 +116,47 @@ export default function MyBookingsPage() {
     } catch (error) {
       console.error('Download invoice error:', error);
       toast.error('Lỗi hệ thống');
+    }
+  };
+
+  const handleShowQRCode = async (booking) => {
+    try {
+      setSelectedBooking(booking);
+      
+      // Generate QR code with booking information
+      const qrData = JSON.stringify({
+        bookingId: booking.id,
+        tourId: booking.tours.id,
+        customerName: booking.customers.full_name,
+        startDate: booking.start_date,
+        status: booking.status
+      });
+      
+      const dataUrl = await QRCode.toDataURL(qrData, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      });
+      
+      setQrCodeDataUrl(dataUrl);
+      setShowQRModal(true);
+    } catch (error) {
+      console.error('Generate QR code error:', error);
+      toast.error('Lỗi khi tạo mã QR');
+    }
+  };
+
+  const handleResumePayment = async (booking) => {
+    try {
+      // Redirect to payment page with booking ID
+      console.log('Resume payment for booking:', booking.id, 'type:', typeof booking.id);
+      router.push(`/payment?bookingId=${booking.id}`);
+    } catch (error) {
+      console.error('Resume payment error:', error);
+      toast.error('Lỗi khi tiếp tục thanh toán');
     }
   };
 
@@ -135,7 +186,7 @@ export default function MyBookingsPage() {
           >
             <div className="flex items-center gap-4 flex-wrap">
               <span className="font-medium text-slate-700">Trạng thái:</span>
-              {['all', 'PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'].map((status) => (
+              {['all', 'PENDING', 'AWAITING_PAYMENT', 'DEPOSIT_PAID', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'REFUNDED'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
@@ -202,7 +253,7 @@ export default function MyBookingsPage() {
                           <span>{booking.tours.location_name}</span>
                         </div>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[booking.status] || statusColors.pending}`}>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[booking.status] || statusColors.PENDING}`}>
                         {statusLabels[booking.status] || booking.status}
                       </span>
                     </div>
@@ -252,6 +303,23 @@ export default function MyBookingsPage() {
                         >
                           <Download size={16} />
                         </button>
+                        {(booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') && (
+                          <button
+                            onClick={() => handleShowQRCode(booking)}
+                            className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm flex items-center gap-1"
+                            title="Xem mã QR"
+                          >
+                            <QrCode size={16} />
+                          </button>
+                        )}
+                        {booking.status === 'AWAITING_PAYMENT' && (
+                          <button
+                            onClick={() => handleResumePayment(booking)}
+                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm"
+                          >
+                            Tiếp tục thanh toán
+                          </button>
+                        )}
                         {booking.status === 'PENDING' && (
                           <button
                             onClick={() => handleCancelBooking(booking.id)}
@@ -275,6 +343,78 @@ export default function MyBookingsPage() {
           </div>
         )}
       </main>
+
+      {/* QR Code Modal */}
+      {showQRModal && selectedBooking && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowQRModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-slate-800">Mã QR Booking</h3>
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition"
+              >
+                <X size={24} className="text-slate-500" />
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="bg-white p-4 rounded-xl border-2 border-slate-200 mb-6">
+                {qrCodeDataUrl && (
+                  <img
+                    src={qrCodeDataUrl}
+                    alt="QR Code"
+                    className="w-64 h-64"
+                  />
+                )}
+              </div>
+
+              <div className="w-full space-y-3 mb-6">
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-500">Booking ID:</span>
+                  <span className="font-semibold text-slate-800">#{selectedBooking.id}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-500">Tour:</span>
+                  <span className="font-semibold text-slate-800 text-right">{selectedBooking.tours.title}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-500">Khách hàng:</span>
+                  <span className="font-semibold text-slate-800">{selectedBooking.customers.full_name}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                  <span className="text-slate-500">Ngày đi:</span>
+                  <span className="font-semibold text-slate-800">
+                    {new Date(selectedBooking.start_date).toLocaleDateString('vi-VN')}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-slate-500">Trạng thái:</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[selectedBooking.status]}`}>
+                    {statusLabels[selectedBooking.status]}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-500 text-center">
+                Hiện mã này khi check-in tại điểm khởi hành
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

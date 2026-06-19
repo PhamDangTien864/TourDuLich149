@@ -798,6 +798,12 @@ function Step4Confirmation({ bookingData, onPrevious, totalAmount, bestDiscount,
       const result = await response.json();
 
       if (!response.ok) {
+        // Check if it's a conflict with existing AWAITING_PAYMENT booking
+        if (response.status === 409 && result.details?.canResume) {
+          // Redirect to payment page to resume payment
+          window.location.href = `/payment?bookingId=${result.details.existingBookingId}`;
+          return;
+        }
         throw new Error(result.error || result.details || 'Đặt tour thất bại');
       }
 

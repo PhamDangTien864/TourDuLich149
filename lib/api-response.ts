@@ -91,8 +91,14 @@ export function notFoundResponse(
 
 // Conflict response helper
 export function conflictResponse(
-  message: string = 'Xung đột dữ liệu'
+  message: string | { message: string; existingBookingId?: number; canResume?: boolean } = 'Xung đột dữ liệu'
 ): NextResponse<ApiResponse> {
+  if (typeof message === 'object') {
+    return errorResponse(message.message, 409, {
+      existingBookingId: message.existingBookingId,
+      canResume: message.canResume
+    });
+  }
   return errorResponse(message, 409);
 }
 

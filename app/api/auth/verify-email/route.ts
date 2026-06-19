@@ -4,16 +4,15 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const token = searchParams.get('token');
-    const email = searchParams.get('email');
+    const id = searchParams.get('id');
 
-    if (!token || !email) {
-      return NextResponse.json({ error: 'Missing token or email' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'Missing user id' }, { status: 400 });
     }
 
-    // Find user by email
+    // Find user by id
     const user = await prisma.accounts.findFirst({
-      where: { email, is_deleted: false }
+      where: { id: parseInt(id), is_deleted: false }
     });
 
     if (!user) {

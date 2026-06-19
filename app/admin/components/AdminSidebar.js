@@ -3,7 +3,8 @@
 import { 
   LayoutDashboard, Users, MapPin, Settings, 
   LogOut, X, Home, BarChart3, Calendar,
-  ChevronLeft, ChevronRight, CreditCard
+  ChevronLeft, ChevronRight, CreditCard, MessageSquare,
+  FileText, Brain
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,6 +21,9 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setSidebarC
     { id: 'bookings', label: 'Quản lý Bookings', icon: Calendar, href: '/admin/bookings' },
     { id: 'transactions', label: 'Giao dịch', icon: CreditCard, href: '/admin/transactions' },
     { id: 'analytics', label: 'Thống kê', icon: BarChart3, href: '/admin/analytics' },
+    { id: 'prompt-config', label: 'Cấu hình Prompt', icon: Brain, href: '/admin/prompt-config' },
+    { id: 'knowledge-documents', label: 'Knowledge Base', icon: FileText, href: '/admin/knowledge-documents' },
+    { id: 'chat-analytics', label: 'Phân tích Chatbot', icon: MessageSquare, href: '/admin/chat-analytics' },
     { id: 'settings', label: 'Cài đặt', icon: Settings, href: '/admin/settings' }
   ];
 

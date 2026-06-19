@@ -29,8 +29,9 @@ export async function POST(req) {
       // Validate with Zod using centralized validation
       const validationResult = bookingRequestSchema.safeParse(body);
       if (!validationResult.success) {
-        console.log('Validation error:', validationResult.error);
-        const errors = validationResult.error?.errors?.map(e => e.message) || ['Validation failed'];
+        console.log('Zod validation error:', validationResult.error);
+        console.log('Received body:', body);
+        const errors = validationResult.error?.errors?.map(e => `${e.path.join('.')}: ${e.message}`) || ['Validation failed'];
         return validationErrorResponse(errors);
       }
 
@@ -97,6 +98,8 @@ export async function POST(req) {
       });
 
       if (!validation.valid) {
+        console.log('Custom validation errors:', validation.errors);
+        console.log('Validation data:', { tourId, adultsCount, childrenCount, startDate, endDate });
         return errorResponse("Dữ liệu không hợp lệ", 400, validation.errors);
       }
 
@@ -114,6 +117,34 @@ export async function POST(req) {
       );
 
       if (isDuplicate) {
+        console.log('Duplicate booking detected for user:', accountId, 'tour:', tourId);
+        // Log existing bookings for debugging
+        const existingBookings = await prisma.bookings.findMany({
+          where: {
+            tour_id: tourId,
+            account_id: accountId,
+            is_deleted: false
+          },
+          select: {
+            id: true,
+            status: true,
+            start_date: true,
+            end_date: true,
+            is_deleted: true
+          }
+        });
+        console.log('Existing bookings for this tour:', existingBookings);
+
+        // Check if existing booking is AWAITING_PAYMENT - allow user to continue payment
+        const awaitingPaymentBooking = existingBookings.find(b => b.status === 'AWAITING_PAYMENT');
+        if (awaitingPaymentBooking) {
+          return conflictResponse({
+            message: "Bạn đã có booking đang chờ thanh toán cho tour này",
+            existingBookingId: awaitingPaymentBooking.id,
+            canResume: true
+          });
+        }
+
         return conflictResponse("Bạn đã có booking trùng thời gian cho tour này");
       }
 
