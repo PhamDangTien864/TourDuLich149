@@ -44,9 +44,14 @@ export async function POST(req: NextRequest) {
       include: {
         tours: true,
         booking_payments: {
+          include: {
+            payment_status_enum: false,
+            payment_type_enum: false
+          },
           orderBy: { created_at: 'desc' },
           take: 1
-        }
+        },
+        booking_status_enum: false
       },
     });
 

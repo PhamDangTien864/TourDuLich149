@@ -102,7 +102,8 @@ function PaymentContent() {
         .catch(err => {
           console.error('Load booking error:', err);
           toast.error(err.message || 'Không tìm thấy booking');
-          router.push('/customer/bookings');
+          // Redirect to bookings page instead of showing error
+          router.push('/my-bookings');
         })
         .finally(() => {
           setIsLoadingBooking(false);

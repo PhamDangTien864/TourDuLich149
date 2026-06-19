@@ -28,6 +28,19 @@ const statusLabels = {
   REFUNDED: 'Đã hoàn tiền'
 };
 
+const getStatusLabel = (status, booking) => {
+  if (status === 'AWAITING_PAYMENT' && isPaid(booking)) {
+    return 'Đã thanh toán';
+  }
+  return statusLabels[status] || status;
+};
+
+const isPaid = (booking) => {
+  const totalAmount = Number(booking.total_amount || 0);
+  const paidAmount = Number(booking.paid_amount || 0);
+  return paidAmount >= totalAmount && totalAmount > 0;
+};
+
 export default function MyBookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState([]);
@@ -254,7 +267,7 @@ export default function MyBookingsPage() {
                         </div>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium border ${statusColors[booking.status] || statusColors.PENDING}`}>
-                        {statusLabels[booking.status] || booking.status}
+                        {getStatusLabel(booking.status, booking)}
                       </span>
                     </div>
 
@@ -312,7 +325,7 @@ export default function MyBookingsPage() {
                             <QrCode size={16} />
                           </button>
                         )}
-                        {booking.status === 'AWAITING_PAYMENT' && (
+                        {booking.status === 'AWAITING_PAYMENT' && !isPaid(booking) && (
                           <button
                             onClick={() => handleResumePayment(booking)}
                             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm"
@@ -336,6 +349,17 @@ export default function MyBookingsPage() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Show itinerary for paid bookings */}
+                    {isPaid(booking) && booking.tours?.itinerary && (
+                      <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                          <Calendar size={16} className="text-blue-600" />
+                          Lịch trình tour
+                        </h4>
+                        <p className="text-sm text-slate-600 whitespace-pre-wrap">{booking.tours.itinerary}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>

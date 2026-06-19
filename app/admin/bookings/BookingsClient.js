@@ -79,6 +79,44 @@ export default function BookingsClient({ bookings = [], totalCount = 0, statusCo
     }
   };
 
+  // ==================== ĐÁNH DẤU ĐÃ THANH TOÁN ====================
+  const handleMarkAsPaid = async (booking) => {
+    if (!booking?.customers?.full_name) {
+      alert("Không tìm thấy thông tin khách hàng!");
+      return;
+    }
+
+    const paymentProgress = booking.total_amount 
+      ? (Number(booking.paid_amount) / Number(booking.total_amount)) * 100 
+      : 0;
+
+    if (paymentProgress >= 100) {
+      alert('Booking này đã được thanh toán đầy đủ!');
+      return;
+    }
+
+    if (confirm(`Xác nhận đã nhận thanh toán đầy đủ cho booking của ${booking.customers.full_name}?`)) {
+      try {
+        const response = await fetch(`/api/bookings/${booking.id}/mark-paid`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          alert('Đã đánh dấu thanh toán thành công!');
+          window.location.reload();
+        } else {
+          alert(data.error || 'Thao tác thất bại. Vui lòng thử lại.');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.');
+      }
+    }
+  };
+
   return (
     <div>
       {/* Header */}
@@ -220,7 +258,7 @@ export default function BookingsClient({ bookings = [], totalCount = 0, statusCo
 
                     const statusColors = {
                       PENDING: 'bg-yellow-100 text-yellow-800',
-                      AWAITING_PAYMENT: 'bg-orange-100 text-orange-800',
+                      AWAITING_PAYMENT: paymentProgress >= 100 ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800',
                       CONFIRMED: 'bg-green-100 text-green-800',
                       COMPLETED: 'bg-blue-100 text-blue-800',
                       CANCELLED: 'bg-red-100 text-red-800',
@@ -229,7 +267,7 @@ export default function BookingsClient({ bookings = [], totalCount = 0, statusCo
 
                     const statusLabels = {
                       PENDING: 'Chờ xử lý',
-                      AWAITING_PAYMENT: 'Chờ thanh toán',
+                      AWAITING_PAYMENT: paymentProgress >= 100 ? 'Đã chuyển khoản' : 'Chờ thanh toán',
                       CONFIRMED: 'Đã xác nhận',
                       COMPLETED: 'Hoàn thành',
                       CANCELLED: 'Đã hủy',
@@ -286,9 +324,9 @@ export default function BookingsClient({ bookings = [], totalCount = 0, statusCo
                                 {Math.round(paymentProgress)}%
                               </span>
                               <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full ${paymentProgress >= 100 ? 'bg-green-500' : paymentProgress >= 50 ? 'bg-blue-500' : 'bg-orange-500'}`} 
-                                  style={{ width: `${Math.min(100, paymentProgress)}%` }} 
+                                <div
+                                  className={`h-full ${paymentProgress >= 100 ? 'bg-green-500' : paymentProgress >= 50 ? 'bg-blue-500' : 'bg-orange-500'}`}
+                                  style={{ width: `${Math.min(100, paymentProgress)}%` }}
                                 />
                               </div>
                             </div>
@@ -299,24 +337,35 @@ export default function BookingsClient({ bookings = [], totalCount = 0, statusCo
                         </td>
 
                         <td className="px-4 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${statusColors[booking.status] || 'bg-slate-100 text-slate-800'}`}>
-                            {statusLabels[booking.status] || booking.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${statusColors[booking.status] || 'bg-slate-100 text-slate-800'}`}>
+                              {statusLabels[booking.status] || booking.status}
+                            </span>
+                            {paymentProgress < 100 && (
+                              <button
+                                onClick={() => handleMarkAsPaid(booking)}
+                                className="px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-xs font-bold transition-colors"
+                                title="Đánh dấu đã thanh toán"
+                              >
+                                Đã thanh toán
+                              </button>
+                            )}
+                          </div>
                         </td>
 
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-1">
-                            <Link 
-                              href={`/tour/${booking.tour_id}`} 
-                              className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-colors" 
+                            <Link
+                              href={`/tour/${booking.tour_id}`}
+                              className="bg-blue-100 hover:bg-blue-200 text-blue-600 p-2 rounded-lg transition-colors"
                               title="Xem chi tiết tour"
                             >
                               <Eye size={14} />
                             </Link>
                             {booking.status === 'PENDING' && (
-                              <button 
-                                onClick={() => handleConfirmBooking(booking)} 
-                                className="bg-green-100 hover:bg-green-200 text-green-600 p-2 rounded-lg transition-colors" 
+                              <button
+                                onClick={() => handleConfirmBooking(booking)}
+                                className="bg-green-100 hover:bg-green-200 text-green-600 p-2 rounded-lg transition-colors"
                                 title="Xác nhận booking"
                               >
                                 <CheckCircle size={14} />

@@ -18,7 +18,7 @@ export async function GET() {
         username: true,
         phone_number: true,
         birth_date: true,
-        role: true
+        role_id: true
       }
     });
 

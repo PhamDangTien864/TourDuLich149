@@ -10,37 +10,9 @@ import Link from 'next/link';
 const fetcher = (url) => fetch(url, { credentials: 'include' }).then((res) => res.json());
 
 export default function BookingHistory() {
-  const [userId, setUserId] = useState(() => {
-    // Lazy initialization - read from localStorage on mount
-    if (typeof window === 'undefined') return null;
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        // Block admin from accessing customer pages
-        if (user.role_id === 1) {
-          window.location.href = '/admin';
-          return null;
-        }
-        return user.id;
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-        return null;
-      }
-    }
-    return null;
-  });
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user_data');
-    if (!userData) {
-      window.location.href = '/login';
-    }
-  }, []);
-
   // Sử dụng SWR để fetch data, tự động quản lý cache, loading, error
   const { data, error, isLoading } = useSWR(
-    userId ? `/api/bookings?user_id=${userId}` : null,
+    '/api/my-bookings',
     fetcher
   );
 
@@ -53,10 +25,10 @@ export default function BookingHistory() {
     : []
   ) : [];
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, booking) => {
     const statusConfig = {
       PENDING: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Chờ xử lý', icon: Clock },
-      AWAITING_PAYMENT: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Chờ thanh toán', icon: Clock },
+      AWAITING_PAYMENT: isPaid(booking) ? { bg: 'bg-green-100', text: 'text-green-800', label: 'Đã thanh toán', icon: CheckCircle } : { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Đang chờ thanh toán', icon: Clock },
       DEPOSIT_PAID: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Đã cọc', icon: CheckCircle },
       CONFIRMED: { bg: 'bg-green-100', text: 'text-green-800', label: 'Đã xác nhận', icon: CheckCircle },
       COMPLETED: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Hoàn thành', icon: CheckCircle },
@@ -74,7 +46,13 @@ export default function BookingHistory() {
     );
   };
 
-  if (isLoading || (!userId && !error)) {
+  const isPaid = (booking) => {
+    const totalAmount = Number(booking.total_amount || booking.amount || 0);
+    const paidAmount = Number(booking.paid_amount || booking.paidAmount || 0);
+    return paidAmount >= totalAmount && totalAmount > 0;
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
@@ -156,22 +134,30 @@ export default function BookingHistory() {
                     <div className="flex-1">
                       <div className="flex items-start gap-4">
                         <div className="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0">
-                          <img
-                            src={booking.tourImage || "https://images.unsplash.com/photo-1528127269322-539801943592?w=200"}
-                            alt={booking.tourTitle || "Hình ảnh tour"}
-                            className="w-full h-full object-cover"
-                          />
+                          {booking.tours?.tour_images?.[0]?.image_url ? (
+                            <img
+                              src={booking.tours.tour_images[0].image_url}
+                              alt={booking.tours.title || "Hình ảnh tour"}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <img
+                              src="https://images.unsplash.com/photo-1528127269322-539801943592?w=200"
+                              alt="Hình ảnh tour"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-black text-slate-800 mb-2">{booking.tourTitle}</h3>
+                          <h3 className="text-xl font-black text-slate-800 mb-2">{booking.tours?.title || booking.tourTitle}</h3>
                           <div className="flex flex-wrap items-center gap-4 text-slate-600 text-sm font-bold">
                             <span className="flex items-center gap-2">
                               <MapPin size={16} />
-                              {booking.location}
+                              {booking.tours?.location_name || booking.location}
                             </span>
                             <span className="flex items-center gap-2">
                               <Calendar size={16} />
-                              {new Date(booking.startDate || booking.start_date).toLocaleDateString('vi-VN')}
+                              {new Date(booking.start_date || booking.startDate).toLocaleDateString('vi-VN')}
                             </span>
                           </div>
                         </div>
@@ -179,14 +165,16 @@ export default function BookingHistory() {
                     </div>
 
                     <div className="flex flex-col items-end gap-4">
-                      {getStatusBadge(booking.status)}
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(booking.status, booking)}
+                      </div>
                       <div className="text-right">
                         <p className="text-2xl font-black text-blue-600">
-                          {Number(booking.amount || booking.total_amount).toLocaleString('vi-VN')}đ
+                          {Number(booking.total_amount || booking.amount).toLocaleString('vi-VN')}đ
                         </p>
-                        {(booking.paidAmount > 0 || booking.paid_amount > 0) && (
+                        {(booking.paid_amount > 0 || booking.paidAmount > 0) && (
                           <p className="text-sm text-green-600 font-bold">
-                            Đã trả: {Number(booking.paidAmount || booking.paid_amount).toLocaleString('vi-VN')}đ
+                            Đã trả: {Number(booking.paid_amount || booking.paidAmount).toLocaleString('vi-VN')}đ
                           </p>
                         )}
                       </div>
@@ -195,12 +183,12 @@ export default function BookingHistory() {
 
                   <div className="mt-6 pt-6 border-t border-slate-100 flex justify-end gap-4">
                     <a
-                      href={`/tour/${booking.tour_id}`}
+                      href={`/tour/${booking.tours?.id || booking.tour_id}`}
                       className="px-6 py-3 rounded-xl font-bold text-slate-700 hover:bg-slate-100 transition-colors"
                     >
                       Xem chi tiết
                     </a>
-                    {!(booking.isConfirmed || booking.status === 'CONFIRMED') && (
+                    {!(booking.is_confirmed || booking.isConfirmed || booking.status === 'CONFIRMED') && !isPaid(booking) && (
                       <a
                         href={`/payment?bookingId=${booking.id}`}
                         className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-colors"
@@ -210,6 +198,17 @@ export default function BookingHistory() {
                       </a>
                     )}
                   </div>
+
+                  {/* Show itinerary for paid bookings */}
+                  {isPaid(booking) && booking.tours?.itinerary && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                      <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <Calendar size={16} className="text-blue-600" />
+                        Lịch trình tour
+                      </h4>
+                      <p className="text-sm text-slate-600 whitespace-pre-wrap">{booking.tours.itinerary}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

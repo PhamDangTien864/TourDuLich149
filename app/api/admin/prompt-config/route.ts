@@ -19,9 +19,7 @@ export async function GET() {
       },
     });
     return NextResponse.json(prompts);
-  } catch (error) {Chào bạn! Rất tiếc, thông tin về sứ mệnh cụ thể của Hoa Binh Travel hiện không có trong tài liệu tôi được cung cấp.
-
-Để biết thêm chi tiết hoặc được hỗ trợ trực tiếp, bạn vui lòng để lại số điện thoại hoặc liên hệ Hotline/Zalo hiển thị trên màn hình nhé! Hoa Binh Travel luôn sẵn lòng phục vụ bạn. 😊
+  } catch (error) {
     console.error('Lỗi lấy danh sách prompt config:', error);
     return NextResponse.json(
       { error: 'Không thể lấy danh sách prompt config' },

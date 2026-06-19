@@ -15,7 +15,7 @@ export default function AdminSidebar({ isOpen, onClose, isCollapsed, setSidebarC
   const { logout } = useAuth();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
     { id: 'tours', label: 'Quản lý Tours', icon: MapPin, href: '/admin/tours' },
     { id: 'users', label: 'Quản lý Users', icon: Users, href: '/admin/users' },
     { id: 'bookings', label: 'Quản lý Bookings', icon: Calendar, href: '/admin/bookings' },
