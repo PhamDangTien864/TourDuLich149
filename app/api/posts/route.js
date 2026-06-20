@@ -4,15 +4,24 @@ import { requireRole } from '@/lib/middleware';
 
 export async function GET() {
   try {
-    const posts = await prisma.$queryRaw`
-      SELECT * FROM posts
-      WHERE is_active = true
-      ORDER BY created_at DESC
-    `;
+    console.log('POSTS API: Fetching posts');
+    const posts = await prisma.posts.findMany({
+      where: { is_active: true },
+      orderBy: { created_at: 'desc' },
+      include: {
+        accounts: {
+          select: {
+            id: true,
+            full_name: true
+          }
+        }
+      }
+    });
+    console.log('POSTS API: Found', posts.length, 'posts');
     return NextResponse.json(posts);
   } catch (error) {
-    console.error('Error fetching posts:', error);
-    return NextResponse.json({ error: 'Error fetching posts' }, { status: 500 });
+    console.error('POSTS API: Error fetching posts:', error);
+    return NextResponse.json({ error: 'Error fetching posts', details: error.message }, { status: 500 });
   }
 }
 
@@ -20,17 +29,24 @@ export async function POST(request) {
   return requireRole([1])(async (req) => {
     try {
       const body = await req.json();
-      const { title, excerpt, content, category, image_url, is_active } = body;
+      const { title, excerpt, content, category, image_url, is_active, account_id } = body;
 
-      await prisma.$queryRaw`
-        INSERT INTO posts (title, excerpt, content, category, image_url, is_active)
-        VALUES (${title}, ${excerpt}, ${content}, ${category}, ${image_url}, ${is_active !== undefined ? is_active : true})
-      `;
+      const post = await prisma.posts.create({
+        data: {
+          title,
+          excerpt,
+          content,
+          category,
+          image_url,
+          is_active: is_active !== undefined ? is_active : true,
+          account_id: account_id || req.user.id
+        }
+      });
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, post });
     } catch (error) {
-      console.error('Error creating post:', error);
-      return NextResponse.json({ error: 'Error creating post' }, { status: 500 });
+      console.error('POSTS API: Error creating post:', error);
+      return NextResponse.json({ error: 'Error creating post', details: error.message }, { status: 500 });
     }
   })(request);
 }
