@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit, Trash2, Play, Check, X, Save } from 'lucide-react';
 
 export default function PromptConfigPage() {
@@ -23,11 +23,7 @@ export default function PromptConfigPage() {
   const [error, setError] = useState('');
   const [activateError, setActivateError] = useState('');
 
-  useEffect(() => {
-    fetchPrompts();
-  }, []);
-
-  const fetchPrompts = async () => {
+  const fetchPrompts = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/prompt-config');
       const data = await res.json();
@@ -37,7 +33,12 @@ export default function PromptConfigPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchPrompts();
+  }, [fetchPrompts]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

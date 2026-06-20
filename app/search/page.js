@@ -18,7 +18,6 @@ function SearchContent() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   
   const query = searchParams.get('q') || ""; 
-  const departure = searchParams.get('departure') || "";
   const date = searchParams.get('date') || "";
   const passengers = searchParams.get('passengers') ? Number(searchParams.get('passengers')) : 0;
   const minPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : 0;
@@ -40,7 +39,6 @@ function SearchContent() {
       try {
         const params = new URLSearchParams();
         if (query) params.append('q', query);
-        if (departure) params.append('departure', departure);
         if (date) params.append('date', date);
         if (passengers > 0) params.append('passengers', passengers.toString());
         if (minPrice > 0) params.append('minPrice', minPrice.toString());
@@ -83,7 +81,7 @@ function SearchContent() {
 
     fetchTours();
     fetchCategories();
-  }, [query, departure, date, passengers, minPrice, maxPrice, category, sortBy, page, departureDate, minSlots, minDuration, maxDuration, availability]);
+  }, [query, date, passengers, minPrice, maxPrice, category, sortBy, page, departureDate, minSlots, minDuration, maxDuration, availability]);
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
@@ -91,7 +89,6 @@ function SearchContent() {
     const params = new URLSearchParams();
 
     if (formData.get('q')) params.append('q', formData.get('q'));
-    if (formData.get('departure')) params.append('departure', formData.get('departure'));
     if (formData.get('date')) params.append('date', formData.get('date'));
     if (formData.get('passengers')) params.append('passengers', formData.get('passengers'));
     if (formData.get('category')) params.append('category', formData.get('category'));
@@ -196,16 +193,6 @@ function SearchContent() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-white border-2 border-slate-200 rounded-xl px-3 py-1.5 shadow-sm">
-              <MapPin size={16} className="text-slate-400" />
-              <input
-                type="text"
-                name="departure"
-                placeholder="Điểm đi"
-                defaultValue={departure || ""}
-                className="w-32 px-2 py-1.5 bg-transparent font-bold text-sm text-slate-700 focus:outline-none"
-              />
-            </div>
             <input
               type="text"
               name="q"

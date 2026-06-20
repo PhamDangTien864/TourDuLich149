@@ -7,6 +7,7 @@ import { ValidationHandler } from '@/lib/api-validation';
 import { ErrorHandler } from '@/lib/errors';
 import { prisma } from "@/lib/prisma";
 import { requireRole } from '@/lib/middleware';
+import { normalizeVietnameseText } from '@/lib/text-utils';
 
 export async function GET(req: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
       is_active: true,
     };
 
-    // Tìm kiếm text (MySQL mặc định không phân biệt hoa thường, không cần mode: insensitive)
+    // Tìm kiếm text (MySQL mặc định không phân biệt hoa thường)
     if (q) {
       where.OR = [
         { title: { contains: q } },
@@ -127,7 +128,7 @@ export async function GET(req: NextRequest) {
     const totalPages = Math.ceil(total / limit);
     
     // Convert BigInt to Number for JSON serialization
-    const serializedTours = tours.map(tour => ({
+    const serializedTours = tours.map((tour: any) => ({
       ...tour,
       price: Number(tour.price),
       max_slots: Number(tour.max_slots),

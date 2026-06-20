@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BarChart3, MessageSquare, TrendingUp, Users, Clock, ThumbsUp } from 'lucide-react';
 
 export default function ChatAnalyticsPage() {
@@ -9,11 +9,7 @@ export default function ChatAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [summaryRes, analyticsRes] = await Promise.all([
         fetch('/api/admin/chat-analytics/summary'),
@@ -28,7 +24,12 @@ export default function ChatAnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (

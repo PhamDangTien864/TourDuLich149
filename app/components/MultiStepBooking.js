@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, Users, Calendar, MapPin, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
 import { bookingRequestSchema, passengerSchema } from '@/lib/validations';
+import PaymentQR from './PaymentQR';
 
 export default function MultiStepBooking({ tourId, price, originalPrice, bestDiscount, initialDate = '', initialPassengers = '1' }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -714,6 +715,14 @@ function Step3Payment({ bookingData, updateBookingData, onNext, onPrevious, tota
         </div>
       </div>
 
+      {/* QR Code Display */}
+      {paymentMethod === 'qr' && (
+        <PaymentQR 
+          amount={depositOption === 'deposit' ? depositAmount : totalAmount} 
+          tourId={tourId} 
+        />
+      )}
+
       {/* Summary */}
       <div className="bg-slate-900 p-6 rounded-xl text-white">
         <h4 className="font-black mb-4">Tóm tắt đặt tour</h4>
@@ -797,6 +806,8 @@ function Step4Confirmation({ bookingData, onPrevious, totalAmount, bestDiscount,
 
       const result = await response.json();
 
+      console.log('Booking API response:', result);
+
       if (!response.ok) {
         // Check if it's a conflict with existing AWAITING_PAYMENT booking
         if (response.status === 409 && result.details?.canResume) {
@@ -807,7 +818,8 @@ function Step4Confirmation({ bookingData, onPrevious, totalAmount, bestDiscount,
         throw new Error(result.error || result.details || 'Đặt tour thất bại');
       }
 
-      setBookingResult(result.booking);
+      console.log('Setting booking result:', result.data);
+      setBookingResult(result.data);
       setSuccess(true);
     } catch (err) {
       setError(err.message || 'Có lỗi xảy ra khi đặt tour');
@@ -859,10 +871,19 @@ function Step4Confirmation({ bookingData, onPrevious, totalAmount, bestDiscount,
         </div>
 
         <button
-          onClick={() => window.location.href = '/my-bookings'}
-          className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all min-h-[56px] touch-manipulation"
+          onClick={() => {
+            if (bookingResult?.id) {
+              window.location.href = `/payment?bookingId=${bookingResult.id}&amount=${totalAmount}&tourId=${tourId}`;
+            } else {
+              console.error('Booking result ID is missing:', bookingResult);
+              alert('Có lỗi xảy ra, vui lòng thử lại');
+            }
+          }}
+          disabled={!bookingResult?.id}
+          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all min-h-[56px] touch-manipulation flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Xem đặt tour của tôi
+          <CreditCard size={20} />
+          Tiếp tục thanh toán
         </button>
       </div>
     );

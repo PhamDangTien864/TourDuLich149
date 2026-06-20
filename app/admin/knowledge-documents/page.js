@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit, Trash2, FileText, Search, Upload, Eye, EyeOff } from 'lucide-react';
 
 export default function KnowledgeDocumentsPage() {
@@ -20,11 +20,7 @@ export default function KnowledgeDocumentsPage() {
   });
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchDocuments();
-  }, []);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/knowledge-documents');
       const data = await res.json();
@@ -34,7 +30,12 @@ export default function KnowledgeDocumentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchDocuments();
+  }, [fetchDocuments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

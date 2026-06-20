@@ -52,14 +52,44 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
+      // Convert BigInt to Number for JSON serialization
+      const serializedBooking = {
+        ...booking,
+        id: Number(booking.id),
+        account_id: Number(booking.account_id),
+        tour_id: Number(booking.tour_id),
+        total_amount: Number(booking.total_amount),
+        paid_amount: Number(booking.paid_amount || 0),
+        tours: booking.tours ? {
+          ...booking.tours,
+          id: Number(booking.tours.id),
+          category_id: Number(booking.tours.category_id),
+          price: Number(booking.tours.price),
+          max_slots: Number(booking.tours.max_slots),
+          duration_days: Number(booking.tours.duration_days),
+          min_age: Number(booking.tours.min_age),
+          max_age: booking.tours.max_age ? Number(booking.tours.max_age) : null
+        } : null,
+        customers: booking.customers ? {
+          ...booking.customers,
+          id: Number(booking.customers.id)
+        } : null,
+        booking_passengers: booking.booking_passengers ? booking.booking_passengers.map((bp: any) => ({
+          ...bp,
+          id: Number(bp.id),
+          booking_id: Number(bp.booking_id)
+        })) : [],
+        booking_payments: booking.booking_payments ? booking.booking_payments.map((bp: any) => ({
+          ...bp,
+          id: Number(bp.id),
+          booking_id: Number(bp.booking_id),
+          amount: Number(bp.amount)
+        })) : []
+      };
+
       return NextResponse.json({ 
         success: true,
-        booking: {
-          ...booking,
-          total_amount: Number(booking.total_amount),
-          paid_amount: Number(booking.paid_amount || 0),
-          tour_id: booking.tour_id
-        }
+        booking: serializedBooking
       });
     } catch (error) {
       console.error('Get booking error:', error);

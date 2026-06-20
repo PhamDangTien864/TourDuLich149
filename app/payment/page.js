@@ -1,36 +1,15 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { CheckCircle, Loader2, CreditCard, AlertCircle, Smartphone, Building2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import QRCode from "qrcode";
 
 const BANKS = [
   { code: 'VNPAYQR', name: 'VNPay QR Code', icon: Smartphone },
-  { code: 'VISA', name: 'Visa/MasterCard', icon: CreditCard },
-  { code: 'NCB', name: 'Ngân hàng NCB', icon: Building2 },
-  { code: 'SACOMBANK', name: 'Sacombank', icon: Building2 },
-  { code: 'EXIMBANK', name: 'Eximbank', icon: Building2 },
-  { code: 'MSBANK', name: 'MSBank', icon: Building2 },
-  { code: 'VNMART', name: 'Ví điện tử VnMart', icon: Smartphone },
-  { code: 'VIETINBANK', name: 'VietinBank', icon: Building2 },
-  { code: 'VIETCOMBANK', name: 'Vietcombank', icon: Building2 },
-  { code: 'HDBANK', name: 'HDBank', icon: Building2 },
-  { code: 'DONGABANK', name: 'DongA Bank', icon: Building2 },
-  { code: 'TPBANK', name: 'TPBank', icon: Building2 },
-  { code: 'OCEANBANK', name: 'OceanBank', icon: Building2 },
-  { code: 'BIDV', name: 'BIDV', icon: Building2 },
-  { code: 'AGRIBANK', name: 'Agribank', icon: Building2 },
-  { code: 'MBBANK', name: 'MB Bank', icon: Building2 },
-  { code: 'ACB', name: 'ACB', icon: Building2 },
-  { code: 'VPBANK', name: 'VPBank', icon: Building2 },
-  { code: 'TECHCOMBANK', name: 'Techcombank', icon: Building2 },
-  { code: 'SHBANK', name: 'Shinhan Bank', icon: Building2 },
-  { code: 'STBANK', name: 'Sacombank', icon: Building2 },
-  { code: 'VIB', name: 'VIB', icon: Building2 },
-  { code: 'CIMB', name: 'CIMB', icon: Building2 },
-  { code: 'KBANK', name: 'KBank', icon: Building2 },
+  { code: 'MOMOQR', name: 'Momo QR Code', icon: Smartphone },
 ];
 
 function PaymentContent() {
@@ -40,6 +19,9 @@ function PaymentContent() {
   const [selectedBank, setSelectedBank] = useState(null);
   const [bookingDetails, setBookingDetails] = useState(null);
   const [isLoadingBooking, setIsLoadingBooking] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const [qrCode, setQrCode] = useState(null);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
   
   const bookingId = searchParams.get("bookingId");
   const amount = searchParams.get("amount");
@@ -68,48 +50,51 @@ function PaymentContent() {
   }, [router]);
 
   // Load booking details if only bookingId is provided (resume payment flow)
-  useEffect(() => {
-    if (bookingId && !amount && !tourId) {
-      setIsLoadingBooking(true);
-      console.log('Loading booking details for ID:', bookingId);
+  const loadBookingDetails = useCallback(async () => {
+    if (!bookingId || amount || tourId) return;
+    
+    setIsLoadingBooking(true);
+    console.log('Loading booking details for ID:', bookingId);
+    
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`);
+      console.log('Booking API response status:', res.status);
       
-      fetch(`/api/bookings/${bookingId}`)
-        .then(res => {
-          console.log('Booking API response status:', res.status);
-          if (!res.ok) {
-            return res.json().then(err => {
-              throw new Error(err.error || `Failed to load booking (status: ${res.status})`);
-            });
-          }
-          return res.json();
-        })
-        .then(data => {
-          console.log('Booking API response data:', data);
-          if (data.success && data.booking) {
-            setBookingDetails(data.booking);
-            // Redirect with full parameters
-            const params = new URLSearchParams({
-              bookingId: bookingId,
-              amount: data.booking.total_amount,
-              tourId: data.booking.tour_id
-            });
-            console.log('Redirecting to payment with params:', params.toString());
-            router.replace(`/payment?${params.toString()}`);
-          } else {
-            throw new Error(data.error || 'Invalid booking data');
-          }
-        })
-        .catch(err => {
-          console.error('Load booking error:', err);
-          toast.error(err.message || 'Không tìm thấy booking');
-          // Redirect to bookings page instead of showing error
-          router.push('/my-bookings');
-        })
-        .finally(() => {
-          setIsLoadingBooking(false);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `Failed to load booking (status: ${res.status})`);
+      }
+      
+      const data = await res.json();
+      console.log('Booking API response data:', data);
+      
+      if (data.success && data.booking) {
+        setBookingDetails(data.booking);
+        // Redirect with full parameters
+        const params = new URLSearchParams({
+          bookingId: bookingId,
+          amount: data.booking.total_amount,
+          tourId: data.booking.tour_id
         });
+        console.log('Redirecting to payment with params:', params.toString());
+        router.replace(`/payment?${params.toString()}`);
+      } else {
+        throw new Error(data.error || 'Invalid booking data');
+      }
+    } catch (err) {
+      console.error('Load booking error:', err);
+      toast.error(err.message || 'Không tìm thấy booking');
+      // Redirect to bookings page instead of showing error
+      router.push('/my-bookings');
+    } finally {
+      setIsLoadingBooking(false);
     }
   }, [bookingId, amount, tourId, router]);
+
+  useEffect(() => {
+    loadBookingDetails();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+  }, []);
 
   // Handle callback status
   useEffect(() => {
@@ -137,30 +122,77 @@ function PaymentContent() {
     setSelectedBank(bankCode);
 
     try {
-      const res = await fetch('/api/payment/create', {
+      // Generate QR code locally using qrcode library
+      const bankId = process.env.NEXT_PUBLIC_BANK_ID || 'MB';
+      const bankAccount = process.env.NEXT_PUBLIC_BANK_ACCOUNT || '0862640720';
+      const accountName = process.env.NEXT_PUBLIC_ACCOUNT_NAME || 'VIET TRAVEL';
+      
+      // Create QR code data for Vietnam bank transfer
+      // Format: Bank ID + Account Number + Amount + Account Name
+      const qrData = `${bankId}|${bankAccount}|${amount}|${accountName}`;
+      
+      // Generate QR code as data URL
+      const qrCodeDataURL = await QRCode.toDataURL(qrData, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      
+      setQrCode(qrCodeDataURL);
+      setShowQR(true);
+      toast.success('Đã tạo mã QR thanh toán');
+    } catch (error) {
+      console.error('QR generation error:', error);
+      toast.error('Lỗi tạo mã QR');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    console.log('Confirm payment clicked, bookingId:', bookingId, 'type:', typeof bookingId);
+    
+    if (!bookingId) {
+      toast.error("Không tìm thấy thông tin booking");
+      return;
+    }
+
+    const parsedBookingId = parseInt(bookingId, 10);
+    console.log('Parsed bookingId:', parsedBookingId, 'isNaN:', isNaN(parsedBookingId));
+    
+    if (isNaN(parsedBookingId)) {
+      toast.error("Booking ID không hợp lệ");
+      return;
+    }
+
+    setConfirmingPayment(true);
+
+    try {
+      const res = await fetch('/api/payment/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bookingId: parseInt(bookingId),
-          amount: parseInt(amount),
-          bankCode,
+          bookingId: parsedBookingId,
         }),
       });
 
       const data = await res.json();
 
-      if (data.success && data.paymentUrl) {
-        // Redirect to VNPay
-        // eslint-disable-next-line react-hooks/immutability
-        window.location.href = data.paymentUrl;
+      if (data.success) {
+        toast.success('Thanh toán thành công!', { icon: '✅' });
+        setTimeout(() => {
+          router.push('/my-bookings');
+        }, 2000);
       } else {
-        toast.error(data.error || 'Lỗi tạo thanh toán');
+        toast.error(data.error || 'Lỗi xác nhận thanh toán');
       }
     } catch {
       toast.error('Lỗi hệ thống');
     } finally {
-      setLoading(false);
-      setSelectedBank(null);
+      setConfirmingPayment(false);
     }
   };
 
@@ -200,6 +232,94 @@ function PaymentContent() {
           <p className="text-slate-400 mb-6">Đang chuyển đến trang booking...</p>
           <Loader2 className="animate-spin mx-auto" size={32} />
         </div>
+      </div>
+    );
+  }
+
+  if (showQR) {
+    return (
+      <div className="min-h-screen bg-slate-900">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-20">
+          <div className="bg-green-500/20 p-4 rounded-2xl border border-green-500/30 text-green-400 flex items-center justify-center gap-2 mx-auto w-fit px-6 mb-8">
+            <CheckCircle size={20} /> <span className="font-black text-sm">ĐẶT TOUR THÀNH CÔNG</span>
+          </div>
+          
+          <div className="bg-white rounded-3xl p-8 mb-6">
+            <h2 className="text-2xl font-black text-slate-800 mb-6 text-center">Quét mã QR để thanh toán</h2>
+            
+            <div className="mb-6 p-4 bg-blue-50 rounded-xl text-center">
+              <p className="text-slate-600 font-bold">
+                Số tiền cần thanh toán: <span className="text-blue-600 text-xl">{parseInt(amount).toLocaleString('vi-VN')} VNĐ</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-6 mb-6">
+              <div className="bg-white p-4 rounded-xl border-2 border-slate-200">
+                {/* Real QR Code */}
+                <div className="w-64 h-64 flex items-center justify-center">
+                  {qrCode ? (
+                    <img 
+                      src={qrCode} 
+                      alt="QR Code thanh toán" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <Smartphone size={48} className="text-slate-400 mx-auto mb-2" />
+                      <p className="text-slate-500 text-sm">Đang tạo mã QR...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-slate-600 mb-2">Ngân hàng: <span className="font-bold">{process.env.NEXT_PUBLIC_BANK_ID || 'MB Bank'}</span></p>
+                <p className="text-slate-600 mb-2">Số tài khoản: <span className="font-bold">{process.env.NEXT_PUBLIC_BANK_ACCOUNT || '0862640720'}</span></p>
+                <p className="text-slate-600">Chủ tài khoản: <span className="font-bold">{process.env.NEXT_PUBLIC_ACCOUNT_NAME || 'VIET TRAVEL'}</span></p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowQR(false)}
+                className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-4 rounded-xl font-bold transition-all"
+              >
+                Quay lại
+              </button>
+              <button
+                onClick={handleConfirmPayment}
+                disabled={confirmingPayment}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+              >
+                {confirmingPayment ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    Đang xác nhận...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={20} />
+                    Xác nhận đã thanh toán
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 flex items-start gap-3">
+            <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-yellow-800">
+              <p className="font-bold mb-1">Lưu ý:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Quét mã QR bằng ứng dụng ngân hàng để thanh toán</li>
+                <li>Sau khi thanh toán, nhấn &quot;Xác nhận đã thanh toán&quot;</li>
+                <li>Hệ thống sẽ cập nhật trạng thái booking sau khi xác nhận</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -252,9 +372,9 @@ function PaymentContent() {
           <div className="text-sm text-yellow-800">
             <p className="font-bold mb-1">Lưu ý:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Sau khi thanh toán thành công, hệ thống sẽ tự động xác nhận booking</li>
-              <li>Bạn có thể xem trạng thái booking trong trang &quot;Đặt tour của tôi&quot;</li>
-              <li>Nếu gặp vấn đề, vui lòng liên hệ hỗ trợ</li>
+              <li>Chọn phương thức thanh toán để hiển thị mã QR</li>
+              <li>Quét mã QR bằng ứng dụng ngân hàng để thanh toán</li>
+              <li>Sau khi thanh toán, xác nhận để hoàn tất đặt tour</li>
             </ul>
           </div>
         </div>

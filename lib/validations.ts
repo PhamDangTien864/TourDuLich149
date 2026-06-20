@@ -165,8 +165,11 @@ export const bookingRequestSchema = z.object({
   phone: z.string()
     .regex(/^[0-9]{10}$/, 'Số điện thoại phải 10 số'),
   email: z.string()
-    .email('Email không đúng định dạng')
-    .optional(),
+    .optional()
+    .refine((email) => {
+      if (!email || email === '') return true; // Allow empty email
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }, 'Email không đúng định dạng'),
   startDate: z.string()
     .refine((date) => !isNaN(Date.parse(date)), 'Ngày bắt đầu không hợp lệ')
     .refine((date) => new Date(date) > new Date(), 'Ngày bắt đầu phải trong tương lai'),
