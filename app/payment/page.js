@@ -50,51 +50,50 @@ function PaymentContent() {
   }, [router]);
 
   // Load booking details if only bookingId is provided (resume payment flow)
-  const loadBookingDetails = useCallback(async () => {
-    if (!bookingId || amount || tourId) return;
-    
-    setIsLoadingBooking(true);
-    console.log('Loading booking details for ID:', bookingId);
-    
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}`);
-      console.log('Booking API response status:', res.status);
-      
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || `Failed to load booking (status: ${res.status})`);
-      }
-      
-      const data = await res.json();
-      console.log('Booking API response data:', data);
-      
-      if (data.success && data.booking) {
-        setBookingDetails(data.booking);
-        // Redirect with full parameters
-        const params = new URLSearchParams({
-          bookingId: bookingId,
-          amount: data.booking.total_amount,
-          tourId: data.booking.tour_id
-        });
-        console.log('Redirecting to payment with params:', params.toString());
-        router.replace(`/payment?${params.toString()}`);
-      } else {
-        throw new Error(data.error || 'Invalid booking data');
-      }
-    } catch (err) {
-      console.error('Load booking error:', err);
-      toast.error(err.message || 'Không tìm thấy booking');
-      // Redirect to bookings page instead of showing error
-      router.push('/my-bookings');
-    } finally {
-      setIsLoadingBooking(false);
-    }
-  }, [bookingId, amount, tourId, router]);
-
   useEffect(() => {
+    const loadBookingDetails = async () => {
+      if (!bookingId || amount || tourId) return;
+      
+      setIsLoadingBooking(true);
+      console.log('Loading booking details for ID:', bookingId);
+      
+      try {
+        const res = await fetch(`/api/bookings/${bookingId}`);
+        console.log('Booking API response status:', res.status);
+        
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || `Failed to load booking (status: ${res.status})`);
+        }
+        
+        const data = await res.json();
+        console.log('Booking API response data:', data);
+        
+        if (data.success && data.booking) {
+          setBookingDetails(data.booking);
+          // Redirect with full parameters
+          const params = new URLSearchParams({
+            bookingId: bookingId,
+            amount: data.booking.total_amount,
+            tourId: data.booking.tour_id
+          });
+          console.log('Redirecting to payment with params:', params.toString());
+          router.replace(`/payment?${params.toString()}`);
+        } else {
+          throw new Error(data.error || 'Invalid booking data');
+        }
+      } catch (err) {
+        console.error('Load booking error:', err);
+        toast.error(err.message || 'Không tìm thấy booking');
+        // Redirect to bookings page instead of showing error
+        router.push('/my-bookings');
+      } finally {
+        setIsLoadingBooking(false);
+      }
+    };
+
     loadBookingDetails();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-  }, []);
+  }, [bookingId, amount, tourId, router]);
 
   // Handle callback status
   useEffect(() => {
