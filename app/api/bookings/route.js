@@ -156,9 +156,10 @@ export async function POST(req) {
 
       // Wrap entire booking creation in transaction for atomicity
       console.log('BOOKING API: Starting transaction for booking creation');
-      const booking = await prisma.$transaction(async (tx) => {
-        console.log('BOOKING API: Transaction started');
-        const totalPassengers = adultsCount + childrenCount;
+      const booking = await prisma.$transaction(
+        async (tx) => {
+          console.log('BOOKING API: Transaction started');
+          const totalPassengers = adultsCount + childrenCount;
 
         // Reserve slots with transaction
         console.log('BOOKING API: Reserving slots');
@@ -291,7 +292,12 @@ export async function POST(req) {
         );
 
         return newBooking;
-      });
+      },
+      {
+        timeout: 30000, // Increase timeout to 30 seconds
+        maxWait: 10000, // Max wait time to start transaction
+      }
+    );
 
       // Gửi email xác nhận (outside transaction)
       console.log('BOOKING API: Sending confirmation email');
