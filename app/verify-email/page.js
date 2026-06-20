@@ -8,22 +8,21 @@ import { motion } from 'framer-motion';
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
+  const id = searchParams.get('id');
 
   const [status, setStatus] = useState('loading'); // loading, success, error
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     const verifyEmail = async () => {
-      if (!token || !email) {
+      if (!id) {
         setStatus('error');
         setMessage('Link xác nhận không hợp lệ');
         return;
       }
 
       try {
-        const res = await fetch(`/api/auth/verify-email?token=${token}&email=${email}`);
+        const res = await fetch(`/api/auth/verify-email?id=${id}`);
         const data = await res.json();
 
         if (data.success) {
@@ -42,7 +41,7 @@ function VerifyEmailContent() {
     };
 
     verifyEmail();
-  }, [token, email, router]);
+  }, [id, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">

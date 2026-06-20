@@ -19,7 +19,7 @@ export default async function BlogPage() {
   // Fetch posts from API
   let posts = [];
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/posts`, {
+    const res = await fetch('/api/posts', {
       cache: 'no-store'
     });
     if (res.ok) {

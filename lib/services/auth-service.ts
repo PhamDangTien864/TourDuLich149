@@ -130,12 +130,13 @@ export class AuthService {
     });
 
     // Send verification email
-    const verifyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/verify-email?id=${user.id}`;
-    
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const verifyUrl = `${baseUrl}/verify-email?id=${user.id}`;
+
     try {
       const emailData = {
         from: 'VietTravel Luxury <verify@travelluxury.id.vn>',
-        to: [email], 
+        to: [email],
         subject: 'Xác thực tài khoản VietTravel Luxury',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 12px; overflow: hidden;">
@@ -161,7 +162,7 @@ export class AuthService {
           </div>
         `
       };
-      
+
       await resend.emails.send(emailData);
     } catch (emailError) {
       ErrorHandler.log(ErrorHandler.handle(emailError), 'Failed to send verification email');
