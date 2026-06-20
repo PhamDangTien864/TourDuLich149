@@ -19,9 +19,12 @@ import crypto from 'crypto';
 export async function POST(req) {
   return requireAuth(async (request) => {
     try {
+      console.log('BOOKING API: Request received');
       const user = request.user;
       const accountId = user.id;
+      console.log('BOOKING API: User authenticated, accountId:', accountId);
       const body = await req.json();
+      console.log('BOOKING API: Request body:', JSON.stringify(body, null, 2));
       
       // Generate or use provided idempotency key using cryptographically secure random
       const idempotencyKey = body.idempotencyKey || `booking_${Date.now()}_${crypto.randomBytes(16).toString('hex')}`;
@@ -29,11 +32,12 @@ export async function POST(req) {
       // Validate with Zod using centralized validation
       const validationResult = bookingRequestSchema.safeParse(body);
       if (!validationResult.success) {
-        console.log('Zod validation error:', validationResult.error);
-        console.log('Received body:', body);
+        console.log('BOOKING API: Zod validation error:', validationResult.error);
+        console.log('BOOKING API: Received body:', body);
         const errors = validationResult.error?.errors?.map(e => `${e.path.join('.')}: ${e.message}`) || ['Validation failed'];
         return validationErrorResponse(errors);
       }
+      console.log('BOOKING API: Validation passed');
 
       const validatedData = validationResult.data;
       const { 
@@ -54,6 +58,7 @@ export async function POST(req) {
       } = validatedData;
 
       // Check for existing booking with same idempotency key
+      console.log('BOOKING API: Checking for existing booking with idempotency key');
       const existingBooking = await prisma.bookings.findFirst({
         where: { 
           idempotency_key: idempotencyKey,
@@ -69,6 +74,7 @@ export async function POST(req) {
           }
         }
       });
+      console.log('BOOKING API: Existing booking check complete');
 
       if (existingBooking) {
         // Return existing booking
@@ -149,10 +155,13 @@ export async function POST(req) {
       }
 
       // Wrap entire booking creation in transaction for atomicity
+      console.log('BOOKING API: Starting transaction for booking creation');
       const booking = await prisma.$transaction(async (tx) => {
+        console.log('BOOKING API: Transaction started');
         const totalPassengers = adultsCount + childrenCount;
 
         // Reserve slots with transaction
+        console.log('BOOKING API: Reserving slots');
         const reservation = await SlotReservationService.reserveSlot(
           tourId,
           departureScheduleId,
@@ -160,15 +169,19 @@ export async function POST(req) {
           accountId,
           tx
         );
+        console.log('BOOKING API: Slot reservation result:', reservation);
 
         if (!reservation.success) {
+          console.log('BOOKING API: Slot reservation failed:', reservation.error);
           throw new Error(reservation.error || "Không thể đặt chỗ");
         }
 
         // Tạo customer mới hoặc tìm customer existing
+        console.log('BOOKING API: Finding/creating customer');
         let customer = await tx.customers.findFirst({
           where: { phone_number: phone, is_deleted: false }
         });
+        console.log('BOOKING API: Customer found:', !!customer);
 
         if (!customer) {
           customer = await tx.customers.create({
@@ -281,6 +294,7 @@ export async function POST(req) {
       });
 
       // Gửi email xác nhận (outside transaction)
+      console.log('BOOKING API: Sending confirmation email');
       if (email) {
         try {
           await sendBookingConfirmationEmail({
@@ -292,10 +306,13 @@ export async function POST(req) {
             startDate: booking.start_date,
             endDate: booking.end_date
           });
+          console.log('BOOKING API: Email sent successfully');
         } catch (emailError) {
-          console.error('Email send error:', emailError);
+          console.error('BOOKING API: Email send error:', emailError);
           // Don't fail booking if email fails
         }
+      } else {
+        console.log('BOOKING API: No email provided, skipping email sending');
       }
 
       // Invalidate user bookings cache
@@ -322,7 +339,9 @@ export async function POST(req) {
       }, 'Booking được tạo thành công');
 
     } catch (error) {
-      console.error("Booking error:", error);
+      console.error("BOOKING API: Booking error:", error);
+      console.error("BOOKING API: Error stack:", error.stack);
+      console.error("BOOKING API: Error message:", error.message);
       return errorResponse("Lỗi hệ thống, vui lòng thử lại sau", 500, error.message);
     }
   })(req);
