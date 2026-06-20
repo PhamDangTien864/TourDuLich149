@@ -821,6 +821,13 @@ function Step4Confirmation({ bookingData, onPrevious, totalAmount, bestDiscount,
       console.log('Setting booking result:', result.data);
       setBookingResult(result.data);
       setSuccess(true);
+      
+      // Auto redirect to payment page after successful booking
+      if (result.data?.id) {
+        setTimeout(() => {
+          window.location.href = `/payment?bookingId=${result.data.id}&amount=${totalAmount}&tourId=${tourId}`;
+        }, 1500);
+      }
     } catch (err) {
       setError(err.message || 'Có lỗi xảy ra khi đặt tour');
     } finally {
