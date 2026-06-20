@@ -101,6 +101,17 @@ const Header = memo(function Header() {
             {pathname === '/reviews' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>}
           </Link>
           <Link 
+            href="/about"
+            className={`text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
+              pathname === '/about'
+                ? 'text-white bg-blue-600 shadow-md'
+                : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            Về chúng tôi
+            {pathname === '/about' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></div>}
+          </Link>
+          <Link 
             href="/blog" 
             className={`text-xs font-black uppercase tracking-widest px-4 py-2.5 rounded-xl transition-all duration-300 relative group ${
               pathname === '/blog' 
@@ -214,6 +225,17 @@ const Header = memo(function Header() {
               }`}
             >
               Đánh giá
+            </Link>
+            <Link 
+              href="/about"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-xs font-black uppercase tracking-widest px-3 py-2 rounded-lg transition-all ${
+                pathname === '/about'
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50'
+              }`}
+            >
+              Về chúng tôi
             </Link>
             <Link 
               href="/blog" 
